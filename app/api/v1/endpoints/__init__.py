@@ -1,0 +1,3 @@
+"""
+Endpoints module initialization
+"""
