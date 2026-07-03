@@ -8,6 +8,12 @@ import asyncio
 from pathlib import Path
 import argparse
 import time
+import sys
+import os
+
+# Add the project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 class BNCCExtractor:
     """Extrator de dados da BNCC"""
     
-    def __init__(self, pdf_path: str, output_path: str):
-        self.pdf_path = Path(pdf_path)
+    def __init__(self, pdf_paths: List[str], output_path: str):
+        self.pdf_paths = [Path(p) for p in pdf_paths] if isinstance(pdf_paths, list) else [Path(pdf_paths)]
         self.output_path = Path(output_path)
         self.data = {
             "habilidades": [],
@@ -27,19 +27,22 @@ class BNCCExtractor:
         }
     
     def extract_data(self):
-        """Extract data from BNCC PDF"""
+        """Extract data from BNCC PDF(s)"""
         try:
-            # Check if PDF exists
-            if not self.pdf_path.exists():
-                logger.error(f"PDF file not found: {self.pdf_path}")
+            # Check if any PDF exists
+            existing_pdfs = [pdf for pdf in self.pdf_paths if pdf.exists()]
+            
+            if not existing_pdfs:
+                logger.error(f"No PDF files found in: {[str(p) for p in self.pdf_paths]}")
                 self._create_sample_data()
+                self._save_data()
                 return
             
-            logger.info(f"Extracting data from PDF: {self.pdf_path}")
+            logger.info(f"Found PDF files: {[str(p) for p in existing_pdfs]}")
             
-            # For now, create sample data structure
-            # In a real implementation, you would use PyPDF2 or similar
-            self._create_sample_data()
+            # For now, create comprehensive sample data structure
+            # In a real implementation, you would use PyPDF2 or similar to parse each PDF
+            self._create_comprehensive_sample_data()
             
             # Save extracted data
             self._save_data()
@@ -147,10 +150,10 @@ class BNCCExtractor:
         # Habilidades de exemplo
         self.data["habilidades"] = [
             {
-                "codigo": "EF05MA03",
-                "descricao": "Identificar e representar frações (menores e maiores que a unidade), associando-as ao resultado de uma divisão ou à ideia de parte de um todo, utilizando a reta numérica como recurso.",
+                "codigo": "EF04MA09",
+                "descricao": "Reconhecer as frações unitárias mais usuais (1/2, 1/3, 1/4, 1/5, 1/10 e 1/100) como unidades de medida menores do que uma unidade, utilizando a reta numérica como recurso.",
                 "etapa": "ensino_fundamental",
-                "anos": ["5"],
+                "anos": ["4"],
                 "area_conhecimento": "matematica",
                 "componente": "matematica",
                 "competencias_gerais": [1, 2, 4],
@@ -204,6 +207,132 @@ class BNCCExtractor:
         ]
         
         logger.info(f"Created sample data: {len(self.data['habilidades'])} habilidades, "
+                   f"{len(self.data['competencias_gerais'])} competências gerais, "
+                   f"{len(self.data['competencias_especificas'])} competências específicas")
+    
+    def _create_comprehensive_sample_data(self):
+        """Create comprehensive sample BNCC data structure for development"""
+        logger.info("Creating comprehensive BNCC data structure...")
+        
+        # Start with basic sample data
+        self._create_sample_data()
+        
+        # Add more comprehensive examples for all areas and components
+        additional_habilidades = [
+            # Mais exemplos de Matemática
+            {
+                "codigo": "EF05MA03",
+                "descricao": "Identificar e representar frações (menores e maiores que a unidade), associando-as ao resultado de uma divisão ou à ideia de parte de um todo, utilizando a reta numérica como recurso.",
+                "etapa": "ensino_fundamental",
+                "anos": ["5"],
+                "area_conhecimento": "matematica",
+                "componente": "matematica",
+                "competencias_gerais": [1, 2, 4],
+                "competencias_especificas": ["EFMAT01", "EFMAT02"],
+                "objetos_conhecimento": ["Números racionais expressos na forma decimal e na forma de fração"]
+            },
+            {
+                "codigo": "EF06MA11",
+                "descricao": "Resolver e elaborar problemas com números racionais positivos na representação decimal, envolvendo as quatro operações fundamentais e a potenciação, por meio de estratégias diversas, utilizando estimativas e arredondamentos para verificar a razoabilidade de respostas, com e sem uso de calculadora.",
+                "etapa": "ensino_fundamental",
+                "anos": ["6"],
+                "area_conhecimento": "matematica",
+                "componente": "matematica",
+                "competencias_gerais": [1, 2, 5],
+                "competencias_especificas": ["EFMAT01", "EFMAT02"],
+                "objetos_conhecimento": ["Operações (adição, subtração, multiplicação, divisão e potenciação) com números racionais"]
+            },
+            # Geografia
+            {
+                "codigo": "EF06GE01",
+                "descricao": "Comparar modificações das paisagens nos lugares de vivência e os usos desses lugares em diferentes tempos.",
+                "etapa": "ensino_fundamental",
+                "anos": ["6"],
+                "area_conhecimento": "ciencias_humanas",
+                "componente": "geografia",
+                "competencias_gerais": [1, 2, 7],
+                "competencias_especificas": ["EFGE01"],
+                "objetos_conhecimento": ["Identidade sociocultural", "Relações entre os componentes físico-naturais"]
+            },
+            # História
+            {
+                "codigo": "EF06HI01",
+                "descricao": "Identificar diferentes formas de compreensão da noção de tempo e de periodização dos processos históricos (continuidades e rupturas).",
+                "etapa": "ensino_fundamental",
+                "anos": ["6"],
+                "area_conhecimento": "ciencias_humanas",
+                "componente": "historia",
+                "competencias_gerais": [1, 2, 3],
+                "competencias_especificas": ["EFHI01"],
+                "objetos_conhecimento": ["A questão do tempo, sincronias e diacronias: reflexões sobre o sentido das cronologias"]
+            },
+            # Arte
+            {
+                "codigo": "EF15AR01",
+                "descricao": "Identificar e apreciar formas distintas das artes visuais tradicionais e contemporâneas, cultivando a percepção, o imaginário, a capacidade de simbolizar e o repertório imagético.",
+                "etapa": "ensino_fundamental",
+                "anos": ["1", "2", "3", "4", "5"],
+                "area_conhecimento": "linguagens",
+                "componente": "arte",
+                "competencias_gerais": [1, 3, 4],
+                "competencias_especificas": ["EFAR01"],
+                "objetos_conhecimento": ["Contextos e práticas", "Elementos da linguagem", "Materialidades"]
+            },
+            # Língua Inglesa
+            {
+                "codigo": "EF06LI01",
+                "descricao": "Interagir em situações de intercâmbio oral, demonstrando iniciativa para utilizar a língua inglesa.",
+                "etapa": "ensino_fundamental",
+                "anos": ["6"],
+                "area_conhecimento": "linguagens",
+                "componente": "lingua_inglesa",
+                "competencias_gerais": [4, 5, 9],
+                "competencias_especificas": ["EFLI01"],
+                "objetos_conhecimento": ["Interação discursiva", "Funções e usos da língua inglesa"]
+            }
+        ]
+        
+        # Add additional competências específicas
+        additional_competencias_especificas = [
+            {
+                "codigo": "EFGE01",
+                "numero": 1,
+                "area_conhecimento": "ciencias_humanas",
+                "componente": "geografia",
+                "etapa": "ensino_fundamental",
+                "descricao": "Utilizar os conhecimentos geográficos para entender a interação sociedade/natureza e exercitar o interesse e o espírito de investigação e de resolução de problemas."
+            },
+            {
+                "codigo": "EFHI01", 
+                "numero": 1,
+                "area_conhecimento": "ciencias_humanas",
+                "componente": "historia",
+                "etapa": "ensino_fundamental",
+                "descricao": "Compreender acontecimentos históricos, relações de poder e processos e mecanismos de transformação e manutenção das estruturas sociais, políticas, econômicas e culturais ao longo do tempo e em diferentes espaços para analisar, posicionar-se e intervir no mundo contemporâneo."
+            },
+            {
+                "codigo": "EFAR01",
+                "numero": 1,
+                "area_conhecimento": "linguagens", 
+                "componente": "arte",
+                "etapa": "ensino_fundamental",
+                "descricao": "Compreender as relações entre as linguagens da Arte e suas práticas integradas, inclusive aquelas possibilitadas pelo uso das novas tecnologias de informação e comunicação, pelo cinema e pelo audiovisual, nas condições particulares de produção, na prática de cada linguagem e nas suas articulações."
+            },
+            {
+                "codigo": "EFLI01",
+                "numero": 1,
+                "area_conhecimento": "linguagens",
+                "componente": "lingua_inglesa", 
+                "etapa": "ensino_fundamental",
+                "descricao": "Assumir o inglês como língua franca, reconhecendo que se trata de uma língua que se materializa em usos híbridos e marcada pela fluidez e que se encontra sempre em processo de construção."
+            }
+        ]
+        
+        # Extend the data
+        self.data["habilidades"].extend(additional_habilidades)
+        self.data["competencias_especificas"].extend(additional_competencias_especificas)
+        
+        logger.info(f"Enhanced data: {len(self.data['habilidades'])} habilidades, "
                    f"{len(self.data['competencias_gerais'])} competências gerais, "
                    f"{len(self.data['competencias_especificas'])} competências específicas")
     
@@ -284,15 +413,40 @@ class BNCCExtractor:
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description="Extract BNCC data from PDF")
-    parser.add_argument("--pdf", default="./data/bncc.pdf", help="Path to BNCC PDF file")
+    parser.add_argument("--pdf", default=None, help="Path to BNCC PDF file (optional, will auto-detect)")
     parser.add_argument("--output", default="./data/bncc_completa.json", help="Output JSON file path")
     parser.add_argument("--validate", action="store_true", help="Validate extracted data")
     
     args = parser.parse_args()
     
     try:
+        # Auto-detect PDF files if not specified
+        pdf_files = []
+        if args.pdf:
+            pdf_files = [args.pdf]
+        else:
+            # Look for BNCC PDF files in data directory
+            data_dir = Path("./data")
+            potential_files = [
+                "bncc_ensino_fundamental.pdf",
+                "bncc_ensino_medio.pdf", 
+                "bncc.pdf",
+                "bncc_completa.pdf"
+            ]
+            
+            for filename in potential_files:
+                pdf_path = data_dir / filename
+                if pdf_path.exists():
+                    pdf_files.append(str(pdf_path))
+            
+            if not pdf_files:
+                logger.warning("No BNCC PDF files found, will generate sample data")
+                pdf_files = ["./data/bncc_not_found.pdf"]  # Will trigger sample data generation
+        
+        logger.info(f"Processing PDFs: {pdf_files}")
+        
         # Create extractor
-        extractor = BNCCExtractor(args.pdf, args.output)
+        extractor = BNCCExtractor(pdf_files, args.output)
         
         # Extract data
         extractor.extract_data()
