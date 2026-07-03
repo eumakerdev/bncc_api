@@ -40,7 +40,10 @@ ENV/
 Thumbs.db
 
 # Data Files
-/data/
+# Ignora o CONTEUDO de data/ (nao o diretorio): so assim a negacao abaixo
+# consegue re-incluir o snapshot (o git nao re-inclui arquivo sob diretorio
+# excluido — usar `/data/*`, nao `/data/`).
+/data/*
 !/data/.gitkeep
 # Snapshot versionado da BNCC é parte do produto (dados oficiais, read-only)
 !/data/bncc_v1.json
