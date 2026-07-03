@@ -2,24 +2,30 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Dependências de sistema (compilação de wheels de ML: sentence-transformers etc.)
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Cache do HuggingFace dentro da imagem: o modelo de embeddings é baixado no
+# build e reutilizado em runtime (sem download no cold start do Cloud Run).
+ENV HF_HOME=/app/.cache/huggingface \
+    PYTHONUNBUFFERED=1
+
+# Dependências Python primeiro (camada cacheável)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Código da aplicação + snapshot oficial da BNCC (data/bncc_v1.json)
 COPY . .
 
-# Create data directory
-RUN mkdir -p /app/data
+# Embeddings "assados" na imagem: derivados não-oficiais (Princípio IV/VII) do
+# snapshot versionado, gerados de forma determinística no build. O filesystem do
+# Cloud Run é efêmero/read-only, então o índice ChromaDB precisa vir pronto.
+RUN mkdir -p /app/data \
+    && python scripts/generate_embeddings.py --reset
 
-# Expose port
-EXPOSE 8000
-
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# O Cloud Run injeta a porta em $PORT (default 8080); localmente cai para 8000.
+EXPOSE 8080
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

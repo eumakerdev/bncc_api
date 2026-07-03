@@ -1,0 +1,42 @@
+# Controla o que sobe para o Cloud Build (`gcloud builds submit`).
+# Quando este arquivo existe, o gcloud o usa NO LUGAR do .gitignore.
+#
+# IMPORTANTE: NAO excluimos `data/` inteiro. O snapshot oficial
+# `data/bncc_v1.json` PRECISA subir — o build gera os embeddings a partir dele.
+# (No .gitignore, a regra `/data/` impede a negacao de re-incluir o arquivo; por
+# isso este arquivo dedicado, que exclui apenas o que nao deve ir.)
+
+.git/
+.github/
+.gitignore
+
+# Ambientes / caches locais
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Segredos e specs (nao vao para a imagem)
+.env
+specs/
+.specify/
+.claude/
+
+# Dentro de data/: manter apenas bncc_v1.json; excluir DBs, vetores e PDFs grandes
+data/*.db
+data/*.db-*
+data/chromadb/
+data/*.pdf
+
+# Diversos
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db

@@ -54,3 +54,21 @@ def test_development_tolerates_permissive_defaults():
         ALLOWED_HOSTS=["*"],
     )
     assert not settings.is_production
+
+
+def test_db_password_injected_into_url_placeholder():
+    """A senha (secret) substitui o placeholder — nunca em texto plano no env."""
+    settings = Settings(
+        _env_file=None,
+        DATABASE_URL="postgresql+asyncpg://u:__DB_PASSWORD__@/db?host=/cloudsql/x",
+        DB_PASSWORD="s3nh@/forte",
+    )
+    assert "__DB_PASSWORD__" not in settings.DATABASE_URL
+    # caracteres especiais são url-encoded (/ e @ não quebram a URL)
+    assert "s3nh%40%2Fforte" in settings.DATABASE_URL
+
+
+def test_db_password_absent_leaves_url_untouched():
+    url = "sqlite+aiosqlite:///./data/platform.db"
+    settings = Settings(_env_file=None, DATABASE_URL=url)
+    assert settings.DATABASE_URL == url

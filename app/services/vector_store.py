@@ -25,6 +25,18 @@ logger = logging.getLogger(__name__)
 COLLECTION_NAME = "bncc_documents"
 
 
+def _coerce_meta(meta: dict[str, Any]) -> dict[str, Any]:
+    """
+    Sanitiza metadados para o ChromaDB, que aceita apenas str/int/float/bool.
+
+    Campos presentes-porem-None no snapshot (ex.: `etapa`, `area_conhecimento`)
+    viram string vazia. `dict.get(k, "")` nao basta: seu default so vale quando a
+    chave esta ausente, nao quando o valor e None. Determinismo/fidelidade
+    (Principio IV): a coercao e estavel e nao altera o texto oficial.
+    """
+    return {k: ("" if v is None else v) for k, v in meta.items()}
+
+
 class VectorStoreService:
     """
     Recuperacao semantica sobre o snapshot da BNCC.
@@ -115,7 +127,13 @@ class VectorStoreService:
         )
         self.collection = self.client.get_or_create_collection(
             name=COLLECTION_NAME,
-            metadata={"description": "BNCC habilidades e competencias (derivado nao-oficial)"},
+            # `hnsw:space=cosine`: search() calcula `similarity = 1 - distance`,
+            # valido apenas para distancia coseno. Sem isto o ChromaDB usa L2
+            # (padrao) e a similaridade fica incorreta (nada passa no limiar).
+            metadata={
+                "description": "BNCC habilidades e competencias (derivado nao-oficial)",
+                "hnsw:space": "cosine",
+            },
         )
 
     async def cleanup(self) -> None:
@@ -232,28 +250,32 @@ class VectorStoreService:
                 text += " Objetos de conhecimento: " + ", ".join(objetos)
             documents.append(text)
             metadatas.append(
-                {
-                    "tipo": "habilidade",
-                    "codigo": hab["codigo"],
-                    "etapa": hab.get("etapa", ""),
-                    "area_conhecimento": hab.get("area_conhecimento", ""),
-                    "componente": hab.get("componente", ""),
-                    "oficial": False,
-                }
+                _coerce_meta(
+                    {
+                        "tipo": "habilidade",
+                        "codigo": hab["codigo"],
+                        "etapa": hab.get("etapa", ""),
+                        "area_conhecimento": hab.get("area_conhecimento", ""),
+                        "componente": hab.get("componente", ""),
+                        "oficial": False,
+                    }
+                )
             )
             ids.append(f"hab_{hab['codigo']}")
 
         for comp in self.bncc_data.get("competencias_especificas", []):
             documents.append(f"{comp['codigo']}: {comp['descricao']}")
             metadatas.append(
-                {
-                    "tipo": "competencia_especifica",
-                    "codigo": comp["codigo"],
-                    "etapa": comp.get("etapa", ""),
-                    "area_conhecimento": comp.get("area_conhecimento", ""),
-                    "componente": comp.get("componente", ""),
-                    "oficial": False,
-                }
+                _coerce_meta(
+                    {
+                        "tipo": "competencia_especifica",
+                        "codigo": comp["codigo"],
+                        "etapa": comp.get("etapa", ""),
+                        "area_conhecimento": comp.get("area_conhecimento", ""),
+                        "componente": comp.get("componente", ""),
+                        "oficial": False,
+                    }
+                )
             )
             ids.append(f"comp_{comp['codigo']}")
 

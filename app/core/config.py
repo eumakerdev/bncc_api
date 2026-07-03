@@ -7,6 +7,8 @@ se SECRET_KEY for placeholder/ausente ou se ALLOWED_HOSTS contiver "*".
 """
 
 
+from urllib.parse import quote
+
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -37,6 +39,10 @@ class Settings(BaseSettings):
 
     # --- Banco da plataforma ---
     DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./data/platform.db")
+    # Senha do banco injetada via secret (Cloud SQL / produção). Quando definida,
+    # substitui o placeholder literal `__DB_PASSWORD__` em DATABASE_URL. Assim a
+    # senha nunca trafega em texto plano na variável de ambiente (Princípio V).
+    DB_PASSWORD: str = Field(default="")
 
     # --- Dados oficiais da BNCC (snapshot versionado, read-only) ---
     BNCC_DATA_PATH: str = Field(default="./data/bncc_v1.json")
@@ -62,9 +68,14 @@ class Settings(BaseSettings):
     # --- IA / Busca semântica (opcional; degrada graciosamente) ---
     OPENAI_API_KEY: str = Field(default="")
     GOOGLE_API_KEY: str = Field(default="")
-    EMBEDDING_MODEL: str = Field(default="sentence-transformers/all-MiniLM-L6-v2")
+    # Modelo multilíngue: a BNCC é em português; modelos só-inglês (all-MiniLM)
+    # casam componentes curriculares errados. Este modelo retorna os corretos.
+    EMBEDDING_MODEL: str = Field(
+        default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    )
     LLM_MODEL: str = Field(default="gpt-3.5-turbo")
-    SIMILARITY_THRESHOLD: float = Field(default=0.70)
+    # Calibrado para o modelo multilíngue: acertos relevantes pontuam ~0,50–0,72.
+    SIMILARITY_THRESHOLD: float = Field(default=0.45)
     MAX_SEARCH_RESULTS: int = Field(default=10)
     AI_REQUEST_TIMEOUT_SECONDS: int = Field(default=15)
     AI_MAX_OUTPUT_TOKENS: int = Field(default=800)
@@ -80,6 +91,15 @@ class Settings(BaseSettings):
         if isinstance(v, str) and not v.strip().startswith("["):
             return [item.strip() for item in v.split(",") if item.strip()]
         return v
+
+    @model_validator(mode="after")
+    def _inject_db_password(self) -> "Settings":
+        """Injeta a senha do banco (secret) no placeholder de DATABASE_URL."""
+        if self.DB_PASSWORD and "__DB_PASSWORD__" in self.DATABASE_URL:
+            self.DATABASE_URL = self.DATABASE_URL.replace(
+                "__DB_PASSWORD__", quote(self.DB_PASSWORD, safe="")
+            )
+        return self
 
     @model_validator(mode="after")
     def _enforce_production_security(self) -> "Settings":
