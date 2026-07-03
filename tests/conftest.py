@@ -21,13 +21,12 @@ os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_TMP_DB.as_posix()}"
 os.environ.setdefault("EMAIL_BACKEND", "console")
 
 import pytest_asyncio  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-from httpx import ASGITransport, AsyncClient  # noqa: E402
-
 from app.core.security import generate_api_key, hash_password  # noqa: E402
 from app.db.base import async_session_factory, engine  # noqa: E402
 from app.db.tables import ApiKey, ApiKeyStatus, DeveloperAccount  # noqa: E402
 from app.main import app  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from httpx import ASGITransport, AsyncClient  # noqa: E402
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -38,6 +37,16 @@ async def _prepare_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiters():
+    """Zera os limitadores in-process (globais de módulo) entre testes."""
+    from app.core.deps import ai_limiter, deterministic_limiter
+
+    deterministic_limiter.reset()
+    ai_limiter.reset()
     yield
 
 

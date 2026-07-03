@@ -64,4 +64,19 @@ async def readiness() -> dict:
     except Exception:  # pragma: no cover
         components["bncc_snapshot"] = "error"
 
+    # Camada de IA (ChromaDB/embeddings) — OPCIONAL (Princípio VII): sua
+    # indisponibilidade é reportada mas NÃO torna o serviço "not_ready", pois os
+    # endpoints determinísticos permanecem 100% funcionais (T064 distingue
+    # "IA indisponível" de "serviço fora"; SC-009).
+    try:
+        from app.main import app as _app
+
+        vector = getattr(_app.state, "vector_service", None)
+        if vector is not None and getattr(vector, "available", False):
+            components["ai"] = "available"
+        else:
+            components["ai"] = "unavailable"  # degrada graciosamente
+    except Exception:  # pragma: no cover
+        components["ai"] = "unavailable"
+
     return {"status": "ready" if ready else "not_ready", "components": components}
