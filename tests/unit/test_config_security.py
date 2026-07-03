@@ -6,9 +6,8 @@ ALLOWED_HOSTS contendo "*". Fora de produção, defaults permissivos são tolera
 """
 
 import pytest
-from pydantic import ValidationError
-
 from app.core.config import Settings
+from pydantic import ValidationError
 
 
 def _make(**overrides):

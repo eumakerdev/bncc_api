@@ -35,14 +35,14 @@ def _wire() -> None:
     for module_name, prefix, tags in _ROUTES:
         try:
             module = importlib.import_module(f"app.api.v1.endpoints.{module_name}")
-            router = getattr(module, "router")
+            router = module.router
         except Exception as e:  # módulo ainda não pronto ou dep ausente → pula
             logger.info("Router '%s' não incluído (%s)", module_name, type(e).__name__)
             continue
-        kwargs = {"tags": tags}
         if prefix:
-            kwargs["prefix"] = prefix
-        api_router.include_router(router, **kwargs)
+            api_router.include_router(router, prefix=prefix, tags=tags)
+        else:
+            api_router.include_router(router, tags=tags)
 
 
 _wire()

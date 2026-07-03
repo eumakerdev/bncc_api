@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 from passlib.context import CryptContext
@@ -48,18 +48,16 @@ def verify_password(password: str, password_hash: str) -> bool:
 # --------------------------------------------------------------------------- #
 # JWT de sessão do portal
 # --------------------------------------------------------------------------- #
-def create_access_token(
-    subject: str, expires_minutes: Optional[int] = None, **claims: Any
-) -> str:
+def create_access_token(subject: str, expires_minutes: int | None = None, **claims: Any) -> str:
     """Cria um JWT assinado com SECRET_KEY para a sessão do portal."""
-    expire = datetime.now(timezone.utc) + timedelta(
+    expire = datetime.now(UTC) + timedelta(
         minutes=expires_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     payload: dict[str, Any] = {"sub": subject, "exp": expire, **claims}
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=_JWT_ALGORITHM)
 
 
-def decode_access_token(token: str) -> Optional[dict[str, Any]]:
+def decode_access_token(token: str) -> dict[str, Any] | None:
     """Decodifica/valida o JWT. Retorna o payload ou None se inválido/expirado."""
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[_JWT_ALGORITHM])

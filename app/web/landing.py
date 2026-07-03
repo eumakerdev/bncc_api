@@ -26,7 +26,7 @@ _PUBLIC_PATHS = [
 
 
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def landing(request: Request) -> HTMLResponse:
+async def landing(request: Request) -> Response:
     """Landing page: proposta de valor, recursos, público-alvo e CTA (SC-008)."""
     return templates.TemplateResponse("landing.html", {"request": request})
 

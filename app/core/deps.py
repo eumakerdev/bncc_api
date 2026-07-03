@@ -9,8 +9,8 @@ de US1 (a auth real chega em US2).
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Annotated, Optional
+from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -36,9 +36,7 @@ deterministic_limiter = SlidingWindowLimiter(
     window_seconds=60,
     burst=settings.RATE_LIMIT_DETERMINISTIC_BURST,
 )
-ai_limiter = SlidingWindowLimiter(
-    max_requests=settings.RATE_LIMIT_AI_PER_MIN, window_seconds=60
-)
+ai_limiter = SlidingWindowLimiter(max_requests=settings.RATE_LIMIT_AI_PER_MIN, window_seconds=60)
 
 
 # --------------------------------------------------------------------------- #
@@ -69,13 +67,11 @@ _session_bearer = HTTPBearer(auto_error=False)
 
 async def get_current_account(
     session: SessionDep,
-    credentials: Annotated[
-        Optional[HTTPAuthorizationCredentials], Depends(_session_bearer)
-    ] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_session_bearer)] = None,
     request: Request = None,  # type: ignore[assignment]
 ) -> DeveloperAccount:
     """Resolve a conta do desenvolvedor a partir do JWT de sessão (header ou cookie)."""
-    token: Optional[str] = None
+    token: str | None = None
     if credentials is not None:
         token = credentials.credentials
     elif request is not None:
@@ -119,9 +115,7 @@ _api_key_bearer = HTTPBearer(auto_error=False)
 
 async def require_api_key(
     session: SessionDep,
-    credentials: Annotated[
-        Optional[HTTPAuthorizationCredentials], Depends(_api_key_bearer)
-    ] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_api_key_bearer)] = None,
 ) -> ApiKey:
     """
     Autentica a requisição por API key (Authorization: Bearer <key>).
@@ -143,7 +137,7 @@ async def require_api_key(
             detail="API key inválida ou revogada.",
         )
 
-    api_key.last_used_at = datetime.now(timezone.utc)
+    api_key.last_used_at = datetime.now(UTC)
     return api_key
 
 

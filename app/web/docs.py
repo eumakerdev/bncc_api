@@ -11,7 +11,7 @@ são gerados automaticamente a partir do mesmo contrato OpenAPI (FR-013/FR-015).
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import HTMLResponse
 
 from app.web.router import templates
@@ -20,6 +20,6 @@ router = APIRouter()
 
 
 @router.get("/guia", response_class=HTMLResponse, include_in_schema=False)
-async def guia(request: Request) -> HTMLResponse:
+async def guia(request: Request) -> Response:
     """Página de documentação: guia de início rápido + link ao Swagger/ReDoc."""
     return templates.TemplateResponse("docs.html", {"request": request})

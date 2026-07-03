@@ -6,7 +6,6 @@ em produção. Em ENVIRONMENT=production a aplicação FALHA RÁPIDO na iniciali
 se SECRET_KEY for placeholder/ausente ou se ALLOWED_HOSTS contiver "*".
 """
 
-from typing import List
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,9 +22,7 @@ INSECURE_SECRET_PLACEHOLDERS = {
 class Settings(BaseSettings):
     """Application settings carregadas de ambiente / arquivo .env."""
 
-    model_config = SettingsConfigDict(
-        env_file=".env", case_sensitive=True, extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
     # --- Ambiente ---
     ENVIRONMENT: str = Field(default="development", description="development | production")
@@ -36,7 +33,7 @@ class Settings(BaseSettings):
     # --- Segurança ---
     SECRET_KEY: str = Field(default="change-me-dev-only-not-for-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
-    ALLOWED_HOSTS: List[str] = Field(default=["*"])
+    ALLOWED_HOSTS: list[str] = Field(default=["*"])
 
     # --- Banco da plataforma ---
     DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./data/platform.db")
@@ -48,9 +45,7 @@ class Settings(BaseSettings):
     # --- E-mail ---
     EMAIL_BACKEND: str = Field(default="console", description="console | smtp")
     EMAIL_FROM: str = Field(default="no-reply@bncc.example.com")
-    EMAIL_VERIFICATION_BASE_URL: str = Field(
-        default="http://localhost:8000/portal/verify-email"
-    )
+    EMAIL_VERIFICATION_BASE_URL: str = Field(default="http://localhost:8000/portal/verify-email")
     EMAIL_TOKEN_EXPIRE_MINUTES: int = Field(default=1440)
     SMTP_HOST: str = Field(default="")
     SMTP_PORT: int = Field(default=587)
@@ -92,18 +87,15 @@ class Settings(BaseSettings):
         if not self.is_production:
             return self
 
-        errors: List[str] = []
+        errors: list[str] = []
         if self.SECRET_KEY in INSECURE_SECRET_PLACEHOLDERS or len(self.SECRET_KEY) < 32:
-            errors.append(
-                "SECRET_KEY ausente, placeholder ou fraca (mínimo 32 chars) em produção"
-            )
+            errors.append("SECRET_KEY ausente, placeholder ou fraca (mínimo 32 chars) em produção")
         if "*" in self.ALLOWED_HOSTS:
             errors.append('ALLOWED_HOSTS não pode conter "*" em produção')
 
         if errors:
             raise ValueError(
-                "Configuração insegura bloqueada (Princípio V / FR-023): "
-                + "; ".join(errors)
+                "Configuração insegura bloqueada (Princípio V / FR-023): " + "; ".join(errors)
             )
         return self
 

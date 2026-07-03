@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
@@ -30,7 +30,7 @@ def _uuid() -> str:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class ApiKeyStatus(str, enum.Enum):
@@ -55,10 +55,10 @@ class DeveloperAccount(Base):
         DateTime(timezone=True), default=_now, onupdate=_now
     )
 
-    api_keys: Mapped[list["ApiKey"]] = relationship(
+    api_keys: Mapped[list[ApiKey]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )
-    verification_tokens: Mapped[list["EmailVerificationToken"]] = relationship(
+    verification_tokens: Mapped[list[EmailVerificationToken]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )
 
@@ -75,7 +75,7 @@ class EmailVerificationToken(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    account: Mapped["DeveloperAccount"] = relationship(back_populates="verification_tokens")
+    account: Mapped[DeveloperAccount] = relationship(back_populates="verification_tokens")
 
 
 class ApiKey(Base):
@@ -92,13 +92,11 @@ class ApiKey(Base):
         Enum(ApiKeyStatus), default=ApiKeyStatus.active, nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
-    last_used_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    account: Mapped["DeveloperAccount"] = relationship(back_populates="api_keys")
-    usage_records: Mapped[list["UsageRecord"]] = relationship(
+    account: Mapped[DeveloperAccount] = relationship(back_populates="api_keys")
+    usage_records: Mapped[list[UsageRecord]] = relationship(
         back_populates="api_key", cascade="all, delete-orphan"
     )
 
@@ -117,4 +115,4 @@ class UsageRecord(Base):
     window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    api_key: Mapped["ApiKey"] = relationship(back_populates="usage_records")
+    api_key: Mapped[ApiKey] = relationship(back_populates="usage_records")

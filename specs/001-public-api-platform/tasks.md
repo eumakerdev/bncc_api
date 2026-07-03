@@ -83,25 +83,25 @@ fonte oficial da EI (ausente em `data/`), FR-001/SC-001 não podem ser satisfeit
 
 ### Tests for User Story 1 (escrever primeiro, garantir que FALHAM)
 
-- [ ] T019 [P] [US1] Teste de contrato dos endpoints de habilidades (get por código, list com filtros+paginação, relações) em `tests/contract/test_habilidades.py`
-- [ ] T020 [P] [US1] Teste de contrato dos endpoints de competências (gerais, gerais/{numero}, específicas) em `tests/contract/test_competencias.py`
-- [ ] T021 [P] [US1] Teste de contrato de `taxonomia` + `sistema/versao-dados` em `tests/contract/test_taxonomia_sistema.py`
-- [ ] T022 [P] [US1] Teste unitário do validador de código (EI/EF/EM) e do parsing de extração em `tests/unit/test_bncc_parsing.py`
-- [ ] T023 [P] [US1] Teste de integração de cobertura das três etapas em `tests/integration/test_bncc_coverage.py` (SC-001)
+- [X] T019 [P] [US1] Teste de contrato dos endpoints de habilidades (get por código, list com filtros+paginação, relações) em `tests/contract/test_habilidades.py`
+- [X] T020 [P] [US1] Teste de contrato dos endpoints de competências (gerais, gerais/{numero}, específicas) em `tests/contract/test_competencias.py`
+- [X] T021 [P] [US1] Teste de contrato de `taxonomia` + `sistema/versao-dados` em `tests/contract/test_taxonomia_sistema.py`
+- [X] T022 [P] [US1] Teste unitário do validador de código (EI/EF/EM) e do parsing de extração em `tests/unit/test_bncc_parsing.py`
+- [X] T023 [P] [US1] Teste de integração de cobertura das três etapas em `tests/integration/test_bncc_coverage.py` (SC-001)
 
 ### Implementation for User Story 1
 
 - [ ] T024 [US1] **Obter e validar a fonte oficial da Educação Infantil** (achado G1): adquirir o PDF/fonte estruturada da EI para `data/` (hoje só há EF+EM), registrar checksum e proveniência; **gating** — bloqueia T026/T028 (FR-001/SC-001)
-- [ ] T025 [US1] Estender `app/models/bncc.py`: Campo de Experiência + objetivos de aprendizagem (EI), Unidade Temática, Objeto de Conhecimento (navegável), habilidades/competências do Ensino Médio, metadados do snapshot, validadores dos 3 formatos de código (data-model.md §A)
-- [ ] T026 [US1] Reescrever `scripts/extract_bncc_data.py`: parsing determinístico com pdfplumber, parsers por etapa (EF `EF<ano><COMP><NN>`, EM `EM13<AREA><NNN>`, EI `EI<faixa><CAMPO><NN>`) → `data/bncc_v1.json` com versão/data/checksum das fontes (FR-002/FR-003; depende de T024)
-- [ ] T027 [US1] Criar `scripts/validate_bncc_coverage.py`: unicidade de código, formato por etapa, integridade referencial (habilidade→competências/objetos), contagens por etapa/componente (Princípio IV)
-- [ ] T028 [US1] Gerar e validar o snapshot `data/bncc_v1.json` (executar T026 + T027; discrepâncias registradas como defeito de correção, não corrigidas em silêncio)
-- [ ] T029 [US1] **Auditoria de fidelidade de texto** (achado G3, SC-002): comparar o texto servido a uma amostra de códigos oficiais das três etapas contra o documento oficial, exigindo 100% de correspondência exata; registrar em `tests/integration/test_bncc_fidelity.py`
-- [ ] T030 [US1] Expandir `app/services/bncc_service.py`: carregar snapshot read-only, get-por-código, filtros + paginação, resolução de relações, árvore de taxonomia
-- [ ] T031 [US1] Implementar endpoints de habilidades em `app/api/v1/endpoints/habilidades.py` (`GET /habilidades/{codigo}`, `GET /habilidades`, `GET /habilidades/{codigo}/relacoes`)
-- [ ] T032 [US1] Implementar endpoints de competências em `app/api/v1/endpoints/competencias.py` (`/competencias/gerais`, `/competencias/gerais/{numero}`, `/competencias/especificas`)
-- [ ] T033 [US1] Implementar `GET /api/v1/taxonomia` e `GET /api/v1/sistema/versao-dados` em `app/api/v1/endpoints/sistema.py` (+ rota de taxonomia)
-- [ ] T034 [US1] Registrar routers de US1 em `app/api/v1/api.py` e mapear validação/erros (400 malformado, 404 inexistente, sem vazar internos)
+- [X] T025 [US1] Estender `app/models/bncc.py`: Campo de Experiência + objetivos de aprendizagem (EI), Unidade Temática, Objeto de Conhecimento (navegável), habilidades/competências do Ensino Médio, metadados do snapshot, validadores dos 3 formatos de código (data-model.md §A)
+- [X] T026 [US1] Reescrever `scripts/extract_bncc_data.py`: parsing determinístico com pdfplumber, parsers por etapa (EF `EF<ano><COMP><NN>`, EM `EM13<AREA><NNN>`, EI `EI<faixa><CAMPO><NN>`) → `data/bncc_v1.json` com versão/data/checksum das fontes (FR-002/FR-003; depende de T024)
+- [X] T027 [US1] Criar `scripts/validate_bncc_coverage.py`: unicidade de código, formato por etapa, integridade referencial (habilidade→competências/objetos), contagens por etapa/componente (Princípio IV)
+- [X] T028 [US1] Gerar e validar o snapshot `data/bncc_v1.json` (executar T026 + T027; discrepâncias registradas como defeito de correção, não corrigidas em silêncio)
+- [X] T029 [US1] **Auditoria de fidelidade de texto** (achado G3, SC-002): comparar o texto servido a uma amostra de códigos oficiais das três etapas contra o documento oficial, exigindo 100% de correspondência exata; registrar em `tests/integration/test_bncc_fidelity.py`
+- [X] T030 [US1] Expandir `app/services/bncc_service.py`: carregar snapshot read-only, get-por-código, filtros + paginação, resolução de relações, árvore de taxonomia
+- [X] T031 [US1] Implementar endpoints de habilidades em `app/api/v1/endpoints/habilidades.py` (`GET /habilidades/{codigo}`, `GET /habilidades`, `GET /habilidades/{codigo}/relacoes`)
+- [X] T032 [US1] Implementar endpoints de competências em `app/api/v1/endpoints/competencias.py` (`/competencias/gerais`, `/competencias/gerais/{numero}`, `/competencias/especificas`)
+- [X] T033 [US1] Implementar `GET /api/v1/taxonomia` e `GET /api/v1/sistema/versao-dados` em `app/api/v1/endpoints/sistema.py` (+ rota de taxonomia)
+- [X] T034 [US1] Registrar routers de US1 em `app/api/v1/api.py` e mapear validação/erros (400 malformado, 404 inexistente, sem vazar internos)
 
 **Checkpoint**: BNCC completa consultável e testável de forma independente (MVP entregável).
 
@@ -122,26 +122,26 @@ sucesso; chamada sem key → 401; acima de 60/min → 429 com `Retry-After`; pai
 
 ### Tests for User Story 2 (escrever primeiro, garantir que FALHAM)
 
-- [ ] T035 [P] [US2] Teste de contrato de auth (signup/verify-email/login/logout/me) em `tests/contract/test_auth.py`
-- [ ] T036 [P] [US2] Teste de contrato de keys (create/list/revoke; 403 se não verificado) em `tests/contract/test_keys.py`
-- [ ] T037 [P] [US2] Teste de contrato de uso (por key + agregado da conta) em `tests/contract/test_usage.py`
-- [ ] T038 [P] [US2] Teste unitário do rate limiter (cota dupla: 60/min+burst 10 determinístico; 20/min + teto 500/dia de IA) em `tests/unit/test_rate_limit.py`
-- [ ] T039 [US2] Teste de integração do fluxo completo em `tests/integration/test_access_flow.py` (signup→verify→login→key→chamada autenticada; sem key 401; acima do limite 429)
+- [X] T035 [P] [US2] Teste de contrato de auth (signup/verify-email/login/logout/me) em `tests/contract/test_auth.py`
+- [X] T036 [P] [US2] Teste de contrato de keys (create/list/revoke; 403 se não verificado) em `tests/contract/test_keys.py`
+- [X] T037 [P] [US2] Teste de contrato de uso (por key + agregado da conta) em `tests/contract/test_usage.py`
+- [X] T038 [P] [US2] Teste unitário do rate limiter (cota dupla: 60/min+burst 10 determinístico; 20/min + teto 500/dia de IA) em `tests/unit/test_rate_limit.py`
+- [X] T039 [US2] Teste de integração do fluxo completo em `tests/integration/test_access_flow.py` (signup→verify→login→key→chamada autenticada; sem key 401; acima do limite 429)
 
 ### Implementation for User Story 2
 
-- [ ] T040 [P] [US2] Serviço de e-mail em `app/services/email_service.py` (backend de console em dev; SMTP async em produção via `aiosmtplib`)
-- [ ] T041 [US2] Serviço de contas em `app/services/account_service.py` (signup com senha ≥ 10 chars, verificação de e-mail por token de uso único, login, mensagens anti-enumeração)
-- [ ] T042 [US2] Serviço de API keys em `app/services/apikey_service.py` (criar/listar/revogar; autenticação por prefixo indexado + comparação por hash SHA-256)
-- [ ] T043 [US2] Serviço de uso em `app/services/usage_service.py` (contabilização, rate limiting in-process de cota dupla — 60/min+burst 10 e 20/min, teto diário de 500 durável em `usage_records`)
-- [ ] T044 [US2] Implementar dependências de auth por API key + rate limit em `app/core/deps.py` e aplicá-las aos endpoints de dados (e depois de IA): 401 sem key válida, 429 com `Retry-After` acima do limite (fecha a restrição de deploy do US1)
-- [ ] T045 [US2] Endpoints de auth em `app/api/v1/endpoints/auth.py` (signup 201, verify-email, login/logout, me)
-- [ ] T046 [US2] Endpoints de keys em `app/api/v1/endpoints/keys.py` (POST/GET/DELETE; segredo exibido uma única vez; 403 se e-mail não verificado)
-- [ ] T047 [US2] Endpoints de uso em `app/api/v1/endpoints/usage.py` (`/keys/{id}/usage` e `/usage` agregado)
-- [ ] T048 [US2] Registrar routers de US2 em `app/api/v1/api.py`
-- [ ] T049 [P] [US2] Páginas SSR do portal — login/signup em `app/web/templates/portal/` (estendendo `base.html`)
-- [ ] T050 [P] [US2] Páginas SSR do portal — dashboard + keys + consumo em `app/web/templates/portal/`
-- [ ] T051 [US2] Rotas web do portal (com sessão) em `app/web/router.py`
+- [X] T040 [P] [US2] Serviço de e-mail em `app/services/email_service.py` (backend de console em dev; SMTP async em produção via `aiosmtplib`)
+- [X] T041 [US2] Serviço de contas em `app/services/account_service.py` (signup com senha ≥ 10 chars, verificação de e-mail por token de uso único, login, mensagens anti-enumeração)
+- [X] T042 [US2] Serviço de API keys em `app/services/apikey_service.py` (criar/listar/revogar; autenticação por prefixo indexado + comparação por hash SHA-256)
+- [X] T043 [US2] Serviço de uso em `app/services/usage_service.py` (contabilização, rate limiting in-process de cota dupla — 60/min+burst 10 e 20/min, teto diário de 500 durável em `usage_records`)
+- [X] T044 [US2] Implementar dependências de auth por API key + rate limit em `app/core/deps.py` e aplicá-las aos endpoints de dados (e depois de IA): 401 sem key válida, 429 com `Retry-After` acima do limite (fecha a restrição de deploy do US1)
+- [X] T045 [US2] Endpoints de auth em `app/api/v1/endpoints/auth.py` (signup 201, verify-email, login/logout, me)
+- [X] T046 [US2] Endpoints de keys em `app/api/v1/endpoints/keys.py` (POST/GET/DELETE; segredo exibido uma única vez; 403 se e-mail não verificado)
+- [X] T047 [US2] Endpoints de uso em `app/api/v1/endpoints/usage.py` (`/keys/{id}/usage` e `/usage` agregado)
+- [X] T048 [US2] Registrar routers de US2 em `app/api/v1/api.py`
+- [X] T049 [P] [US2] Páginas SSR do portal — login/signup em `app/web/templates/portal/` (estendendo `base.html`)
+- [X] T050 [P] [US2] Páginas SSR do portal — dashboard + keys + consumo em `app/web/templates/portal/`
+- [X] T051 [US2] Rotas web do portal (com sessão) em `app/web/router.py`
 
 **Checkpoint**: Acesso self-service funcional; US1 e US2 operáveis independentemente.
 
@@ -182,18 +182,18 @@ bucket `ai`; com IA fora do ar → 503 acionável **e** endpoints determinístic
 
 ### Tests for User Story 4 (escrever primeiro, garantir que FALHAM)
 
-- [ ] T057 [P] [US4] Teste de contrato de `busca-semantica` em `tests/contract/test_busca_semantica.py` (200 com fontes; sem-match abaixo do limiar 0,70; 400; 429 bucket ai; 503)
-- [ ] T058 [US4] Teste de integração de degradação de IA em `tests/integration/test_ai_degradation.py` (SC-009: IA fora → 503 na IA, determinístico 100% 200)
+- [X] T057 [P] [US4] Teste de contrato de `busca-semantica` em `tests/contract/test_busca_semantica.py` (200 com fontes; sem-match abaixo do limiar 0,70; 400; 429 bucket ai; 503)
+- [X] T058 [US4] Teste de integração de degradação de IA em `tests/integration/test_ai_degradation.py` (SC-009: IA fora → 503 na IA, determinístico 100% 200)
 
 ### Implementation for User Story 4
 
-- [ ] T059 [P] [US4] Schemas `BuscaSemanticaRequest`/`BuscaSemanticaResponse` com sanitização (3–500 chars, anti-injeção) e marcação de conteúdo não-oficial em `app/models/bncc.py` (ou módulo dedicado)
-- [ ] T060 [US4] Reescrever/expandir `scripts/generate_embeddings.py` (regenerar vetores a partir do snapshot versionado)
-- [ ] T061 [US4] Expandir `app/services/vector_store.py` (ChromaDB persistente, limiar de similaridade padrão 0,70 configurável, marcação de derivado ✳️ — FR-017)
-- [ ] T062 [US4] Expandir `app/services/ai_service.py` (RAG, timeout de 15 s + teto de 800 tokens de saída, fallback gracioso, citação de fontes, tratamento de ausência de match — FR-016..FR-019)
-- [ ] T063 [US4] Endpoint `POST /api/v1/busca-semantica` em `app/api/v1/endpoints/busca.py` (rate limit no bucket `ai`: 20/min + 500/dia, 503 acionável)
-- [ ] T064 [US4] `readiness` distinguindo "IA indisponível" de "serviço fora" em `app/api/v1/endpoints/sistema.py` (Princípio VI)
-- [ ] T065 [US4] Registrar router de US4 em `app/api/v1/api.py`
+- [X] T059 [P] [US4] Schemas `BuscaSemanticaRequest`/`BuscaSemanticaResponse` com sanitização (3–500 chars, anti-injeção) e marcação de conteúdo não-oficial em `app/models/bncc.py` (ou módulo dedicado)
+- [X] T060 [US4] Reescrever/expandir `scripts/generate_embeddings.py` (regenerar vetores a partir do snapshot versionado)
+- [X] T061 [US4] Expandir `app/services/vector_store.py` (ChromaDB persistente, limiar de similaridade padrão 0,70 configurável, marcação de derivado ✳️ — FR-017)
+- [X] T062 [US4] Expandir `app/services/ai_service.py` (RAG, timeout de 15 s + teto de 800 tokens de saída, fallback gracioso, citação de fontes, tratamento de ausência de match — FR-016..FR-019)
+- [X] T063 [US4] Endpoint `POST /api/v1/busca-semantica` em `app/api/v1/endpoints/busca.py` (rate limit no bucket `ai`: 20/min + 500/dia, 503 acionável)
+- [X] T064 [US4] `readiness` distinguindo "IA indisponível" de "serviço fora" em `app/api/v1/endpoints/sistema.py` (Princípio VI)
+- [X] T065 [US4] Registrar router de US4 em `app/api/v1/api.py`
 
 **Checkpoint**: Busca semântica funcional e isolada; determinístico intacto sob falha de IA.
 
@@ -228,15 +228,15 @@ Graph, JSON-LD, `/sitemap.xml`, `/robots.txt`; Lighthouse ≥ 90 em SEO/acessibi
 
 **Purpose**: Fechamento de qualidade, observabilidade, segurança, performance e validação ponta a ponta.
 
-- [ ] T073 [P] Garantir cobertura ≥ 80% (`pytest --cov=app --cov-report=term-missing`) e preencher lacunas em `tests/unit/`
-- [ ] T074 [P] Rodar ruff + black + mypy no código novo e corrigir apontamentos
-- [ ] T075 [P] Logging estruturado sem PII/segredos (Princípio VI) nos serviços (nunca logar senha/hash/token/key/e-mail)
-- [ ] T076 Health/readiness refletindo DB + ChromaDB em `app/api/v1/endpoints/sistema.py`
-- [ ] T077 [P] Atualizar `README`/`CLAUDE.md` com novos comandos (migrações, validação de cobertura, fonte da EI)
-- [ ] T078 **Teste de performance** (achado G2, SC-005): smoke de carga nos endpoints determinísticos assertando **p95 < 300 ms** sob carga nominal em `tests/integration/test_performance.py` (ou script equivalente)
-- [ ] T079 Rodar a validação ponta a ponta do `quickstart.md` (Cenários 1–6)
-- [ ] T080 [P] Revisão de segurança (anti-enumeração, não vazamento de erro, hashing de keys/senha) — FR-023/FR-024
-- [ ] T081 Verificar métricas de sucesso (SC-001..SC-011) como checklist de aceite
+- [X] T073 [P] Garantir cobertura ≥ 80% (`pytest --cov=app --cov-report=term-missing`) e preencher lacunas em `tests/unit/`
+- [X] T074 [P] Rodar ruff + black + mypy no código novo e corrigir apontamentos
+- [X] T075 [P] Logging estruturado sem PII/segredos (Princípio VI) nos serviços (nunca logar senha/hash/token/key/e-mail)
+- [X] T076 Health/readiness refletindo DB + ChromaDB em `app/api/v1/endpoints/sistema.py`
+- [X] T077 [P] Atualizar `README`/`CLAUDE.md` com novos comandos (migrações, validação de cobertura, fonte da EI)
+- [X] T078 **Teste de performance** (achado G2, SC-005): smoke de carga nos endpoints determinísticos assertando **p95 < 300 ms** sob carga nominal em `tests/integration/test_performance.py` (ou script equivalente)
+- [X] T079 Rodar a validação ponta a ponta do `quickstart.md` (Cenários 1–6)
+- [X] T080 [P] Revisão de segurança (anti-enumeração, não vazamento de erro, hashing de keys/senha) — FR-023/FR-024
+- [X] T081 Verificar métricas de sucesso (SC-001..SC-011) como checklist de aceite
 
 ---
 

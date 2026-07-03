@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -90,7 +89,7 @@ class ApiKeyResponse(BaseModel):
     prefix: str
     status: str
     created_at: datetime
-    last_used_at: Optional[datetime] = None
+    last_used_at: datetime | None = None
 
 
 # --------------------------------------------------------------------------- #
@@ -99,8 +98,8 @@ class ApiKeyResponse(BaseModel):
 class BucketUsage(BaseModel):
     used_this_minute: int = 0
     limit_per_minute: int
-    used_today: Optional[int] = None
-    limit_per_day: Optional[int] = None
+    used_today: int | None = None
+    limit_per_day: int | None = None
 
 
 class KeyUsageResponse(BaseModel):

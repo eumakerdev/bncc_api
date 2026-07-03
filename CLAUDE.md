@@ -33,9 +33,18 @@ por extração exaustiva das três etapas (EI/EF/EM) e adiciona P2–P5.
 
 ## Comandos
 ```bash
-uvicorn app.main:app --reload          # subir API
-pytest --cov=app                       # testes + cobertura
-ruff check app/ && black app/          # lint/format
-python scripts/extract_bncc_data.py --validate   # (re)gerar snapshot da BNCC
-python scripts/generate_embeddings.py            # (re)gerar vetores
+uvicorn app.main:app --reload          # subir API (landing /, docs /guia + /docs, portal /portal)
+pytest --cov=app --cov-report=term-missing   # testes + cobertura (gate ≥ 80%)
+ruff check app/ scripts/ tests/ && black app/ scripts/ tests/   # lint/format
+mypy app/                              # tipos (código novo; ver pyproject)
+alembic upgrade head                   # migrações do banco da plataforma (contas/keys/uso)
+python scripts/extract_bncc_data.py --validate   # (re)gerar snapshot data/bncc_v1.json
+python scripts/validate_bncc_coverage.py         # validar cobertura/integridade do snapshot
+python scripts/generate_embeddings.py            # (re)gerar vetores (opcional; requer libs de IA)
+pre-commit run --all-files             # portões locais (segredos, lint, format)
 ```
+
+> **Fonte da Educação Infantil (T024 — pendente):** `data/` contém apenas os PDFs de EF e EM. A
+> extração cobre as três etapas, mas sem a fonte oficial da EI o snapshot registra
+> `educacao_infantil: 0` e `missing_sources: ["educacao_infantil"]` — **não** se fabricam dados de EI
+> (Princípio IV). Ao obter a fonte oficial da EI, coloque-a em `data/` e rode a extração novamente.
