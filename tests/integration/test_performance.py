@@ -7,6 +7,7 @@ Assere p95 < 300 ms sob carga nominal local. Mede o custo de servir o snapshot
 """
 
 import statistics
+import sys
 import time
 
 import pytest
@@ -14,6 +15,13 @@ import pytest
 # Limiar da Constituição / SC-005.
 P95_BUDGET_SECONDS = 0.300
 _ITERATIONS = 40
+
+# Sob instrumentação (coverage/debugger) a latência medida não representa a real
+# — o tracing infla o tempo por requisição. Pular a asserção de p95 nesse caso.
+_TRACING = sys.gettrace() is not None
+_skip_if_traced = pytest.mark.skipif(
+    _TRACING, reason="Medição de latência inválida sob coverage/tracing (SC-005)"
+)
 
 
 def _percentile(values: list[float], pct: float) -> float:
@@ -34,6 +42,7 @@ def _measure(client, method) -> list[float]:
     return samples
 
 
+@_skip_if_traced
 @pytest.mark.usefixtures("override_api_key_auth")
 def test_p95_list_habilidades_under_budget(client):
     samples = _measure(client, lambda c: c.get("/api/v1/habilidades?size=20"))
@@ -44,6 +53,7 @@ def test_p95_list_habilidades_under_budget(client):
     )
 
 
+@_skip_if_traced
 @pytest.mark.usefixtures("override_api_key_auth")
 def test_p95_versao_dados_under_budget(client):
     samples = _measure(client, lambda c: c.get("/api/v1/sistema/versao-dados"))
