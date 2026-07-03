@@ -1,21 +1,25 @@
 """
 Extração determinística do snapshot da BNCC (T026, Princípio IV).
 
-Lê os PDFs oficiais em `data/` (Ensino Fundamental e Ensino Médio) com pdfplumber
-e grava `data/bncc_v1.json` com metadados de rastreabilidade (versão, checksum
-SHA-256 das fontes, contagens por etapa/componente).
+Lê os PDFs oficiais em `data/` (Educação Infantil, Ensino Fundamental e Ensino
+Médio) com pdfplumber e grava `data/bncc_v1.json` com metadados de rastreabilidade
+(versão, checksum SHA-256 das fontes, contagens por etapa/componente).
 
-**Fidelidade (Princípio IV / T029)**: as tabelas da BNCC têm 3 colunas
-(UNIDADES TEMÁTICAS | OBJETOS DE CONHECIMENTO | HABILIDADES). Uma extração ingênua
-com `extract_text()` intercala o texto das colunas da esquerda dentro da descrição
-da habilidade. Para evitar essa contaminação, isolamos a **coluna HABILIDADES**
-por coordenada horizontal (o código `(EFxxxx)` marca a borda esquerda da coluna) e
-só então recompomos e fatiamos o texto por código.
+**Fidelidade (Princípio IV / T029)**: as tabelas da BNCC têm colunas. No EF/EM são 3
+colunas (UNIDADES TEMÁTICAS | OBJETOS DE CONHECIMENTO | HABILIDADES) e uma extração
+ingênua com `extract_text()` intercala o texto das colunas da esquerda dentro da
+descrição da habilidade; por isso isolamos a **coluna HABILIDADES** por coordenada
+horizontal (o código `(EFxxxx)` marca a borda esquerda da coluna) e só então
+recompomos e fatiamos o texto por código.
 
-Educação Infantil (T024 — BLOQUEIO): não há PDF dedicado da EI em `data/`. O parser
-de EI existe e ativa apenas se a fonte aparecer; na ausência, emite WARN e registra
-contagem 0 + `missing_sources: ["educacao_infantil"]`. **Nenhum dado de EI é
-fabricado.**
+Educação Infantil (T024): a fonte oficial completa é `data/BNCC_20dez_site.pdf` (as
+três etapas em um único PDF, 472 páginas). Sua árvore de páginas está comprimida e o
+pdfplumber sozinho enxerga apenas 1 página; por isso normalizamos o PDF com
+**pikepdf** (reescreve o arquivo → pdfplumber passa a ler as 472 páginas COM
+coordenadas). A EI é uma tabela de 3 colunas = as três faixas etárias (01/02/03).
+Cada coluna é isolada pela borda esquerda do código `(EIxxYYnn)` — igual ao EF/EM,
+mas processada por faixa. O PDF normalizado é temporário e nunca é versionado; o
+checksum registrado é o do `BNCC_20dez_site.pdf` ORIGINAL (proveniência).
 
 Uso:
     python scripts/extract_bncc_data.py [--validate]
@@ -30,13 +34,16 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import re
 import sys
+import tempfile
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 import pdfplumber
+import pikepdf
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger("extract_bncc")
@@ -48,8 +55,21 @@ if str(ROOT) not in sys.path:
 DATA_DIR = ROOT / "data"
 PDF_EF = DATA_DIR / "bncc_ensino_fundamental.pdf"
 PDF_EM = DATA_DIR / "bncc_ensino_medio.pdf"
-PDF_EI = DATA_DIR / "bncc_educacao_infantil.pdf"  # ausente (T024)
+# Fonte oficial completa (3 etapas em 1 PDF) — usada para a Educação Infantil.
+PDF_EI_SITE = DATA_DIR / "BNCC_20dez_site.pdf"
+# Fallback opcional: PDF dedicado da EI (mesma estrutura de 3 colunas por faixa).
+PDF_EI = DATA_DIR / "bncc_educacao_infantil.pdf"
 OUTPUT = DATA_DIR / "bncc_v1.json"
+
+# EI: no `BNCC_20dez_site.pdf` as tabelas de objetivos ficam além do prefácio; a
+# página-exemplo (que ilustra o código EI02TS01 em prosa) está no material
+# explicativo inicial. Pulamos o prefácio por índice e, por segurança, também
+# ignoramos qualquer página que contenha os marcadores do texto-exemplo.
+EI_FRONTMATTER_SKIP_PAGES = 40
+EI_EXPLANATION_SENTINELS = re.compile(
+    r"exemplo apresentado|par de letras indica|c[óo]digo alfanum[ée]rico",
+    re.IGNORECASE,
+)
 
 SNAPSHOT_VERSION = "v1"
 
@@ -61,6 +81,8 @@ RE_EI = r"EI\d{2}[A-Z]{2}\d{2}"
 
 # Token isolado (palavra) que é um código, com ou sem parênteses.
 RE_CODE_TOKEN = re.compile(r"^\(?(E[FMI]\d{2}[A-Z]{2,3}\d{2,3})\)?[.,;:]?$")
+# Idem, restrito à Educação Infantil (usado para agrupar as 3 colunas por faixa).
+RE_EI_CODE_TOKEN = re.compile(r"^\(?(" + RE_EI + r")\)?[.,;:]?$")
 # Divisor de habilidades no fluxo textual já isolado da coluna direita.
 RE_SPLIT_EF = re.compile(r"\((" + RE_EF + r")\)")
 RE_SPLIT_EM = re.compile(r"\((" + RE_EM_AREA + r"|" + RE_EM_LP + r")\)")
@@ -154,6 +176,91 @@ def right_column_text(pdf_path: Path) -> str:
             right.sort(key=lambda w: (round(w["top"]), w["x0"]))
             parts.append(" ".join(w["text"] for w in right))
     return " ".join(parts)
+
+
+# --------------------------------------------------------------------------- #
+# Isolamento das 3 colunas da Educação Infantil (uma coluna por faixa etária)
+# --------------------------------------------------------------------------- #
+def _ei_page_column_texts(words: list[dict[str, Any]]) -> list[str]:
+    """Reconstroi, em ordem de leitura, o texto de cada coluna (faixa etária) de
+    uma página de tabela da EI.
+
+    A borda esquerda de cada coluna é dada pelo x0 do código `(EIxxYYnn)` (faixa =
+    dígitos 01/02/03). Como o texto justificado de uma coluna transborda a metade
+    do vão até quase a borda esquerda da coluna seguinte, associar por *ponto médio*
+    embaralharia as colunas; por isso cada palavra é atribuída à coluna cuja borda
+    esquerda é a MAIOR que ainda seja <= x0 da palavra (com pequena tolerância).
+
+    Retorna uma lista de strings — uma por faixa (esquerda→direita). Cada string é
+    fatiada por código separadamente pelo chamador, para que a última descrição de
+    uma coluna não absorva o cabeçalho da coluna seguinte.
+    """
+    code_words = [w for w in words if RE_EI_CODE_TOKEN.match(w["text"])]
+    if not code_words:
+        return []
+    # Borda esquerda por faixa (mínimo x0 dos códigos daquela faixa na página).
+    left_by_faixa: dict[str, float] = {}
+    for w in code_words:
+        m = RE_EI_CODE_TOKEN.match(w["text"])
+        faixa = m.group(1)[2:4]
+        if faixa not in left_by_faixa or w["x0"] < left_by_faixa[faixa]:
+            left_by_faixa[faixa] = w["x0"]
+    lefts = sorted(left_by_faixa.items(), key=lambda kv: kv[1])  # [(faixa, x0), ...]
+
+    cols: dict[str, list[dict[str, Any]]] = {faixa: [] for faixa, _ in lefts}
+    for w in words:
+        chosen: str | None = None
+        for faixa, left in lefts:
+            if w["x0"] >= left - 6.0:
+                chosen = faixa
+        if chosen is not None:
+            cols[chosen].append(w)
+
+    texts: list[str] = []
+    for faixa, _ in lefts:
+        ordered = sorted(cols[faixa], key=lambda w: (round(w["top"]), w["x0"]))
+        texts.append(" ".join(w["text"] for w in ordered))
+    return texts
+
+
+def ei_column_texts(original_pdf: Path) -> list[str]:
+    """Normaliza o PDF oficial completo com pikepdf e devolve o texto de cada coluna
+    (faixa) das páginas de tabela da EI.
+
+    O `BNCC_20dez_site.pdf` tem a árvore de páginas comprimida — o pdfplumber sozinho
+    enxerga só 1 página. Reescrevê-lo com pikepdf destrava a leitura das 472 páginas
+    com coordenadas. O arquivo normalizado é temporário e removido ao final (nunca é
+    versionado).
+    """
+    fd, norm_name = tempfile.mkstemp(prefix="bncc_norm_", suffix=".pdf")
+    os.close(fd)
+    norm_path = Path(norm_name)
+    out: list[str] = []
+    try:
+        # pikepdf pode logar "Error occurred parsing XMP" — inofensivo (só metadados).
+        with pikepdf.open(str(original_pdf)) as pk:
+            pk.save(str(norm_path))
+        with pdfplumber.open(str(norm_path)) as pdf:
+            for idx, page in enumerate(pdf.pages):
+                if idx < EI_FRONTMATTER_SKIP_PAGES:
+                    continue  # prefácio/material explicativo (inclui o exemplo EI02TS01)
+                try:
+                    words = page.extract_words(use_text_flow=False, keep_blank_chars=False)
+                except Exception as e:  # pragma: no cover - página problemática
+                    logger.warning("Falha ao ler página %d da EI: %s", idx, e)
+                    continue
+                if not any(RE_EI_CODE_TOKEN.match(w["text"]) for w in words):
+                    continue
+                page_text = " ".join(w["text"] for w in words)
+                if EI_EXPLANATION_SENTINELS.search(page_text):
+                    continue  # guarda contra a página-exemplo (código ilustrativo)
+                out.extend(_ei_page_column_texts(words))
+    finally:
+        try:
+            norm_path.unlink()
+        except OSError:  # pragma: no cover
+            pass
+    return out
 
 
 def _split_by_codes(text: str, regex: re.Pattern) -> list[tuple[str, str]]:
@@ -344,17 +451,26 @@ def build_snapshot() -> dict[str, Any]:
         logger.warning("Fonte do Ensino Médio ausente: %s", PDF_EM)
         missing_sources.append("ensino_medio")
 
-    if PDF_EI.exists():
-        logger.info("Extraindo Educação Infantil de %s ...", PDF_EI.name)
-        ei = parse_ei(right_column_text(PDF_EI))
+    ei_source = PDF_EI_SITE if PDF_EI_SITE.exists() else (PDF_EI if PDF_EI.exists() else None)
+    if ei_source is not None:
+        logger.info(
+            "Extraindo Educação Infantil de %s (normalizado via pikepdf) ...",
+            ei_source.name,
+        )
+        # Cada coluna (faixa) é fatiada por código separadamente e depois combinada;
+        # assim a última descrição de uma coluna não absorve o cabeçalho da seguinte.
+        ei: list[dict[str, Any]] = []
+        for col_text in ei_column_texts(ei_source):
+            ei.extend(parse_ei(col_text))
+        ei = _dedup_longest(ei)
         habilidades.extend(ei)
-        checksums["educacao_infantil"] = sha256_of(PDF_EI)
+        checksums["educacao_infantil"] = sha256_of(ei_source)  # proveniência do original
         logger.info("  -> %d objetivos/habilidades EI", len(ei))
     else:
         logger.warning(
-            "T024: fonte oficial da Educação Infantil AUSENTE (%s). "
+            "Fonte oficial da Educação Infantil AUSENTE (%s). "
             "Registrando contagem 0 + missing_sources; NENHUM dado de EI fabricado.",
-            PDF_EI.name,
+            PDF_EI_SITE.name,
         )
         missing_sources.append("educacao_infantil")
 
@@ -420,7 +536,8 @@ def validate_snapshot(snapshot: dict[str, Any]) -> int:
         logger.error("Cobertura zero para ensino_medio")
         errors += 1
     if counts.get("educacao_infantil", 0) == 0:
-        logger.warning("Educação Infantil com contagem 0 (T024 — fonte ausente).")
+        logger.error("Cobertura zero para educacao_infantil (SC-001, três etapas).")
+        errors += 1
     if len(snapshot["competencias_gerais"]) != 10:
         logger.error("Competências gerais != 10")
         errors += 1

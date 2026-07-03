@@ -1,9 +1,10 @@
 """
 Teste de integração de cobertura das etapas (T023, SC-001).
 
-Valida o snapshot real `data/bncc_v1.json`: cobertura de EF e EM > 0, unicidade e
-formato dos códigos, exatamente 10 competências gerais. A Educação Infantil é
-tratada como bloqueio conhecido (T024): contagem 0 + `missing_sources`.
+Valida o snapshot real `data/bncc_v1.json`: cobertura das três etapas (EI/EF/EM) > 0,
+unicidade e formato dos códigos, exatamente 10 competências gerais. A Educação
+Infantil é extraída do PDF oficial completo (`BNCC_20dez_site.pdf`, normalizado via
+pikepdf), portanto `missing_sources` não deve mais listá-la (T024 encerrada).
 """
 
 from __future__ import annotations
@@ -38,11 +39,11 @@ def test_cobertura_ensino_medio(snapshot):
     assert counts.get("ensino_medio", 0) > 0
 
 
-def test_educacao_infantil_bloqueada_t024(snapshot):
-    """EI ausente por falta de fonte oficial (T024) — documentado, não fabricado."""
+def test_cobertura_educacao_infantil(snapshot):
+    """EI extraída do PDF oficial completo (T024 encerrada): cobertura > 0."""
     counts = snapshot["metadata"]["contagens"]["por_etapa"]
-    assert counts.get("educacao_infantil", 0) == 0
-    assert "educacao_infantil" in snapshot["metadata"].get("missing_sources", [])
+    assert counts.get("educacao_infantil", 0) > 0
+    assert "educacao_infantil" not in snapshot["metadata"].get("missing_sources", [])
 
 
 def test_dez_competencias_gerais(snapshot):
@@ -69,4 +70,5 @@ def test_checksum_das_fontes_presente(snapshot):
     checksums = snapshot["metadata"]["checksum_fontes"]
     assert "ensino_fundamental" in checksums
     assert "ensino_medio" in checksums
+    assert "educacao_infantil" in checksums
     assert all(len(v) == 64 for v in checksums.values())  # SHA-256 hex

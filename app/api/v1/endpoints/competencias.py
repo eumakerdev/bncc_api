@@ -14,17 +14,35 @@ from app.models.bncc import (
     CompetenciaEspecifica,
     CompetenciaGeral,
     ComponenteCurricular,
+    ErrorResponse,
     EtapaEnsino,
 )
 from app.services.bncc_service import BNCCDataService
 
 router = APIRouter()
 
+_AUTH_RESPONSES: dict[int | str, dict] = {
+    401: {
+        "model": ErrorResponse,
+        "description": "API key ausente, inválida ou revogada.",
+    },
+    429: {
+        "model": ErrorResponse,
+        "description": "Cota determinística excedida (60/min, burst 10).",
+    },
+}
+
 
 @router.get(
     "/gerais",
     response_model=list[CompetenciaGeral],
     summary="Listar as 10 competências gerais",
+    response_description="As 10 competências gerais da BNCC, transversais às três etapas.",
+    description=(
+        "Lista as 10 competências gerais oficiais da BNCC, aplicáveis a todas as "
+        "etapas de ensino. Requer API key e consome a cota determinística."
+    ),
+    responses=_AUTH_RESPONSES,
 )
 async def get_competencias_gerais(
     _: DeterministicRateLimited,
@@ -37,10 +55,26 @@ async def get_competencias_gerais(
     "/gerais/{numero}",
     response_model=CompetenciaGeral,
     summary="Buscar competência geral por número (1-10)",
+    response_description="Dados completos da competência geral.",
+    description=(
+        "Busca uma das 10 competências gerais oficiais pelo número (1-10). "
+        "Requer API key e consome a cota determinística."
+    ),
+    responses={
+        404: {
+            "model": ErrorResponse,
+            "description": "Número fora de 1-10 ou competência inexistente.",
+        },
+        **_AUTH_RESPONSES,
+    },
 )
 async def get_competencia_geral(
     _: DeterministicRateLimited,
-    numero: int = Path(..., description="Número da competência geral (1-10)"),
+    numero: int = Path(
+        ...,
+        description="Número da competência geral (1-10)",
+        openapi_examples={"exemplo": {"summary": "Competência 1 — Conhecimento", "value": 1}},
+    ),
     bncc_service: BNCCDataService = Depends(get_bncc_service),
 ) -> CompetenciaGeral:
     # numero fora de 1-10 (ou inexistente) → 404 (contrato bncc-data.md).
@@ -57,6 +91,13 @@ async def get_competencia_geral(
     "/especificas",
     response_model=list[CompetenciaEspecifica],
     summary="Listar competências específicas (filtros: area/componente/etapa)",
+    response_description="Competências específicas que casam com os filtros informados.",
+    description=(
+        "Lista competências específicas de área/componente curricular, com "
+        "filtros opcionais por área de conhecimento, componente e etapa de "
+        "ensino. Requer API key e consome a cota determinística."
+    ),
+    responses=_AUTH_RESPONSES,
 )
 async def get_competencias_especificas(
     _: DeterministicRateLimited,

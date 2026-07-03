@@ -2,9 +2,9 @@
 Auditoria de fidelidade de texto (T029, achado G3, SC-002).
 
 Confere que o texto servido pela API corresponde exatamente ao texto persistido
-no snapshot versionado, para uma amostra de códigos oficiais das etapas cobertas,
-e que não há caracteres de substituição (perda de acento na extração). Códigos
-ausentes na amostra são ignorados via `pytest.skip` (a extração de PDF é
+no snapshot versionado, para uma amostra de códigos oficiais das três etapas
+(EI/EF/EM), e que não há caracteres de substituição (perda de acento na extração).
+Códigos ausentes na amostra são ignorados via `pytest.skip` (a extração de PDF é
 best-effort — ver relatório de qualidade).
 """
 
@@ -20,8 +20,13 @@ from app.services.bncc_service import BNCCDataService
 
 SNAPSHOT_PATH = Path(settings.BNCC_DATA_PATH)
 
-# Amostra de códigos oficiais para auditoria de fidelidade (EF + EM).
+# Amostra de códigos oficiais para auditoria de fidelidade (EI + EF + EM).
+# Os códigos de EI foram verificados no snapshot regenerado (extração por coluna de
+# faixa etária a partir do BNCC_20dez_site.pdf normalizado via pikepdf).
 SAMPLE_CODES = [
+    "EI01EO01",
+    "EI02TS01",
+    "EI03ET08",
     "EF05MA07",
     "EF15LP01",
     "EF67EF01",

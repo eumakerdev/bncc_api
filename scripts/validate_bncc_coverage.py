@@ -9,8 +9,7 @@ Verifica:
   4. Contagens por etapa/componente e presença das etapas.
 
 Saída: exit code != 0 em erros graves (duplicidade / código malformado /
-referência quebrada / cobertura zero de EF ou EM). Educação Infantil ausente é
-apenas WARN (T024 — fonte oficial não disponível).
+referência quebrada / cobertura zero de qualquer uma das três etapas EI/EF/EM).
 
 Uso:
     python scripts/validate_bncc_coverage.py [caminho_do_snapshot]
@@ -96,7 +95,7 @@ def validate(snapshot: dict[str, Any]) -> dict[str, list[str]]:
     if por_etapa.get("ensino_medio", 0) == 0:
         errors.append("Cobertura zero para ensino_medio (SC-001).")
     if por_etapa.get("educacao_infantil", 0) == 0:
-        warnings.append("Educação Infantil ausente (T024 — fonte oficial não disponível).")
+        errors.append("Cobertura zero para educacao_infantil (SC-001, três etapas).")
 
     if len(snapshot.get("competencias_gerais", [])) != 10:
         errors.append(

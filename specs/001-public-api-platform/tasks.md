@@ -91,7 +91,7 @@ fonte oficial da EI (ausente em `data/`), FR-001/SC-001 não podem ser satisfeit
 
 ### Implementation for User Story 1
 
-- [ ] T024 [US1] **Obter e validar a fonte oficial da Educação Infantil** (achado G1): adquirir o PDF/fonte estruturada da EI para `data/` (hoje só há EF+EM), registrar checksum e proveniência; **gating** — bloqueia T026/T028 (FR-001/SC-001)
+- [X] T024 [US1] **Obter e validar a fonte oficial da Educação Infantil** (achado G1): adquirir o PDF/fonte estruturada da EI para `data/` (hoje só há EF+EM), registrar checksum e proveniência; **gating** — bloqueia T026/T028 (FR-001/SC-001)
 - [X] T025 [US1] Estender `app/models/bncc.py`: Campo de Experiência + objetivos de aprendizagem (EI), Unidade Temática, Objeto de Conhecimento (navegável), habilidades/competências do Ensino Médio, metadados do snapshot, validadores dos 3 formatos de código (data-model.md §A)
 - [X] T026 [US1] Reescrever `scripts/extract_bncc_data.py`: parsing determinístico com pdfplumber, parsers por etapa (EF `EF<ano><COMP><NN>`, EM `EM13<AREA><NNN>`, EI `EI<faixa><CAMPO><NN>`) → `data/bncc_v1.json` com versão/data/checksum das fontes (FR-002/FR-003; depende de T024)
 - [X] T027 [US1] Criar `scripts/validate_bncc_coverage.py`: unicidade de código, formato por etapa, integridade referencial (habilidade→competências/objetos), contagens por etapa/componente (Princípio IV)
@@ -162,7 +162,7 @@ reflete nas docs sem edição manual.
 
 ### Implementation for User Story 3
 
-- [ ] T053 [US3] Enriquecer metadados OpenAPI em todos os endpoints (descrições, exemplos, tags, schemas de erro) — FR-013/FR-014 (fora do escopo owned por US3/US5; endpoints são de US1/US2/US4)
+- [X] T053 [US3] Enriquecer metadados OpenAPI em todos os endpoints (descrições, exemplos, tags, schemas de erro) — FR-013/FR-014 (fora do escopo owned por US3/US5; endpoints são de US1/US2/US4)
 - [X] T054 [US3] Página de docs estilizada em `app/web/templates/docs.html` embutindo o mesmo spec OpenAPI (Swagger UI com "testar" por API key)
 - [X] T055 [US3] Conteúdo do guia de início rápido nas docs (autenticação, limites, versionamento) — FR-015
 - [X] T056 [US3] Rota de docs em `app/web/docs.py` (`GET /guia`), incluída pelo seam de `app/web/router.py` via `include_web_routers()`

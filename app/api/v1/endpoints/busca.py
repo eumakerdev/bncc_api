@@ -30,8 +30,13 @@ logger = logging.getLogger("bncc.busca")
     "",
     response_model=BuscaSemanticaResponse,
     summary="Busca semantica com IA (conteudo nao-oficial)",
+    response_description=(
+        "Resposta gerada por IA (nao-oficial) com fontes oficiais rastreaveis, "
+        "ou aviso de ausencia de correspondencia confiavel."
+    ),
     responses={
         400: {"description": "Query invalida (vazia/curta/longa) ou payload invalido."},
+        401: {"description": "API key ausente, invalida ou revogada."},
         429: {"description": "Cota de IA excedida (bucket ai: 20/min ou 500/dia)."},
         503: {"description": "Camada de IA indisponivel (acionavel)."},
     },

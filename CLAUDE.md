@@ -44,7 +44,9 @@ python scripts/generate_embeddings.py            # (re)gerar vetores (opcional; 
 pre-commit run --all-files             # portões locais (segredos, lint, format)
 ```
 
-> **Fonte da Educação Infantil (T024 — pendente):** `data/` contém apenas os PDFs de EF e EM. A
-> extração cobre as três etapas, mas sem a fonte oficial da EI o snapshot registra
-> `educacao_infantil: 0` e `missing_sources: ["educacao_infantil"]` — **não** se fabricam dados de EI
-> (Princípio IV). Ao obter a fonte oficial da EI, coloque-a em `data/` e rode a extração novamente.
+> **Fontes da BNCC (as 3 etapas cobertas):** EF e EM vêm de `data/bncc_ensino_fundamental.pdf` e
+> `data/bncc_ensino_medio.pdf` (pdfplumber, isolamento de coluna). A **Educação Infantil** vem do
+> documento oficial completo `data/BNCC_20dez_site.pdf` (472 págs.): como seu page tree comprimido
+> impede o pdfplumber, o script o **normaliza com pikepdf** antes de extrair as 3 colunas de faixa
+> etária. Contagens atuais do snapshot: EI 93, EF 1291, EM 179 (`missing_sources: []`). Os PDFs são
+> grandes e ficam fora do versionamento (`data/` no .gitignore); apenas `data/bncc_v1.json` é versionado.

@@ -46,6 +46,8 @@ beautifulsoup4==4.12.2
 lxml==4.9.3
 pdfplumber==0.10.3
 PyPDF2==3.0.1
+pypdf==6.14.2
+pikepdf==10.9.1
 
 # Testes + cobertura (gate de CI ≥ 80%)
 pytest==7.4.3

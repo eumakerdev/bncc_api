@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text
 
 from app.core.deps import DeterministicRateLimited, get_bncc_service
-from app.models.bncc import SnapshotMetadata
+from app.models.bncc import ErrorResponse, SnapshotMetadata
 from app.services.bncc_service import BNCCDataService
 
 router = APIRouter()
@@ -25,6 +25,23 @@ logger = logging.getLogger(__name__)
     "/versao-dados",
     response_model=SnapshotMetadata,
     summary="Metadados do snapshot da BNCC (versão, checksum, contagens)",
+    response_description="Versão do snapshot, checksums das fontes oficiais e contagens (FR-025).",
+    description=(
+        "Expõe metadados de rastreabilidade do snapshot estático da BNCC "
+        "(FR-025): versão, data de publicação, checksum SHA-256 de cada fonte "
+        "oficial e contagens por etapa/componente. Requer API key e consome a "
+        "cota determinística."
+    ),
+    responses={
+        401: {
+            "model": ErrorResponse,
+            "description": "API key ausente, inválida ou revogada.",
+        },
+        429: {
+            "model": ErrorResponse,
+            "description": "Cota determinística excedida (60/min, burst 10).",
+        },
+    },
 )
 async def get_versao_dados(
     _: DeterministicRateLimited,
@@ -33,12 +50,32 @@ async def get_versao_dados(
     return await bncc_service.get_snapshot_metadata()
 
 
-@router.get("/health", summary="Liveness check (público)")
+@router.get(
+    "/health",
+    summary="Liveness check (público)",
+    response_description="Indicador simples de que o processo está no ar.",
+    description=(
+        "Verificação de vivacidade (liveness) simples e pública — não requer "
+        "API key nem autenticação. Não verifica dependências externas; use "
+        "`/readiness` para isso."
+    ),
+)
 async def health() -> dict:
     return {"status": "ok"}
 
 
-@router.get("/readiness", summary="Readiness check (DB best-effort)")
+@router.get(
+    "/readiness",
+    summary="Readiness check (DB best-effort)",
+    response_description="Status agregado de prontidão e status por componente.",
+    description=(
+        "Verificação de prontidão pública — checa o banco da plataforma e o "
+        "snapshot da BNCC de forma best-effort. A camada de IA (ChromaDB/"
+        "embeddings) é reportada separadamente e sua indisponibilidade **não** "
+        "torna o serviço `not_ready`, pois os endpoints determinísticos "
+        "permanecem 100% funcionais (Princípio VII / SC-009)."
+    ),
+)
 async def readiness() -> dict:
     components: dict[str, str] = {}
     ready = True
