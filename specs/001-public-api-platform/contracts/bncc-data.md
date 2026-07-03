@@ -43,9 +43,9 @@ componente (FR-025, rastreabilidade; SC-001).
 - **200** → objeto de metadados do snapshot.
 
 ## Erros comuns
-`401` sem key válida (FR-009); `429` acima de 60/min com `Retry-After` (FR-010, edge case de
-paginação preserva estado já retornado); `400` com mensagem clara e sem vazar internos (US1/AS4,
-FR-024).
+`401` sem key válida (FR-009); `429` acima de 60/min (burst de até 10) com `Retry-After` (FR-010,
+edge case de paginação preserva estado já retornado); `400` com mensagem clara e sem vazar internos
+(US1/AS4, FR-024).
 
 ## Cobertura de teste de contrato (Princípio III)
 - Código válido de cada etapa → 200 com schema correto.

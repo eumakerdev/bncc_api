@@ -23,7 +23,7 @@ Revoga uma key (`status = revoked`).
 ## GET /api/v1/keys/{id}/usage
 Métricas de consumo por key (FR-011).
 - **200** → uso recente por bucket: `{ deterministic: {...}, ai: {...} }` com contagens e limites
-  atuais (60/min determinístico; ~20/min + teto diário de IA).
+  atuais (60/min + burst 10 determinístico; 20/min + teto de 500/dia de IA).
 - **Aceite** (US2/AS5): painel mostra consumo recente e limites de cada key.
 
 ## GET /api/v1/usage (agregado da conta)

@@ -39,6 +39,25 @@ BNCC: a estrutura de dados e a arquitetura da API derivam da própria taxonomia 
 - Q: Como os desenvolvedores fazem login no portal? → A: **E-mail + senha com verificação de
   e-mail** obrigatória.
 
+### Session 2026-07-03 (remediação pós-análise)
+
+> Valores antes subespecificados, agora fixados como padrões configuráveis (resolvem os achados
+> U1/U2/A1/A2/A3 da análise de consistência). Todos podem ser recalibrados por configuração.
+
+- Q: Qual o teto diário da cota de IA (FR-010a)? → A: **500 requisições/dia por key** (além das
+  20 req/min), medido no bucket `ai`.
+- Q: Qual o burst permitido na cota determinística (FR-010)? → A: **burst de até 10** requisições
+  (token bucket de capacidade 70, reposição 60/min).
+- Q: Qual o limiar de relevância da busca semântica (FR-017)? → A: **similaridade coseno < 0,70**
+  (valor padrão configurável) não é apresentado como resultado oficial.
+- Q: Quais os limites de custo por chamada de IA (FR-019)? → A: **timeout de 15 s** e **teto de
+  800 tokens de saída** por chamada (configuráveis).
+- Q: Qual a política mínima de senha (FR-007)? → A: **≥ 10 caracteres**, com ao menos letras e
+  números.
+- Q: A fonte de dados da Educação Infantil está disponível? → A: **Não** — `data/` contém apenas os
+  PDFs de Ensino Fundamental e Ensino Médio. A obtenção/validação da fonte oficial da EI é
+  **pré-requisito gating** de US1 (ver Dependencies e tasks).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Consumir a BNCC completa via API estruturada (Priority: P1)
@@ -221,18 +240,20 @@ performance/acessibilidade adequadas, conteúdo descritivo e CTA que leva ao cad
 
 **Controle de acesso self-service (P2)**
 
-- **FR-007**: Visitantes MUST be able to se cadastrar no portal com **e-mail e senha** e
-  verificação de e-mail obrigatória antes de obter acesso funcional (geração de keys).
+- **FR-007**: Visitantes MUST be able to se cadastrar no portal com **e-mail e senha** (senha com
+  **mínimo de 10 caracteres**, contendo ao menos letras e números) e verificação de e-mail
+  obrigatória antes de obter acesso funcional (geração de keys).
 - **FR-008**: Desenvolvedores autenticados MUST be able to gerar, listar e revogar suas próprias
   API keys.
 - **FR-009**: O sistema DEVE autenticar cada requisição à API por API key e recusar requisições
   sem key válida.
 - **FR-010**: O sistema DEVE aplicar rate limiting por API key e responder com erro de limite
   excedido (incluindo quando o limite reseta) ao ultrapassá-lo. O limite padrão dos endpoints
-  determinísticos é de **60 requisições/minuto por key** (com pequeno burst permitido).
+  determinísticos é de **60 requisições/minuto por key**, com **burst de até 10 requisições**
+  (token bucket de capacidade 70, reposição 60/min).
 - **FR-010a**: Os endpoints de busca semântica (IA) DEVEM ter **cota separada e mais restrita**
-  (~20 requisições/minuto por key, com teto diário), medida independentemente da cota dos endpoints
-  determinísticos, para conter o custo de LLM.
+  (**20 requisições/minuto por key**, com **teto diário de 500 requisições/dia por key**), medida
+  independentemente da cota dos endpoints determinísticos, para conter o custo de LLM.
 - **FR-011**: O sistema DEVE registrar métricas de uso por key e exibi-las ao desenvolvedor em um
   painel.
 - **FR-012**: O acesso DEVE ser gratuito em um único nível (tier), sem cobrança/billing nesta
@@ -251,13 +272,14 @@ performance/acessibilidade adequadas, conteúdo descritivo e CTA que leva ao cad
 
 - **FR-016**: O sistema DEVE responder perguntas em linguagem natural retornando texto gerado
   acompanhado das fontes oficiais utilizadas (códigos + score de relevância).
-- **FR-017**: Resultados abaixo do limiar de relevância NÃO DEVEM ser apresentados como oficiais;
-  na ausência de correspondência confiável, o sistema DEVE indicá-lo em vez de inventar dados.
+- **FR-017**: Resultados abaixo do limiar de relevância (**similaridade coseno < 0,70**, valor
+  padrão configurável) NÃO DEVEM ser apresentados como oficiais; na ausência de correspondência
+  confiável, o sistema DEVE indicá-lo em vez de inventar dados.
 - **FR-018**: Os recursos determinísticos (busca por código/filtros) DEVEM permanecer funcionais
   quando a camada de IA estiver indisponível (degradação graciosa).
 - **FR-019**: Entradas de busca semântica DEVEM ser validadas e sanitizadas (tamanho, tipo,
-  conteúdo) e as chamadas de IA DEVEM ter limites explícitos de custo (tokens/latência), além da
-  cota separada definida em FR-010a.
+  conteúdo) e as chamadas de IA DEVEM ter limites explícitos de custo (**timeout de 15 s e teto de
+  800 tokens de saída por chamada, configuráveis**), além da cota separada definida em FR-010a.
 
 **Landing page com SEO (P5)**
 
@@ -360,6 +382,10 @@ performance/acessibilidade adequadas, conteúdo descritivo e CTA que leva ao cad
 
 ## Dependencies
 
+- **Fonte da Educação Infantil (gating de US1)**: `data/` hoje contém apenas os PDFs de Ensino
+  Fundamental e Ensino Médio. A fonte oficial da Educação Infantil (PDF ou fonte estruturada
+  equivalente) DEVE ser obtida e validada **antes** da extração de US1; sem ela, FR-001/SC-001
+  (cobertura das três etapas) não podem ser satisfeitos.
 - Disponibilidade dos materiais oficiais da BNCC em formato processável (PDFs e/ou fontes
   estruturadas) para todas as três etapas.
 - Provedor de modelo de linguagem/embeddings para a busca semântica (com limites de custo e

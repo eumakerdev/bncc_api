@@ -6,7 +6,7 @@ portal via JWT. **Estes endpoints não usam API key** — usam sessão do portal
 ## POST /api/v1/auth/signup
 Cria conta de desenvolvedor (estado `unverified`) e dispara e-mail de verificação.
 - **Body**: `{ email, password }` — `email` válido/normalizado; `password` com política mínima
-  (tamanho/força) validada por Pydantic.
+  (**≥ 10 caracteres, ao menos letras e números**) validada por Pydantic.
 - **201** → `{ account_id, email, email_verified: false }`. Envia link de verificação.
 - **400** → e-mail inválido / senha fraca.
 - **409** → e-mail já cadastrado — **mensagem neutra anti-enumeração** (não confirmar existência).

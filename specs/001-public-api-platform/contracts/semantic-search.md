@@ -1,7 +1,10 @@
 # Contract: Busca Semântica com IA (P4)
 
-Camada aumentada por IA. **Auth**: API key (Bearer). **Cota separada**: ~20 req/min + teto diário
-(FR-010a), medida no bucket `ai`. Sempre cita fontes oficiais; degrada graciosamente (Princípio VII).
+Camada aumentada por IA. **Auth**: API key (Bearer). **Cota separada**: 20 req/min + teto de
+500 req/dia (FR-010a), medida no bucket `ai`. Limiar de relevância padrão: **similaridade coseno
+< 0,70 não é oficial** (FR-017, configurável). Limites de custo por chamada: **timeout 15 s, teto
+800 tokens de saída** (FR-019, configuráveis). Sempre cita fontes oficiais; degrada graciosamente
+(Princípio VII).
 
 ## POST /api/v1/busca-semantica
 Responde pergunta em linguagem natural com texto gerado + fontes oficiais rastreáveis.
@@ -14,7 +17,7 @@ Responde pergunta em linguagem natural com texto gerado + fontes oficiais rastre
   vez de inventar (FR-017; US4/AS3). Fontes abaixo do limiar de similaridade não aparecem como
   oficiais.
 - **400** → query vazia/curta/longa demais ou payload inválido (edge case).
-- **429** → acima da cota de IA (~20/min ou teto diário) com `Retry-After`.
+- **429** → acima da cota de IA (20/min ou teto de 500/dia) com `Retry-After`.
 - **503** → camada de IA (LLM/embeddings) indisponível — erro **acionável**, não 500 opaco (FR-018,
   Princípio VI). **Não afeta** os endpoints determinísticos (US4/AS2; SC-009).
 
