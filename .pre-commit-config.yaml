@@ -18,6 +18,9 @@ repos:
         name: Detectar segredos hardcoded
         args: ["--baseline", ".secrets.baseline"]
         # .env.example só contém placeholders; ainda assim é varrido.
+        # tests/ contém credenciais fictícias (fixtures) — apenas falsos
+        # positivos; excluído do scanner (código de app/scripts continua varrido).
+        exclude: ^tests/
 
   # --- Higiene geral + segurança (chaves privadas, arquivos grandes) ---------
   - repo: https://github.com/pre-commit/pre-commit-hooks
