@@ -35,13 +35,13 @@ Monolito FastAPI existente (ver plan.md → Project Structure): `app/`, `scripts
 
 **Purpose**: Preparar dependências, configuração, estrutura de diretórios e portões de CI do monolito.
 
-- [ ] T001 Atualizar `requirements.txt` com as novas dependências (SQLAlchemy 2.0 + Alembic + aiosqlite, passlib[argon2]/argon2-cffi, PyJWT, aiosmtplib, Jinja2, pdfplumber, slowapi, sentence-transformers/LangChain, ChromaDB, httpx, pytest-asyncio, pytest-cov)
-- [ ] T002 [P] Criar `.env.example` na raiz com todas as variáveis de config **sem defaults inseguros** (SECRET_KEY, ALLOWED_HOSTS, ENVIRONMENT, DATABASE_URL, SMTP_*, ACCESS_TOKEN_EXPIRE_MINUTES, LLM/embedding keys opcionais, limites de IA)
-- [ ] T003 [P] Configurar ruff + black + mypy (código novo) em `pyproject.toml`
-- [ ] T004 [P] Configurar pytest em `pyproject.toml`/`pytest.ini` (asyncio mode, cobertura ≥ 80% como gate)
-- [ ] T005 [P] Criar scaffolding de diretórios: `app/db/`, `app/web/templates/`, `app/web/static/`, `migrations/`, `tests/contract/`, `tests/integration/`, `tests/unit/`
-- [ ] T006 [P] Adicionar `Dockerfile` + `docker-compose.yml` na raiz (referenciados em quickstart.md)
-- [ ] T007 [P] Configurar pipeline de CI em `.github/workflows/ci.yml` com **portões bloqueantes** exigidos pela Constituição: suíte verde, cobertura ≥ 80%, `ruff` + `black` limpos e build da imagem Docker bem-sucedido
+- [X] T001 Atualizar `requirements.txt` com as novas dependências (SQLAlchemy 2.0 + Alembic + aiosqlite, passlib[argon2]/argon2-cffi, PyJWT, aiosmtplib, Jinja2, pdfplumber, slowapi, sentence-transformers/LangChain, ChromaDB, httpx, pytest-asyncio, pytest-cov)
+- [X] T002 [P] Criar `.env.example` na raiz com todas as variáveis de config **sem defaults inseguros** (SECRET_KEY, ALLOWED_HOSTS, ENVIRONMENT, DATABASE_URL, SMTP_*, ACCESS_TOKEN_EXPIRE_MINUTES, LLM/embedding keys opcionais, limites de IA)
+- [X] T003 [P] Configurar ruff + black + mypy (código novo) em `pyproject.toml`
+- [X] T004 [P] Configurar pytest em `pyproject.toml`/`pytest.ini` (asyncio mode, cobertura ≥ 80% como gate)
+- [X] T005 [P] Criar scaffolding de diretórios: `app/db/`, `app/web/templates/`, `app/web/static/`, `migrations/`, `tests/contract/`, `tests/integration/`, `tests/unit/`
+- [X] T006 [P] Adicionar `Dockerfile` + `docker-compose.yml` na raiz (referenciados em quickstart.md)
+- [X] T007 [P] Configurar pipeline de CI em `.github/workflows/ci.yml` com **portões bloqueantes** exigidos pela Constituição: suíte verde, cobertura ≥ 80%, `ruff` + `black` limpos e build da imagem Docker bem-sucedido
 
 ---
 
@@ -52,17 +52,17 @@ Monolito FastAPI existente (ver plan.md → Project Structure): `app/`, `scripts
 **⚠️ CRITICAL**: Bloqueia todas as histórias de backend (US1–US4). A tarefa de design compartilhado
 (T017) só é pré-requisito das superfícies visuais (US2 portal, US3 docs, US5 landing), não do US1.
 
-- [ ] T008 Corrigir configuração insegura em `app/core/config.py` (FR-023): remover default de `SECRET_KEY`, restringir `ALLOWED_HOSTS` (rejeitar `*` em produção), validators de startup com fail-fast em `ENVIRONMENT=production`
-- [ ] T009 [P] Criar handlers de erro globais em `app/core/errors.py` (FR-024): respostas sem stack trace/paths/detalhes internos
-- [ ] T010 [P] Criar utilitários de segurança em `app/core/security.py`: hash Argon2 de senha, emissão/validação de JWT, geração de API key + hash SHA-256 + prefixo não sensível
-- [ ] T011 Configurar engine/session async do SQLAlchemy em `app/db/base.py` (SQLite dev, URL migrável a Postgres)
-- [ ] T012 Definir tabelas ORM em `app/db/tables.py`: `developer_accounts`, `email_verification_tokens`, `api_keys`, `usage_records` (ver data-model.md §B)
-- [ ] T013 Inicializar Alembic e gerar migração inicial em `migrations/` (contas/keys/uso/tokens)
-- [ ] T014 [P] Criar schemas Pydantic da plataforma em `app/models/platform.py` (request/response de conta, key, uso; política de senha ≥ 10 caracteres — FR-007)
-- [ ] T015 Atualizar container de DI em `app/core/deps.py`: provider de DB session, injeção de serviços, dependências (placeholder) de auth por API key e rate limiter
-- [ ] T016 Fazer o wiring de `app/main.py`: registrar handlers de erro, fail-fast de config no startup, montar API `/api/v1` e o web router
-- [ ] T017 [P] Design system compartilhado (FR-022): build estático do Tailwind em `app/web/static/` + `app/web/templates/base.html` + tokens minimalistas (consumido por US2/US3/US5)
-- [ ] T018 [P] Teste de regressão de config insegura (escrever primeiro, deve falhar) em `tests/unit/test_config_security.py` (FR-023/SC-010: app não sobe em produção com SECRET_KEY placeholder / ALLOWED_HOSTS=*)
+- [X] T008 Corrigir configuração insegura em `app/core/config.py` (FR-023): remover default de `SECRET_KEY`, restringir `ALLOWED_HOSTS` (rejeitar `*` em produção), validators de startup com fail-fast em `ENVIRONMENT=production`
+- [X] T009 [P] Criar handlers de erro globais em `app/core/errors.py` (FR-024): respostas sem stack trace/paths/detalhes internos
+- [X] T010 [P] Criar utilitários de segurança em `app/core/security.py`: hash Argon2 de senha, emissão/validação de JWT, geração de API key + hash SHA-256 + prefixo não sensível
+- [X] T011 Configurar engine/session async do SQLAlchemy em `app/db/base.py` (SQLite dev, URL migrável a Postgres)
+- [X] T012 Definir tabelas ORM em `app/db/tables.py`: `developer_accounts`, `email_verification_tokens`, `api_keys`, `usage_records` (ver data-model.md §B)
+- [X] T013 Inicializar Alembic e gerar migração inicial em `migrations/` (contas/keys/uso/tokens)
+- [X] T014 [P] Criar schemas Pydantic da plataforma em `app/models/platform.py` (request/response de conta, key, uso; política de senha ≥ 10 caracteres — FR-007)
+- [X] T015 Atualizar container de DI em `app/core/deps.py`: provider de DB session, injeção de serviços, dependências (placeholder) de auth por API key e rate limiter
+- [X] T016 Fazer o wiring de `app/main.py`: registrar handlers de erro, fail-fast de config no startup, montar API `/api/v1` e o web router
+- [X] T017 [P] Design system compartilhado (FR-022): build estático do Tailwind em `app/web/static/` + `app/web/templates/base.html` + tokens minimalistas (consumido por US2/US3/US5)
+- [X] T018 [P] Teste de regressão de config insegura (escrever primeiro, deve falhar) em `tests/unit/test_config_security.py` (FR-023/SC-010: app não sobe em produção com SECRET_KEY placeholder / ALLOWED_HOSTS=*)
 
 **Checkpoint**: Fundação pronta — implementação das histórias pode começar.
 

@@ -9,8 +9,11 @@ services:
       - ENVIRONMENT=development
       - API_HOST=0.0.0.0
       - API_PORT=8000
+      - SECRET_KEY=change-me-dev-only-not-for-production
       - CHROMADB_PATH=/app/data/chromadb
-      - BNCC_DATA_PATH=/app/data/bncc_completa.json
+      - BNCC_DATA_PATH=/app/data/bncc_v1.json
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/platform.db
+      - EMAIL_BACKEND=console
     volumes:
       - ./app:/app/app
       - ./data:/app/data

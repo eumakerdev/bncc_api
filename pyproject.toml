@@ -1,0 +1,72 @@
+[project]
+name = "bncc-api"
+version = "1.0.0"
+description = "API pública que expõe toda a Base Nacional Comum Curricular (BNCC) do Brasil"
+requires-python = ">=3.11"
+
+# =============================================================================
+# Lint / Format / Types  (T003)
+# =============================================================================
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["app", "scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4"]
+# Erros comuns em código legado do protótipo (ajustados de forma incremental)
+ignore = ["B008"]  # FastAPI usa chamadas em defaults (Depends(...))
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+# Aplicado a CÓDIGO NOVO (Princípio da Constituição): módulos da plataforma.
+# Habilitado por diretório para não travar o protótipo legado.
+warn_unused_ignores = true
+warn_redundant_casts = true
+ignore_missing_imports = true
+files = ["app"]
+
+[[tool.mypy.overrides]]
+module = [
+    "app.core.security",
+    "app.core.errors",
+    "app.db.*",
+    "app.services.account_service",
+    "app.services.apikey_service",
+    "app.services.usage_service",
+    "app.services.email_service",
+]
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+# =============================================================================
+# Testes + Cobertura (T004) — cobertura ≥ 80% é gate de CI (Princípio III)
+# =============================================================================
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra -q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/main.py", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
