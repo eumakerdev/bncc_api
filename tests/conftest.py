@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 # --- Ambiente de teste (definido ANTES de importar a aplicação) ---------------
-_TMP_DB = Path(tempfile.gettempdir()) / "bncc_test_platform.db"
+# DB por PID: garante que execuções paralelas de pytest não colidam no mesmo arquivo.
+_TMP_DB = Path(tempfile.gettempdir()) / f"bncc_test_{os.getpid()}.db"
 os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production-000000")
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_TMP_DB.as_posix()}"
