@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Criar conta — BNCC API{% endblock %}
+{% block content %}
+<div class="container section" style="max-width: 30rem;">
+  <h1>Criar conta</h1>
+  <p class="lead">Cadastre-se para obter acesso à API pública da BNCC.</p>
+
+  {% if error %}<div class="notice" style="border-left-color: var(--danger);">{{ error }}</div>{% endif %}
+
+  <form method="post" action="/portal/signup" class="card">
+    <label for="email">E-mail</label>
+    <input id="email" name="email" type="email" autocomplete="email" required>
+
+    <label for="password">Senha</label>
+    <input id="password" name="password" type="password" autocomplete="new-password"
+           minlength="10" required>
+    <p class="muted" style="margin-top: 0.35rem; font-size: 0.85rem;">
+      Mínimo de 10 caracteres, com letras e números.
+    </p>
+
+    <p style="margin-top: 1.25rem;">
+      <button class="btn" type="submit">Criar conta</button>
+    </p>
+  </form>
+
+  <p class="muted" style="margin-top: 1rem;">
+    Já tem conta? <a href="/portal/login">Entrar</a>
+  </p>
+</div>
+{% endblock %}

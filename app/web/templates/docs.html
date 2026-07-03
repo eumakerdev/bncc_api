@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Documentação — BNCC API{% endblock %}
+{% block description %}Guia de início rápido da BNCC API: autenticação por API key, limites de uso e versionamento. Documentação interativa gerada automaticamente a partir do contrato OpenAPI.{% endblock %}
+
+{% block content %}
+<section class="hero container">
+  <h1>Documentação</h1>
+  <p class="lead">
+    Esta página reúne um guia de início rápido. A referência completa de endpoints,
+    schemas e exemplos é gerada automaticamente a partir do contrato OpenAPI em
+    <code>/api/v1/openapi.json</code> — qualquer alteração nos endpoints aparece aqui sem
+    edição manual.
+  </p>
+  <p>
+    <a class="btn" href="/docs">Abrir Swagger UI</a>
+    <a class="btn btn-secondary" href="/redoc">Abrir ReDoc</a>
+  </p>
+</section>
+
+<section class="section container" aria-labelledby="auth-heading">
+  <h2 id="auth-heading">Autenticação por API key</h2>
+  <p>
+    A API de dados é autenticada por <strong>API key</strong> enviada no cabeçalho
+    <code>Authorization</code> como <code>Bearer</code>. Gere uma key gratuita no
+    <a href="/portal/signup">portal self-service</a> após verificar seu e-mail.
+  </p>
+  <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  https://sua-instancia/api/v1/habilidades/EF05MA07</code></pre>
+  <p class="muted">Requisições sem uma API key válida recebem <code>401</code>.</p>
+</section>
+
+<section class="section container" aria-labelledby="exemplos-heading">
+  <h2 id="exemplos-heading">Exemplos rápidos</h2>
+
+  <h3>Consultar uma habilidade por código</h3>
+  <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  https://sua-instancia/api/v1/habilidades/EM13MAT101</code></pre>
+
+  <h3>Listar com filtros e paginação</h3>
+  <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  "https://sua-instancia/api/v1/habilidades?etapa=ensino_medio&size=20"</code></pre>
+
+  <h3>Busca semântica com IA (não-oficial)</h3>
+  <pre><code>curl -X POST https://sua-instancia/api/v1/busca-semantica \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "quais habilidades de matemática do 5º ano tratam de frações?"}'</code></pre>
+  <p class="muted">
+    As respostas de busca semântica trazem <code>fontes</code> rastreáveis e são sempre
+    marcadas como conteúdo gerado, <strong>não-oficial</strong> — os dados determinísticos
+    permanecem a fonte da verdade.
+  </p>
+</section>
+
+<section class="section container" aria-labelledby="limites-heading">
+  <h2 id="limites-heading">Limites de uso (rate limiting)</h2>
+  <table>
+    <thead>
+      <tr><th>Cota</th><th>Limite</th><th>Aplica-se a</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Determinística</td><td>60 requisições/min</td><td>Habilidades, competências, taxonomia, sistema</td></tr>
+      <tr><td>IA (busca semântica)</td><td>20 requisições/min e teto de 500/dia</td><td><code>/api/v1/busca-semantica</code></td></tr>
+    </tbody>
+  </table>
+  <p class="muted">
+    Acima do limite, a API responde <code>429</code> com o cabeçalho
+    <code>Retry-After</code> indicando quando tentar novamente. As duas cotas são
+    independentes: exceder a cota de IA não afeta os endpoints determinísticos.
+  </p>
+</section>
+
+<section class="section container" aria-labelledby="versionamento-heading">
+  <h2 id="versionamento-heading">Versionamento</h2>
+  <p>
+    Todos os endpoints ficam sob <code>/api/v1</code>. Mudanças incompatíveis (breaking
+    changes) são publicadas em uma nova versão (<code>/api/v2</code>), nunca dentro da
+    versão atual.
+  </p>
+</section>
+{% endblock %}

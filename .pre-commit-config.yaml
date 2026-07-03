@@ -1,0 +1,49 @@
+# Pre-commit — portões locais de segurança e qualidade.
+# Instale uma vez:  pre-commit install
+# Rode em tudo:     pre-commit run --all-files
+#
+# Foco principal: impedir que segredos ou artefatos sensíveis entrem no
+# repositório PÚBLICO (Princípio V — Segurança por padrão). As versões de
+# ruff/black espelham as fixadas em requirements.txt para que o local == CI.
+
+default_language_version:
+  python: python3.11
+
+repos:
+  # --- Detecção de segredos (varre o diff staged contra um baseline) ---------
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: Detectar segredos hardcoded
+        args: ["--baseline", ".secrets.baseline"]
+        # .env.example só contém placeholders; ainda assim é varrido.
+
+  # --- Higiene geral + segurança (chaves privadas, arquivos grandes) ---------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key            # bloqueia chaves privadas (PEM/RSA/...)
+      - id: check-added-large-files       # evita commitar bancos/dumps por engano
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+
+  # --- Lint / Format (espelha o gate de CI; versões idênticas) ---------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        files: ^(app|scripts|tests)/
+
+  - repo: https://github.com/psf/black
+    rev: 23.11.0
+    hooks:
+      - id: black
+        files: ^(app|scripts|tests)/

@@ -158,14 +158,14 @@ reflete nas docs sem edição manual.
 
 ### Tests for User Story 3 (escrever primeiro, garantir que FALHAM)
 
-- [ ] T052 [P] [US3] Teste de integração de sincronia das docs em `tests/integration/test_docs.py` (OpenAPI lista 100% dos endpoints públicos; página de docs renderiza)
+- [X] T052 [P] [US3] Teste de integração de sincronia das docs em `tests/integration/test_docs.py` (OpenAPI lista 100% dos endpoints públicos; página de docs renderiza)
 
 ### Implementation for User Story 3
 
-- [ ] T053 [US3] Enriquecer metadados OpenAPI em todos os endpoints (descrições, exemplos, tags, schemas de erro) — FR-013/FR-014
-- [ ] T054 [US3] Página de docs estilizada em `app/web/templates/docs.html` embutindo o mesmo spec OpenAPI (Swagger UI com "testar" por API key)
-- [ ] T055 [US3] Conteúdo do guia de início rápido nas docs (autenticação, limites, versionamento) — FR-015
-- [ ] T056 [US3] Rota de docs em `app/web/router.py`
+- [ ] T053 [US3] Enriquecer metadados OpenAPI em todos os endpoints (descrições, exemplos, tags, schemas de erro) — FR-013/FR-014 (fora do escopo owned por US3/US5; endpoints são de US1/US2/US4)
+- [X] T054 [US3] Página de docs estilizada em `app/web/templates/docs.html` embutindo o mesmo spec OpenAPI (Swagger UI com "testar" por API key)
+- [X] T055 [US3] Conteúdo do guia de início rápido nas docs (autenticação, limites, versionamento) — FR-015
+- [X] T056 [US3] Rota de docs em `app/web/docs.py` (`GET /guia`), incluída pelo seam de `app/web/router.py` via `include_web_routers()`
 
 **Checkpoint**: Documentação fiel ao contrato e navegável.
 
@@ -209,16 +209,16 @@ Graph, JSON-LD, `/sitemap.xml`, `/robots.txt`; Lighthouse ≥ 90 em SEO/acessibi
 
 ### Tests for User Story 5 (escrever primeiro, garantir que FALHAM)
 
-- [ ] T066 [P] [US5] Teste de integração de SEO da landing em `tests/integration/test_landing.py` (meta/OG/JSON-LD, `/sitemap.xml`, `/robots.txt`, HTML semântico)
+- [X] T066 [P] [US5] Teste de integração de SEO da landing em `tests/integration/test_landing.py` (meta/OG/JSON-LD, `/sitemap.xml`, `/robots.txt`, HTML semântico)
 
 ### Implementation for User Story 5
 
-- [ ] T067 [US5] Template `app/web/templates/landing.html` (proposta de valor, recursos, público-alvo, CTA para cadastro/docs)
-- [ ] T068 [US5] Metadados de SEO na landing (title/description/Open Graph/JSON-LD) + asset de OG image em `app/web/static/`
-- [ ] T069 [US5] Rotas `/sitemap.xml` e `/robots.txt` em `app/web/router.py`
-- [ ] T070 [US5] Rota da landing (`GET /`) em `app/web/router.py`
-- [ ] T071 [P] [US5] Consolidar tokens/estilos minimalistas compartilhados entre landing/portal/docs (FR-022)
-- [ ] T072 [US5] Ajuste de performance/acessibilidade para Lighthouse ≥ 90 (sem JS pesado; SC-008)
+- [X] T067 [US5] Template `app/web/templates/landing.html` (proposta de valor, recursos, público-alvo, CTA para cadastro/docs)
+- [X] T068 [US5] Metadados de SEO na landing (title/description/Open Graph/JSON-LD) + asset de OG image em `app/web/static/`
+- [X] T069 [US5] Rotas `/sitemap.xml` e `/robots.txt` em `app/web/landing.py`, incluídas pelo seam de `app/web/router.py` via `include_web_routers()`
+- [X] T070 [US5] Rota da landing (`GET /`) em `app/web/landing.py`, incluída pelo seam de `app/web/router.py` via `include_web_routers()`
+- [X] T071 [P] [US5] Consolidar tokens/estilos minimalistas compartilhados entre landing/portal/docs (FR-022) — já entregue em `app/web/static/styles.css` (T017); reutilizado (`.container`, `.hero`, `.lead`, `.grid`, `.card`, `.btn`, `.section`, `.badge`) sem duplicação
+- [X] T072 [US5] Ajuste de performance/acessibilidade para Lighthouse ≥ 90 (sem JS pesado; SC-008) — sem JS nas páginas, CSS estático único, `<meta viewport>`, `skip-link`, headings semânticos únicos, sem CDN externo
 
 **Checkpoint**: Todas as histórias entregues e independentemente funcionais.
 

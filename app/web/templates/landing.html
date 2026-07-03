@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}BNCC API — toda a Base Nacional Comum Curricular, via API{% endblock %}
+
+{% block description %}API pública e gratuita para começar: acesse toda a Base Nacional Comum Curricular (BNCC) — Educação Infantil, Fundamental e Médio — por uma API REST determinística, com API keys self-service, documentação automática e busca semântica com IA.{% endblock %}
+
+{% block head_extra %}
+{% set site_url = (request.base_url|string).rstrip('/') %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="BNCC API — toda a Base Nacional Comum Curricular, via API">
+<meta property="og:description" content="API pública com toda a BNCC (EI/EF/EM) determinística e versionada, acesso self-service por API keys, documentação automática e busca semântica com IA (não-oficial).">
+<meta property="og:url" content="{{ site_url }}/">
+<meta property="og:image" content="{{ site_url }}/static/og-image.svg">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BNCC API — toda a Base Nacional Comum Curricular, via API">
+<meta name="twitter:description" content="Dados oficiais da BNCC (EI/EF/EM), self-service por API keys, docs automáticas e busca semântica com IA.">
+<meta name="twitter:image" content="{{ site_url }}/static/og-image.svg">
+<link rel="canonical" href="{{ site_url }}/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "BNCC API",
+  "url": "{{ site_url }}/",
+  "description": "API pública que expõe toda a Base Nacional Comum Curricular (BNCC) do Brasil: dados determinísticos das três etapas, acesso self-service por API keys, documentação automática e busca semântica com IA.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "BNCC API",
+    "url": "{{ site_url }}/",
+    "logo": "{{ site_url }}/static/og-image.svg"
+  },
+  "inLanguage": "pt-BR"
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="hero container">
+  <h1>Toda a BNCC, pronta para consumir via API</h1>
+  <p class="lead">
+    A Base Nacional Comum Curricular completa — Educação Infantil, Ensino Fundamental e
+    Ensino Médio — em endpoints determinísticos, com os códigos e textos oficiais
+    preservados. Crie sua conta, gere uma API key e faça sua primeira chamada em minutos.
+  </p>
+  <p>
+    <a class="btn" href="/portal/signup">Criar conta grátis</a>
+    <a class="btn btn-secondary" href="/guia">Ver documentação</a>
+  </p>
+</section>
+
+<section class="section container" aria-labelledby="recursos-heading">
+  <h2 id="recursos-heading">Recursos</h2>
+  <div class="grid">
+    <article class="card">
+      <h3>BNCC completa e determinística</h3>
+      <p class="muted">
+        As três etapas (EI/EF/EM) extraídas de forma determinística e versionada a partir
+        das fontes oficiais, com relações navegáveis entre habilidades, competências e
+        objetos de conhecimento.
+      </p>
+    </article>
+    <article class="card">
+      <h3>API keys self-service</h3>
+      <p class="muted">
+        Cadastro por e-mail e senha, verificação obrigatória e geração/revogação de API
+        keys pelo portal — sem burocracia, sem espera por aprovação manual.
+      </p>
+    </article>
+    <article class="card">
+      <h3>Documentação sempre atualizada</h3>
+      <p class="muted">
+        Docs geradas automaticamente a partir do contrato OpenAPI: schemas, exemplos e
+        teste autenticado direto no navegador, sincronizados com o código.
+      </p>
+    </article>
+    <article class="card">
+      <h3>Busca semântica com IA <span class="badge badge-muted">não-oficial</span></h3>
+      <p class="muted">
+        Faça perguntas em linguagem natural e receba respostas com fontes oficiais
+        rastreáveis. Conteúdo gerado é sempre marcado como não-oficial — os dados
+        determinísticos continuam sendo a fonte da verdade.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section class="section container" aria-labelledby="publico-heading">
+  <h2 id="publico-heading">Para quem é</h2>
+  <div class="grid">
+    <article class="card">
+      <h3>Desenvolvedores de edtech</h3>
+      <p class="muted">Integre currículo oficial a plataformas de ensino, planejadores de aula e sistemas de avaliação.</p>
+    </article>
+    <article class="card">
+      <h3>Pesquisadores</h3>
+      <p class="muted">Analise cobertura curricular, componentes e competências em escala, com dados estruturados e versionados.</p>
+    </article>
+    <article class="card">
+      <h3>Governos e redes de ensino</h3>
+      <p class="muted">Alinhe materiais e currículos locais à BNCC com uma fonte oficial, íntegra e auditável.</p>
+    </article>
+  </div>
+</section>
+
+<section class="section container" aria-labelledby="cta-heading">
+  <h2 id="cta-heading">Comece agora</h2>
+  <p class="lead">Crie sua conta, gere uma API key e consulte a BNCC completa em minutos.</p>
+  <p>
+    <a class="btn" href="/portal/signup">Criar conta grátis</a>
+    <a class="btn btn-secondary" href="/guia">Ler o guia de início rápido</a>
+  </p>
+</section>
+{% endblock %}
