@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="og-title og-desc">
+  <title id="og-title">BNCC API</title>
+  <desc id="og-desc">Toda a Base Nacional Comum Curricular, via API</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d0f14"/>
+      <stop offset="100%" stop-color="#1b2340"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="72" y="72" width="120" height="120" rx="24" fill="#1b4dff"/>
+  <text x="132" y="152" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700" fill="#ffffff" text-anchor="middle">B</text>
+  <text x="72" y="330" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="700" fill="#f5f6f8">BNCC API</text>
+  <text x="72" y="400" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#9aa2b1">Toda a Base Nacional Comum Curricular, via API</text>
+  <text x="72" y="470" font-family="Arial, Helvetica, sans-serif" font-size="26" fill="#5b7bff">Dados oficiais · API keys self-service · Docs automáticas · Busca com IA</text>
+</svg>

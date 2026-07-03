@@ -1,334 +1,612 @@
 """
-Script para extrair dados da BNCC a partir do PDF oficial
+Extração determinística do snapshot da BNCC (T026, Princípio IV).
+
+Lê os PDFs oficiais em `data/` (Educação Infantil, Ensino Fundamental e Ensino
+Médio) com pdfplumber e grava `data/bncc_v1.json` com metadados de rastreabilidade
+(versão, checksum SHA-256 das fontes, contagens por etapa/componente).
+
+**Fidelidade (Princípio IV / T029)**: as tabelas da BNCC têm colunas. No EF/EM são 3
+colunas (UNIDADES TEMÁTICAS | OBJETOS DE CONHECIMENTO | HABILIDADES) e uma extração
+ingênua com `extract_text()` intercala o texto das colunas da esquerda dentro da
+descrição da habilidade; por isso isolamos a **coluna HABILIDADES** por coordenada
+horizontal (o código `(EFxxxx)` marca a borda esquerda da coluna) e só então
+recompomos e fatiamos o texto por código.
+
+Educação Infantil (T024): a fonte oficial completa é `data/BNCC_20dez_site.pdf` (as
+três etapas em um único PDF, 472 páginas). Sua árvore de páginas está comprimida e o
+pdfplumber sozinho enxerga apenas 1 página; por isso normalizamos o PDF com
+**pikepdf** (reescreve o arquivo → pdfplumber passa a ler as 472 páginas COM
+coordenadas). A EI é uma tabela de 3 colunas = as três faixas etárias (01/02/03).
+Cada coluna é isolada pela borda esquerda do código `(EIxxYYnn)` — igual ao EF/EM,
+mas processada por faixa. O PDF normalizado é temporário e nunca é versionado; o
+checksum registrado é o do `BNCC_20dez_site.pdf` ORIGINAL (proveniência).
+
+Uso:
+    python scripts/extract_bncc_data.py [--validate]
 """
 
-import json
-import re
-import logging
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+from __future__ import annotations
+
+# E501: as 10 competências gerais são texto OFICIAL fixo — quebrá-las alteraria o
+# dado (Princípio IV); mantê-las em linha única é intencional.
+# ruff: noqa: E501
 import argparse
+import hashlib
+import json
+import logging
+import os
+import re
+import sys
+import tempfile
+from datetime import date
+from pathlib import Path
+from typing import Any
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+import pdfplumber
+import pikepdf
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+logger = logging.getLogger("extract_bncc")
 
-class BNCCExtractor:
-    """Extrator de dados da BNCC"""
-    
-    def __init__(self, pdf_path: str, output_path: str):
-        self.pdf_path = Path(pdf_path)
-        self.output_path = Path(output_path)
-        self.data = {
-            "habilidades": [],
-            "competencias_gerais": [],
-            "competencias_especificas": []
-        }
-    
-    def extract_data(self):
-        """Extract data from BNCC PDF"""
-        try:
-            # Check if PDF exists
-            if not self.pdf_path.exists():
-                logger.error(f"PDF file not found: {self.pdf_path}")
-                self._create_sample_data()
-                return
-            
-            logger.info(f"Extracting data from PDF: {self.pdf_path}")
-            
-            # For now, create sample data structure
-            # In a real implementation, you would use PyPDF2 or similar
-            self._create_sample_data()
-            
-            # Save extracted data
-            self._save_data()
-            
-            logger.info(f"Data extraction completed. Output saved to: {self.output_path}")
-            
-        except Exception as e:
-            logger.error(f"Error during data extraction: {e}")
-            raise
-    
-    def _create_sample_data(self):
-        """Create sample BNCC data structure for development"""
-        logger.info("Creating sample BNCC data structure...")
-        
-        # Competências Gerais (as 10 competências da BNCC)
-        self.data["competencias_gerais"] = [
-            {
-                "numero": 1,
-                "titulo": "Conhecimento",
-                "descricao": "Valorizar e utilizar os conhecimentos historicamente construídos sobre o mundo físico, social, cultural e digital para entender e explicar a realidade, continuar aprendendo e colaborar para a construção de uma sociedade justa, democrática e inclusiva."
-            },
-            {
-                "numero": 2,
-                "titulo": "Pensamento científico, crítico e criativo",
-                "descricao": "Exercitar a curiosidade intelectual e recorrer à abordagem própria das ciências, incluindo a investigação, a reflexão, a análise crítica, a imaginação e a criatividade, para investigar causas, elaborar e testar hipóteses, formular e resolver problemas e criar soluções (inclusive tecnológicas) com base nos conhecimentos das diferentes áreas."
-            },
-            {
-                "numero": 3,
-                "titulo": "Repertório cultural",
-                "descricao": "Valorizar e fruir as diversas manifestações artísticas e culturais, das locais às mundiais, e também participar de práticas diversificadas da produção artístico-cultural."
-            },
-            {
-                "numero": 4,
-                "titulo": "Comunicação",
-                "descricao": "Utilizar diferentes linguagens – verbal (oral ou visual-motora, como Libras, e escrita), corporal, visual, sonora e digital –, bem como conhecimentos das linguagens artística, matemática e científica, para se expressar e partilhar informações, experiências, ideias e sentimentos em diferentes contextos e produzir sentidos que levem ao entendimento mútuo."
-            },
-            {
-                "numero": 5,
-                "titulo": "Cultura digital",
-                "descricao": "Compreender, utilizar e criar tecnologias digitais de informação e comunicação de forma crítica, significativa, reflexiva e ética nas diversas práticas sociais (incluindo as escolares) para se comunicar, acessar e disseminar informações, produzir conhecimentos, resolver problemas e exercer protagonismo e autoria na vida pessoal e coletiva."
-            },
-            {
-                "numero": 6,
-                "titulo": "Trabalho e projeto de vida",
-                "descricao": "Valorizar a diversidade de saberes e vivências culturais e apropriar-se de conhecimentos e experiências que lhe possibilitem entender as relações próprias do mundo do trabalho e fazer escolhas alinhadas ao exercício da cidadania e ao seu projeto de vida, com liberdade, autonomia, consciência crítica e responsabilidade."
-            },
-            {
-                "numero": 7,
-                "titulo": "Argumentação",
-                "descricao": "Argumentar com base em fatos, dados e informações confiáveis, para formular, negociar e defender ideias, pontos de vista e decisões comuns que respeitem e promovam os direitos humanos, a consciência socioambiental e o consumo responsável em âmbito local, regional e global, com posicionamento ético em relação ao cuidado de si mesmo, dos outros e do planeta."
-            },
-            {
-                "numero": 8,
-                "titulo": "Autoconhecimento e autocuidado",
-                "descricao": "Conhecer-se, apreciar-se e cuidar de sua saúde física e emocional, compreendendo-se na diversidade humana e reconhecendo suas emoções e as dos outros, com autocrítica e capacidade para lidar com elas."
-            },
-            {
-                "numero": 9,
-                "titulo": "Empatia e cooperação",
-                "descricao": "Exercitar a empatia, o diálogo, a resolução de conflitos e a cooperação, fazendo-se respeitar e promovendo o respeito ao outro e aos direitos humanos, com acolhimento e valorização da diversidade de indivíduos e de grupos sociais, seus saberes, identidades, culturas e potencialidades, sem preconceitos de qualquer natureza."
-            },
-            {
-                "numero": 10,
-                "titulo": "Responsabilidade e cidadania",
-                "descricao": "Agir pessoal e coletivamente com autonomia, responsabilidade, flexibilidade, resiliência e determinação, tomando decisões com base em princípios éticos, democráticos, inclusivos, sustentáveis e solidários."
-            }
-        ]
-        
-        # Competências Específicas de exemplo
-        self.data["competencias_especificas"] = [
-            {
-                "codigo": "EFMAT01",
-                "numero": 1,
-                "area_conhecimento": "matematica",
-                "componente": "matematica",
-                "etapa": "ensino_fundamental",
-                "descricao": "Reconhecer que a Matemática é uma ciência humana, fruto das necessidades e preocupações de diferentes culturas, em diferentes momentos históricos, e é uma ciência viva, que contribui para solucionar problemas científicos e tecnológicos e para alicerçar descobertas e construções, inclusive com impactos no mundo do trabalho."
-            },
-            {
-                "codigo": "EFMAT02",
-                "numero": 2,
-                "area_conhecimento": "matematica",
-                "componente": "matematica",
-                "etapa": "ensino_fundamental",
-                "descricao": "Desenvolver o raciocínio lógico, o espírito de investigação e a capacidade de produzir argumentos convincentes, recorrendo aos conhecimentos matemáticos para compreender e atuar no mundo."
-            },
-            {
-                "codigo": "EFLP01",
-                "numero": 1,
-                "area_conhecimento": "linguagens",
-                "componente": "lingua_portuguesa",
-                "etapa": "ensino_fundamental",
-                "descricao": "Compreender a língua como fenômeno cultural, histórico, social, variável, heterogêneo e sensível aos contextos de uso, reconhecendo-a como meio de construção de identidades de seus usuários e da comunidade a que pertencem."
-            },
-            {
-                "codigo": "EFCI01",
-                "numero": 1,
-                "area_conhecimento": "ciencias_natureza",
-                "componente": "ciencias",
-                "etapa": "ensino_fundamental",
-                "descricao": "Compreender as Ciências da Natureza como empreendimento humano, e o conhecimento científico como provisório, cultural e histórico."
-            }
-        ]
-        
-        # Habilidades de exemplo
-        self.data["habilidades"] = [
-            {
-                "codigo": "EF05MA03",
-                "descricao": "Identificar e representar frações (menores e maiores que a unidade), associando-as ao resultado de uma divisão ou à ideia de parte de um todo, utilizando a reta numérica como recurso.",
-                "etapa": "ensino_fundamental",
-                "anos": ["5"],
-                "area_conhecimento": "matematica",
-                "componente": "matematica",
-                "competencias_gerais": [1, 2, 4],
-                "competencias_especificas": ["EFMAT01", "EFMAT02"],
-                "objetos_conhecimento": ["Números racionais expressos na forma decimal e na forma de fração", "Comparação e ordenação de números racionais na representação decimal e na fracionária utilizando a noção de equivalência"]
-            },
-            {
-                "codigo": "EF05MA08",
-                "descricao": "Resolver e elaborar problemas de multiplicação e divisão com números naturais e com números racionais cuja representação decimal é finita (com multiplicador natural e divisor natural e diferente de zero), utilizando estratégias diversas, como cálculo por estimativa, cálculo mental e algoritmos.",
-                "etapa": "ensino_fundamental",
-                "anos": ["5"],
-                "area_conhecimento": "matematica",
-                "componente": "matematica",
-                "competencias_gerais": [1, 2, 7],
-                "competencias_especificas": ["EFMAT01", "EFMAT02"],
-                "objetos_conhecimento": ["Problemas: multiplicação e divisão de números racionais cuja representação decimal é finita por números naturais"]
-            },
-            {
-                "codigo": "EF67EF01",
-                "descricao": "Experimentar, desfrutar, apreciar e criar diferentes brincadeiras, jogos, danças, ginásticas, esportes, lutas e práticas corporais de aventura, valorizando o trabalho coletivo e o protagonismo.",
-                "etapa": "ensino_fundamental",
-                "anos": ["6", "7"],
-                "area_conhecimento": "linguagens",
-                "componente": "educacao_fisica",
-                "competencias_gerais": [1, 4, 8, 9],
-                "competencias_especificas": ["EFEF01"],
-                "objetos_conhecimento": ["Brincadeiras e jogos", "Esportes", "Ginásticas", "Danças", "Lutas", "Práticas corporais de aventura"]
-            },
-            {
-                "codigo": "EF15LP01",
-                "descricao": "Identificar a função social de textos que circulam em campos da vida social dos quais participa cotidianamente (a casa, a rua, a comunidade, a escola) e nas mídias impressa, de massa e digital, reconhecendo para que foram produzidos, onde circulam, quem os produziu e a quem se destinam.",
-                "etapa": "ensino_fundamental",
-                "anos": ["1", "2", "3", "4", "5"],
-                "area_conhecimento": "linguagens",
-                "componente": "lingua_portuguesa",
-                "competencias_gerais": [1, 4, 5],
-                "competencias_especificas": ["EFLP01"],
-                "objetos_conhecimento": ["Reconstrução das condições de produção e recepção de textos", "Estratégias de leitura"]
-            },
-            {
-                "codigo": "EF02CI01",
-                "descricao": "Identificar de que materiais (metais, madeira, vidro etc.) são feitos os objetos que fazem parte da vida cotidiana, como esses objetos são utilizados e com quais materiais eram produzidos no passado.",
-                "etapa": "ensino_fundamental",
-                "anos": ["2"],
-                "area_conhecimento": "ciencias_natureza",
-                "componente": "ciencias",
-                "competencias_gerais": [1, 2, 6],
-                "competencias_especificas": ["EFCI01"],
-                "objetos_conhecimento": ["Propriedades e usos dos materiais", "Prevenção de acidentes domésticos"]
-            }
-        ]
-        
-        logger.info(f"Created sample data: {len(self.data['habilidades'])} habilidades, "
-                   f"{len(self.data['competencias_gerais'])} competências gerais, "
-                   f"{len(self.data['competencias_especificas'])} competências específicas")
-    
-    def _save_data(self):
-        """Save extracted data to JSON file"""
-        try:
-            # Create output directory if it doesn't exist
-            self.output_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Save to JSON file
-            with open(self.output_path, 'w', encoding='utf-8') as f:
-                json.dump(self.data, f, ensure_ascii=False, indent=2)
-            
-            logger.info(f"Data saved successfully to {self.output_path}")
-            
-        except Exception as e:
-            logger.error(f"Error saving data: {e}")
-            raise
-    
-    def validate_extracted_data(self) -> Dict[str, Any]:
-        """Validate the extracted data structure"""
-        validation_report = {
-            "valid": True,
-            "errors": [],
-            "warnings": [],
-            "summary": {}
-        }
-        
-        try:
-            # Check required sections
-            required_sections = ["habilidades", "competencias_gerais", "competencias_especificas"]
-            for section in required_sections:
-                if section not in self.data:
-                    validation_report["errors"].append(f"Missing section: {section}")
-                    validation_report["valid"] = False
-            
-            # Validate habilidades
-            hab_codigos = set()
-            for i, hab in enumerate(self.data.get("habilidades", [])):
-                if not hab.get("codigo"):
-                    validation_report["errors"].append(f"Habilidade {i}: Missing codigo")
-                    validation_report["valid"] = False
-                
-                codigo = hab.get("codigo", "")
-                if codigo in hab_codigos:
-                    validation_report["errors"].append(f"Duplicate habilidade codigo: {codigo}")
-                    validation_report["valid"] = False
-                hab_codigos.add(codigo)
-                
-                # Check required fields
-                required_fields = ["descricao", "etapa", "anos", "area_conhecimento", "componente"]
-                for field in required_fields:
-                    if not hab.get(field):
-                        validation_report["warnings"].append(f"Habilidade {codigo}: Missing {field}")
-            
-            # Validate competências gerais
-            for i, comp in enumerate(self.data.get("competencias_gerais", [])):
-                if not comp.get("numero") or not comp.get("descricao"):
-                    validation_report["errors"].append(f"Competência geral {i}: Missing required fields")
-                    validation_report["valid"] = False
-            
-            # Summary
-            validation_report["summary"] = {
-                "total_habilidades": len(self.data.get("habilidades", [])),
-                "total_competencias_gerais": len(self.data.get("competencias_gerais", [])),
-                "total_competencias_especificas": len(self.data.get("competencias_especificas", [])),
-                "unique_codigos": len(hab_codigos)
-            }
-            
-            return validation_report
-            
-        except Exception as e:
-            validation_report["valid"] = False
-            validation_report["errors"].append(f"Validation error: {str(e)}")
-            return validation_report
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+DATA_DIR = ROOT / "data"
+PDF_EF = DATA_DIR / "bncc_ensino_fundamental.pdf"
+PDF_EM = DATA_DIR / "bncc_ensino_medio.pdf"
+# Fonte oficial completa (3 etapas em 1 PDF) — usada para a Educação Infantil.
+PDF_EI_SITE = DATA_DIR / "BNCC_20dez_site.pdf"
+# Fallback opcional: PDF dedicado da EI (mesma estrutura de 3 colunas por faixa).
+PDF_EI = DATA_DIR / "bncc_educacao_infantil.pdf"
+OUTPUT = DATA_DIR / "bncc_v1.json"
+
+# EI: no `BNCC_20dez_site.pdf` as tabelas de objetivos ficam além do prefácio; a
+# página-exemplo (que ilustra o código EI02TS01 em prosa) está no material
+# explicativo inicial. Pulamos o prefácio por índice e, por segurança, também
+# ignoramos qualquer página que contenha os marcadores do texto-exemplo.
+EI_FRONTMATTER_SKIP_PAGES = 40
+EI_EXPLANATION_SENTINELS = re.compile(
+    r"exemplo apresentado|par de letras indica|c[óo]digo alfanum[ée]rico",
+    re.IGNORECASE,
+)
+
+SNAPSHOT_VERSION = "v1"
+
+# --- Padrões de código -------------------------------------------------------
+RE_EF = r"EF\d{2}[A-Z]{2}\d{2}"
+RE_EM_AREA = r"EM13[A-Z]{3}\d{3}"
+RE_EM_LP = r"EM13[A-Z]{2}\d{2}"
+RE_EI = r"EI\d{2}[A-Z]{2}\d{2}"
+
+# Token isolado (palavra) que é um código, com ou sem parênteses.
+RE_CODE_TOKEN = re.compile(r"^\(?(E[FMI]\d{2}[A-Z]{2,3}\d{2,3})\)?[.,;:]?$")
+# Idem, restrito à Educação Infantil (usado para agrupar as 3 colunas por faixa).
+RE_EI_CODE_TOKEN = re.compile(r"^\(?(" + RE_EI + r")\)?[.,;:]?$")
+# Divisor de habilidades no fluxo textual já isolado da coluna direita.
+RE_SPLIT_EF = re.compile(r"\((" + RE_EF + r")\)")
+RE_SPLIT_EM = re.compile(r"\((" + RE_EM_AREA + r"|" + RE_EM_LP + r")\)")
+RE_SPLIT_EI = re.compile(r"\((" + RE_EI + r")\)")
+
+# --- Mapeamentos determinísticos ---------------------------------------------
+EF_COMPONENTE = {
+    "LP": ("lingua_portuguesa", "linguagens"),
+    "LI": ("lingua_inglesa", "linguagens"),
+    "AR": ("arte", "linguagens"),
+    "EF": ("educacao_fisica", "linguagens"),
+    "MA": ("matematica", "matematica"),
+    "CI": ("ciencias", "ciencias_natureza"),
+    "GE": ("geografia", "ciencias_humanas"),
+    "HI": ("historia", "ciencias_humanas"),
+    "ER": ("ensino_religioso", "ensino_religioso"),
+}
+EM_AREA = {
+    "LGG": "linguagens",
+    "MAT": "matematica",
+    "CNT": "ciencias_natureza",
+    "CHS": "ciencias_humanas",
+}
+EI_CAMPO = {
+    "EO": "O eu, o outro e o nós",
+    "CG": "Corpo, gestos e movimentos",
+    "TS": "Traços, sons, cores e formas",
+    "EF": "Escuta, fala, pensamento e imaginação",
+    "ET": "Espaços, tempos, quantidades, relações e transformações",
+}
+
+# Sentinelas de cabeçalho/rodapé que podem contaminar a última habilidade da
+# página (a descrição oficial nunca contém estas expressões em maiúsculas).
+NOISE_SENTINELS = re.compile(
+    r"BASE NACIONAL|COMUM CURRICULAR|UNIDADES TEM|CAMPOS DE ATUA|"
+    r"OBJETOS DE CONHE|\bHABILIDADES\b|COMPET[ÊE]NCIAS ESPEC|PR[ÁA]TICAS DE LINGUAGEM"
+)
 
 
-def main():
-    """Main function"""
-    parser = argparse.ArgumentParser(description="Extract BNCC data from PDF")
-    parser.add_argument("--pdf", default="./data/bncc.pdf", help="Path to BNCC PDF file")
-    parser.add_argument("--output", default="./data/bncc_completa.json", help="Output JSON file path")
-    parser.add_argument("--validate", action="store_true", help="Validate extracted data")
-    
-    args = parser.parse_args()
-    
+# --------------------------------------------------------------------------- #
+# Utilitários
+# --------------------------------------------------------------------------- #
+def sha256_of(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def anos_from_ef(digits: str) -> list[str]:
+    """ "05"→['5']; "67"→['6','7']; "15"→['1'..'5']; "89"→['8','9']."""
+    a, b = int(digits[0]), int(digits[1])
+    if a == 0:
+        return [str(b)] if b != 0 else []
+    if a <= b:
+        return [str(y) for y in range(a, b + 1)]
+    return [str(a), str(b)]
+
+
+def clean_description(raw: str) -> str:
+    """Corta ruído de cabeçalho, remove nº de rodapé residual e normaliza espaços."""
+    m = NOISE_SENTINELS.search(raw)
+    if m and m.start() > 30:
+        raw = raw[: m.start()]
+    raw = re.sub(r"\s+\d{1,4}\s*$", "", raw)  # nº de página ao final
+    raw = re.sub(r"\s+", " ", raw).strip()
+    return raw
+
+
+# --------------------------------------------------------------------------- #
+# Isolamento da coluna HABILIDADES (evita contaminação — fidelidade)
+# --------------------------------------------------------------------------- #
+def right_column_text(pdf_path: Path) -> str:
+    """Concatena, em ordem de leitura, apenas a coluna direita (HABILIDADES)."""
+    parts: list[str] = []
+    with pdfplumber.open(str(pdf_path)) as pdf:
+        for page in pdf.pages:
+            try:
+                words = page.extract_words(use_text_flow=False, keep_blank_chars=False)
+            except Exception as e:  # pragma: no cover - página problemática
+                logger.warning("Falha ao ler página em %s: %s", pdf_path.name, e)
+                continue
+            if not words:
+                continue
+            code_x0 = [w["x0"] for w in words if RE_CODE_TOKEN.match(w["text"])]
+            if not code_x0:
+                continue
+            col_x = min(code_x0) - 3.0
+            right = [w for w in words if w["x0"] >= col_x]
+            right.sort(key=lambda w: (round(w["top"]), w["x0"]))
+            parts.append(" ".join(w["text"] for w in right))
+    return " ".join(parts)
+
+
+# --------------------------------------------------------------------------- #
+# Isolamento das 3 colunas da Educação Infantil (uma coluna por faixa etária)
+# --------------------------------------------------------------------------- #
+def _ei_page_column_texts(words: list[dict[str, Any]]) -> list[str]:
+    """Reconstroi, em ordem de leitura, o texto de cada coluna (faixa etária) de
+    uma página de tabela da EI.
+
+    A borda esquerda de cada coluna é dada pelo x0 do código `(EIxxYYnn)` (faixa =
+    dígitos 01/02/03). Como o texto justificado de uma coluna transborda a metade
+    do vão até quase a borda esquerda da coluna seguinte, associar por *ponto médio*
+    embaralharia as colunas; por isso cada palavra é atribuída à coluna cuja borda
+    esquerda é a MAIOR que ainda seja <= x0 da palavra (com pequena tolerância).
+
+    Retorna uma lista de strings — uma por faixa (esquerda→direita). Cada string é
+    fatiada por código separadamente pelo chamador, para que a última descrição de
+    uma coluna não absorva o cabeçalho da coluna seguinte.
+    """
+    code_words = [w for w in words if RE_EI_CODE_TOKEN.match(w["text"])]
+    if not code_words:
+        return []
+    # Borda esquerda por faixa (mínimo x0 dos códigos daquela faixa na página).
+    left_by_faixa: dict[str, float] = {}
+    for w in code_words:
+        m = RE_EI_CODE_TOKEN.match(w["text"])
+        faixa = m.group(1)[2:4]
+        if faixa not in left_by_faixa or w["x0"] < left_by_faixa[faixa]:
+            left_by_faixa[faixa] = w["x0"]
+    lefts = sorted(left_by_faixa.items(), key=lambda kv: kv[1])  # [(faixa, x0), ...]
+
+    cols: dict[str, list[dict[str, Any]]] = {faixa: [] for faixa, _ in lefts}
+    for w in words:
+        chosen: str | None = None
+        for faixa, left in lefts:
+            if w["x0"] >= left - 6.0:
+                chosen = faixa
+        if chosen is not None:
+            cols[chosen].append(w)
+
+    texts: list[str] = []
+    for faixa, _ in lefts:
+        ordered = sorted(cols[faixa], key=lambda w: (round(w["top"]), w["x0"]))
+        texts.append(" ".join(w["text"] for w in ordered))
+    return texts
+
+
+def ei_column_texts(original_pdf: Path) -> list[str]:
+    """Normaliza o PDF oficial completo com pikepdf e devolve o texto de cada coluna
+    (faixa) das páginas de tabela da EI.
+
+    O `BNCC_20dez_site.pdf` tem a árvore de páginas comprimida — o pdfplumber sozinho
+    enxerga só 1 página. Reescrevê-lo com pikepdf destrava a leitura das 472 páginas
+    com coordenadas. O arquivo normalizado é temporário e removido ao final (nunca é
+    versionado).
+    """
+    fd, norm_name = tempfile.mkstemp(prefix="bncc_norm_", suffix=".pdf")
+    os.close(fd)
+    norm_path = Path(norm_name)
+    out: list[str] = []
     try:
-        # Create extractor
-        extractor = BNCCExtractor(args.pdf, args.output)
-        
-        # Extract data
-        extractor.extract_data()
-        
-        # Validate if requested
-        if args.validate:
-            logger.info("Validating extracted data...")
-            validation_report = extractor.validate_extracted_data()
-            
-            print("\n" + "="*50)
-            print("VALIDATION REPORT")
-            print("="*50)
-            print(f"Valid: {validation_report['valid']}")
-            print(f"Errors: {len(validation_report['errors'])}")
-            print(f"Warnings: {len(validation_report['warnings'])}")
-            
-            if validation_report["errors"]:
-                print("\nErrors:")
-                for error in validation_report["errors"]:
-                    print(f"  - {error}")
-            
-            if validation_report["warnings"]:
-                print("\nWarnings:")
-                for warning in validation_report["warnings"]:
-                    print(f"  - {warning}")
-            
-            print(f"\nSummary: {validation_report['summary']}")
-        
-        logger.info("BNCC data extraction completed successfully!")
-        
-    except Exception as e:
-        logger.error(f"Script failed: {e}")
-        return 1
-    
+        # pikepdf pode logar "Error occurred parsing XMP" — inofensivo (só metadados).
+        with pikepdf.open(str(original_pdf)) as pk:
+            pk.save(str(norm_path))
+        with pdfplumber.open(str(norm_path)) as pdf:
+            for idx, page in enumerate(pdf.pages):
+                if idx < EI_FRONTMATTER_SKIP_PAGES:
+                    continue  # prefácio/material explicativo (inclui o exemplo EI02TS01)
+                try:
+                    words = page.extract_words(use_text_flow=False, keep_blank_chars=False)
+                except Exception as e:  # pragma: no cover - página problemática
+                    logger.warning("Falha ao ler página %d da EI: %s", idx, e)
+                    continue
+                if not any(RE_EI_CODE_TOKEN.match(w["text"]) for w in words):
+                    continue
+                page_text = " ".join(w["text"] for w in words)
+                if EI_EXPLANATION_SENTINELS.search(page_text):
+                    continue  # guarda contra a página-exemplo (código ilustrativo)
+                out.extend(_ei_page_column_texts(words))
+    finally:
+        try:
+            norm_path.unlink()
+        except OSError:  # pragma: no cover
+            pass
+    return out
+
+
+def _split_by_codes(text: str, regex: re.Pattern) -> list[tuple[str, str]]:
+    matches = list(regex.finditer(text))
+    out: list[tuple[str, str]] = []
+    for i, m in enumerate(matches):
+        start = m.end()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        out.append((m.group(1), text[start:end]))
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# Parsers por etapa
+# --------------------------------------------------------------------------- #
+def _dedup_longest(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    best: dict[str, dict[str, Any]] = {}
+    for it in items:
+        cur = best.get(it["codigo"])
+        if cur is None or len(it["descricao"]) > len(cur["descricao"]):
+            best[it["codigo"]] = it
+    return sorted(best.values(), key=lambda h: h["codigo"])
+
+
+def parse_ef(text: str) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for codigo, raw in _split_by_codes(text, RE_SPLIT_EF):
+        mapping = EF_COMPONENTE.get(codigo[4:6])
+        if not mapping:
+            continue
+        componente, area = mapping
+        desc = clean_description(raw)
+        if len(desc) < 12:
+            continue
+        out.append(
+            {
+                "codigo": codigo,
+                "descricao": desc,
+                "etapa": "ensino_fundamental",
+                "anos": anos_from_ef(codigo[2:4]),
+                "area_conhecimento": area,
+                "componente": componente,
+                "competencias_gerais": [],
+                "competencias_especificas": [],
+                "objetos_conhecimento": [],
+            }
+        )
+    return _dedup_longest(out)
+
+
+def parse_em(text: str) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for codigo, raw in _split_by_codes(text, RE_SPLIT_EM):
+        if len(codigo) == 10:  # EM13 + 3 letras + 3 dígitos (por área)
+            area = EM_AREA.get(codigo[4:7])
+            componente = None
+        else:  # EM13 + 2 letras + 2 dígitos (Língua Portuguesa)
+            area = "linguagens"
+            componente = "lingua_portuguesa"
+        if not area:
+            continue
+        desc = clean_description(raw)
+        if len(desc) < 12:
+            continue
+        out.append(
+            {
+                "codigo": codigo,
+                "descricao": desc,
+                "etapa": "ensino_medio",
+                "anos": ["1", "2", "3"],
+                "area_conhecimento": area,
+                "componente": componente,
+                "competencias_gerais": [],
+                "competencias_especificas": [],
+                "objetos_conhecimento": [],
+            }
+        )
+    return _dedup_longest(out)
+
+
+def parse_ei(text: str) -> list[dict[str, Any]]:
+    """Parser da Educação Infantil (ativa apenas com fonte dedicada — T024)."""
+    out: list[dict[str, Any]] = []
+    for codigo, raw in _split_by_codes(text, RE_SPLIT_EI):
+        desc = clean_description(raw)
+        if len(desc) < 12:
+            continue
+        campo = codigo[4:6]
+        out.append(
+            {
+                "codigo": codigo,
+                "descricao": desc,
+                "etapa": "educacao_infantil",
+                "anos": [codigo[2:4]],
+                "area_conhecimento": "linguagens",
+                "componente": None,
+                "competencias_gerais": [],
+                "competencias_especificas": [],
+                "objetos_conhecimento": [],
+                "campo_experiencia": EI_CAMPO.get(campo, campo),
+            }
+        )
+    return _dedup_longest(out)
+
+
+# --------------------------------------------------------------------------- #
+# Competências gerais (texto oficial fixo — 10 registros, SC-001)
+# --------------------------------------------------------------------------- #
+COMPETENCIAS_GERAIS: list[dict[str, Any]] = [
+    {
+        "numero": 1,
+        "titulo": "Conhecimento",
+        "descricao": "Valorizar e utilizar os conhecimentos historicamente construídos sobre o mundo físico, social, cultural e digital para entender e explicar a realidade, continuar aprendendo e colaborar para a construção de uma sociedade justa, democrática e inclusiva.",  # noqa: E501
+    },
+    {
+        "numero": 2,
+        "titulo": "Pensamento científico, crítico e criativo",
+        "descricao": "Exercitar a curiosidade intelectual e recorrer à abordagem própria das ciências, incluindo a investigação, a reflexão, a análise crítica, a imaginação e a criatividade, para investigar causas, elaborar e testar hipóteses, formular e resolver problemas e criar soluções (inclusive tecnológicas) com base nos conhecimentos das diferentes áreas.",  # noqa: E501
+    },
+    {
+        "numero": 3,
+        "titulo": "Repertório cultural",
+        "descricao": "Valorizar e fruir as diversas manifestações artísticas e culturais, das locais às mundiais, e também participar de práticas diversificadas da produção artístico-cultural.",  # noqa: E501
+    },
+    {
+        "numero": 4,
+        "titulo": "Comunicação",
+        "descricao": "Utilizar diferentes linguagens – verbal (oral ou visual-motora, como Libras, e escrita), corporal, visual, sonora e digital –, bem como conhecimentos das linguagens artística, matemática e científica, para se expressar e partilhar informações, experiências, ideias e sentimentos em diferentes contextos e produzir sentidos que levem ao entendimento mútuo.",  # noqa: E501
+    },
+    {
+        "numero": 5,
+        "titulo": "Cultura digital",
+        "descricao": "Compreender, utilizar e criar tecnologias digitais de informação e comunicação de forma crítica, significativa, reflexiva e ética nas diversas práticas sociais (incluindo as escolares) para se comunicar, acessar e disseminar informações, produzir conhecimentos, resolver problemas e exercer protagonismo e autoria na vida pessoal e coletiva.",  # noqa: E501
+    },
+    {
+        "numero": 6,
+        "titulo": "Trabalho e projeto de vida",
+        "descricao": "Valorizar a diversidade de saberes e vivências culturais e apropriar-se de conhecimentos e experiências que lhe possibilitem entender as relações próprias do mundo do trabalho e fazer escolhas alinhadas ao exercício da cidadania e ao seu projeto de vida, com liberdade, autonomia, consciência crítica e responsabilidade.",  # noqa: E501
+    },
+    {
+        "numero": 7,
+        "titulo": "Argumentação",
+        "descricao": "Argumentar com base em fatos, dados e informações confiáveis, para formular, negociar e defender ideias, pontos de vista e decisões comuns que respeitem e promovam os direitos humanos, a consciência socioambiental e o consumo responsável em âmbito local, regional e global, com posicionamento ético em relação ao cuidado de si mesmo, dos outros e do planeta.",  # noqa: E501
+    },
+    {
+        "numero": 8,
+        "titulo": "Autoconhecimento e autocuidado",
+        "descricao": "Conhecer-se, apreciar-se e cuidar de sua saúde física e emocional, compreendendo-se na diversidade humana e reconhecendo suas emoções e as dos outros, com autocrítica e capacidade para lidar com elas.",  # noqa: E501
+    },
+    {
+        "numero": 9,
+        "titulo": "Empatia e cooperação",
+        "descricao": "Exercitar a empatia, o diálogo, a resolução de conflitos e a cooperação, fazendo-se respeitar e promovendo o respeito ao outro e aos direitos humanos, com acolhimento e valorização da diversidade de indivíduos e de grupos sociais, seus saberes, identidades, culturas e potencialidades, sem preconceitos de qualquer natureza.",  # noqa: E501
+    },
+    {
+        "numero": 10,
+        "titulo": "Responsabilidade e cidadania",
+        "descricao": "Agir pessoal e coletivamente com autonomia, responsabilidade, flexibilidade, resiliência e determinação, tomando decisões com base em princípios éticos, democráticos, inclusivos, sustentáveis e solidários.",  # noqa: E501
+    },
+]
+
+
+# --------------------------------------------------------------------------- #
+# Orquestração
+# --------------------------------------------------------------------------- #
+def build_snapshot() -> dict[str, Any]:
+    habilidades: list[dict[str, Any]] = []
+    checksums: dict[str, str] = {}
+    missing_sources: list[str] = []
+
+    if PDF_EF.exists():
+        logger.info("Extraindo Ensino Fundamental de %s ...", PDF_EF.name)
+        ef = parse_ef(right_column_text(PDF_EF))
+        habilidades.extend(ef)
+        checksums["ensino_fundamental"] = sha256_of(PDF_EF)
+        logger.info("  -> %d habilidades EF", len(ef))
+    else:
+        logger.warning("Fonte do Ensino Fundamental ausente: %s", PDF_EF)
+        missing_sources.append("ensino_fundamental")
+
+    if PDF_EM.exists():
+        logger.info("Extraindo Ensino Médio de %s ...", PDF_EM.name)
+        em = parse_em(right_column_text(PDF_EM))
+        habilidades.extend(em)
+        checksums["ensino_medio"] = sha256_of(PDF_EM)
+        logger.info("  -> %d habilidades EM", len(em))
+    else:
+        logger.warning("Fonte do Ensino Médio ausente: %s", PDF_EM)
+        missing_sources.append("ensino_medio")
+
+    ei_source = PDF_EI_SITE if PDF_EI_SITE.exists() else (PDF_EI if PDF_EI.exists() else None)
+    if ei_source is not None:
+        logger.info(
+            "Extraindo Educação Infantil de %s (normalizado via pikepdf) ...",
+            ei_source.name,
+        )
+        # Cada coluna (faixa) é fatiada por código separadamente e depois combinada;
+        # assim a última descrição de uma coluna não absorve o cabeçalho da seguinte.
+        ei: list[dict[str, Any]] = []
+        for col_text in ei_column_texts(ei_source):
+            ei.extend(parse_ei(col_text))
+        ei = _dedup_longest(ei)
+        habilidades.extend(ei)
+        checksums["educacao_infantil"] = sha256_of(ei_source)  # proveniência do original
+        logger.info("  -> %d objetivos/habilidades EI", len(ei))
+    else:
+        logger.warning(
+            "Fonte oficial da Educação Infantil AUSENTE (%s). "
+            "Registrando contagem 0 + missing_sources; NENHUM dado de EI fabricado.",
+            PDF_EI_SITE.name,
+        )
+        missing_sources.append("educacao_infantil")
+
+    # Deduplicação global final por código.
+    habilidades = _dedup_longest(habilidades)
+
+    por_etapa: dict[str, int] = {
+        "educacao_infantil": 0,
+        "ensino_fundamental": 0,
+        "ensino_medio": 0,
+    }
+    por_componente: dict[str, int] = {}
+    for h in habilidades:
+        por_etapa[h["etapa"]] = por_etapa.get(h["etapa"], 0) + 1
+        comp = h.get("componente") or "sem_componente"
+        por_componente[comp] = por_componente.get(comp, 0) + 1
+
+    metadata = {
+        "versao": SNAPSHOT_VERSION,
+        "data_publicacao": date.today().isoformat(),
+        "checksum_fontes": checksums,
+        "missing_sources": missing_sources,
+        "contagens": {
+            "por_etapa": por_etapa,
+            "por_componente": por_componente,
+            "total_habilidades": len(habilidades),
+            "total_competencias_gerais": len(COMPETENCIAS_GERAIS),
+        },
+    }
+    return {
+        "metadata": metadata,
+        "competencias_gerais": COMPETENCIAS_GERAIS,
+        "competencias_especificas": [],
+        "campos_experiencia": [],
+        "unidades_tematicas": [],
+        "objetos_conhecimento": [],
+        "habilidades": habilidades,
+    }
+
+
+def validate_snapshot(snapshot: dict[str, Any]) -> int:
+    """Validação leve inline (--validate). Retorna nº de erros graves."""
+    from app.models.bncc import is_valid_codigo
+
+    errors = 0
+    habs = snapshot["habilidades"]
+    codigos = [h["codigo"] for h in habs]
+    dups = {c for c in codigos if codigos.count(c) > 1}
+    if dups:
+        logger.error("Códigos duplicados: %s", sorted(dups)[:10])
+        errors += len(dups)
+    malformed = [c for c in codigos if not is_valid_codigo(c)]
+    if malformed:
+        logger.error("Códigos malformados: %s", malformed[:10])
+        errors += len(malformed)
+
+    counts = snapshot["metadata"]["contagens"]["por_etapa"]
+    logger.info("Contagens por etapa: %s", counts)
+    if counts.get("ensino_fundamental", 0) == 0:
+        logger.error("Cobertura zero para ensino_fundamental")
+        errors += 1
+    if counts.get("ensino_medio", 0) == 0:
+        logger.error("Cobertura zero para ensino_medio")
+        errors += 1
+    if counts.get("educacao_infantil", 0) == 0:
+        logger.error("Cobertura zero para educacao_infantil (SC-001, três etapas).")
+        errors += 1
+    if len(snapshot["competencias_gerais"]) != 10:
+        logger.error("Competências gerais != 10")
+        errors += 1
+
+    logger.info("Validação inline: %d erro(s) grave(s).", errors)
+    return errors
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Extrai o snapshot da BNCC.")
+    parser.add_argument("--validate", action="store_true", help="Valida o snapshot após extrair.")
+    args = parser.parse_args()
+
+    snapshot = build_snapshot()
+    OUTPUT.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+    logger.info(
+        "Snapshot gravado em %s (%d habilidades).",
+        OUTPUT,
+        len(snapshot["habilidades"]),
+    )
+
+    if args.validate:
+        return 1 if validate_snapshot(snapshot) > 0 else 0
     return 0
 
 
 if __name__ == "__main__":
-    exit(main())
+    raise SystemExit(main())
+
+
+# Metadados auxiliares expostos para testes unitários de parsing (T022).
+def metadata_from_codigo(codigo: str) -> dict[str, Any] | None:
+    """Deriva (etapa, anos, área, componente) do código — helper testável."""
+    c = codigo.strip().upper()
+    if re.fullmatch(RE_EF, c):
+        mapping = EF_COMPONENTE.get(c[4:6])
+        if not mapping:
+            return None
+        componente, area = mapping
+        return {
+            "etapa": "ensino_fundamental",
+            "anos": anos_from_ef(c[2:4]),
+            "area_conhecimento": area,
+            "componente": componente,
+        }
+    if re.fullmatch(RE_EM_AREA, c):
+        area = EM_AREA.get(c[4:7])
+        return (
+            None
+            if not area
+            else {
+                "etapa": "ensino_medio",
+                "anos": ["1", "2", "3"],
+                "area_conhecimento": area,
+                "componente": None,
+            }
+        )
+    if re.fullmatch(RE_EM_LP, c):
+        return {
+            "etapa": "ensino_medio",
+            "anos": ["1", "2", "3"],
+            "area_conhecimento": "linguagens",
+            "componente": "lingua_portuguesa",
+        }
+    if re.fullmatch(RE_EI, c):
+        return {
+            "etapa": "educacao_infantil",
+            "anos": [c[2:4]],
+            "area_conhecimento": "linguagens",
+            "componente": None,
+        }
+    return None

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Painel — BNCC API{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="nav" style="padding: 0 0 1rem;">
+    <h1 style="margin: 0;">Painel</h1>
+    <a href="/portal/logout" class="btn btn-secondary">Sair</a>
+  </div>
+  <p class="lead">{{ account.email }}
+    {% if account.email_verified %}
+      <span class="badge">verificado</span>
+    {% else %}
+      <span class="badge badge-muted">não verificado</span>
+    {% endif %}
+  </p>
+
+  {% if new_key %}
+  <div class="notice">
+    <strong>Sua nova API key (exibida apenas uma vez):</strong>
+    <pre style="margin: 0.5rem 0 0;"><code>{{ new_key }}</code></pre>
+    Guarde-a com segurança — não será possível vê-la novamente.
+  </div>
+  {% endif %}
+
+  {% if not account.email_verified %}
+  <div class="notice" style="border-left-color: var(--danger);">
+    Verifique seu e-mail para liberar a geração de API keys.
+  </div>
+  {% endif %}
+
+  <h2>Consumo de hoje</h2>
+  <div class="grid">
+    <div class="card">
+      <p class="muted">Keys ativas/criadas</p>
+      <p style="font-size: 1.6rem; margin: 0;">{{ usage.total_keys }}</p>
+    </div>
+    <div class="card">
+      <p class="muted">Requisições determinísticas (hoje)</p>
+      <p style="font-size: 1.6rem; margin: 0;">{{ usage.deterministic_used_today }}</p>
+    </div>
+    <div class="card">
+      <p class="muted">Requisições de IA (hoje)</p>
+      <p style="font-size: 1.6rem; margin: 0;">{{ usage.ai_used_today }}</p>
+    </div>
+  </div>
+
+  <h2>API keys</h2>
+  {% if account.email_verified %}
+  <form method="post" action="/portal/keys" class="card" style="margin-bottom: 1.5rem;">
+    <label for="name">Nome da nova key</label>
+    <input id="name" name="name" type="text" maxlength="120" required
+           placeholder="ex.: integração-escola">
+    <p style="margin-top: 1rem;">
+      <button class="btn" type="submit">Gerar key</button>
+    </p>
+  </form>
+  {% endif %}
+
+  {% if keys %}
+  <div style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr><th>Nome</th><th>Prefixo</th><th>Status</th><th>Criada</th><th>Último uso</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for k in keys %}
+      <tr>
+        <td>{{ k.name }}</td>
+        <td><code>{{ k.prefix }}</code></td>
+        <td>
+          {% if k.status.value == 'active' %}
+            <span class="badge">ativa</span>
+          {% else %}
+            <span class="badge badge-muted">revogada</span>
+          {% endif %}
+        </td>
+        <td>{{ k.created_at.strftime('%d/%m/%Y') }}</td>
+        <td>{{ k.last_used_at.strftime('%d/%m/%Y %H:%M') if k.last_used_at else '—' }}</td>
+        <td>
+          {% if k.status.value == 'active' %}
+          <form method="post" action="/portal/keys/{{ k.id }}/revoke" style="margin: 0;">
+            <button class="btn btn-danger" type="submit">Revogar</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">Nenhuma API key ainda.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+# Build + push da imagem da BNCC API para o Artifact Registry.
+# O deploy no Cloud Run e as migrações Alembic ficam no script deploy/cloudrun.*
+# (dependem de recursos com estado: Cloud SQL, secrets).
+#
+# Uso:
+#   gcloud builds submit --config cloudbuild.yaml \
+#     --substitutions=_REGION=southamerica-east1,_TAG=v1
+#
+# O build gera os embeddings (ChromaDB) dentro da imagem — passo pesado de ML —,
+# por isso uma máquina maior e timeout folgado.
+
+substitutions:
+  _REGION: southamerica-east1
+  _REPO: bncc
+  _IMAGE: api
+  _TAG: latest
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 2400s
+
+images:
+  - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${_TAG}"
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${_TAG}"
+      - "."

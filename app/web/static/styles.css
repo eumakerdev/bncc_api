@@ -1,0 +1,100 @@
+/* =========================================================================
+   BNCC API — design system minimalista compartilhado (FR-022).
+   Build estático (sem CDN em runtime, research §1/§10). Tokens sóbrios,
+   foco em legibilidade, performance e acessibilidade (SC-008).
+   ========================================================================= */
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f7f8fa;
+  --fg: #16181d;
+  --fg-muted: #5b6270;
+  --border: #e4e7ec;
+  --brand: #1b4dff;
+  --brand-fg: #ffffff;
+  --accent: #0d9488;
+  --danger: #b42318;
+  --radius: 10px;
+  --maxw: 72rem;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d0f14;
+    --bg-soft: #151922;
+    --fg: #e8eaed;
+    --fg-muted: #9aa2b1;
+    --border: #262b36;
+    --brand: #5b7bff;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.6;
+  font-size: 17px;
+}
+a { color: var(--brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 1.25rem; }
+.site-header, .site-footer {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.site-footer { border-top: 1px solid var(--border); border-bottom: none; color: var(--fg-muted); }
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 0; gap: 1rem;
+}
+.brand { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; }
+.nav-links { display: flex; gap: 1.25rem; align-items: center; }
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; }
+h1 { font-size: clamp(2rem, 5vw, 3.25rem); margin: 0 0 1rem; }
+h2 { font-size: 1.6rem; margin: 2.5rem 0 1rem; }
+.muted { color: var(--fg-muted); }
+.section { padding: 3rem 0; }
+.hero { padding: 4rem 0 3rem; }
+.lead { font-size: 1.25rem; color: var(--fg-muted); max-width: 42rem; }
+.grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.card {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.25rem; background: var(--bg-soft);
+}
+.btn {
+  display: inline-block; padding: 0.7rem 1.2rem; border-radius: var(--radius);
+  background: var(--brand); color: var(--brand-fg); font-weight: 600;
+  border: 1px solid transparent; cursor: pointer;
+}
+.btn:hover { text-decoration: none; opacity: 0.92; }
+.btn-secondary { background: transparent; color: var(--brand); border-color: var(--border); }
+.btn-danger { background: var(--danger); }
+code, kbd, pre { font-family: var(--mono); }
+pre {
+  background: var(--bg-soft); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem; overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+form label { display: block; font-weight: 600; margin: 1rem 0 0.35rem; }
+input, select, textarea {
+  width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--bg); color: var(--fg); font-size: 1rem;
+}
+.badge {
+  display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem;
+  border-radius: 999px; background: var(--accent); color: #fff;
+}
+.badge-muted { background: var(--border); color: var(--fg-muted); }
+.notice {
+  border-left: 3px solid var(--accent); background: var(--bg-soft);
+  padding: 0.75rem 1rem; border-radius: 6px; margin: 1rem 0;
+}
+.skip-link {
+  position: absolute; left: -999px; top: 0; background: var(--brand);
+  color: #fff; padding: 0.5rem 1rem; z-index: 100;
+}
+.skip-link:focus { left: 0; }

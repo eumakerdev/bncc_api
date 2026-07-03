@@ -1,87 +1,81 @@
 """
-BNCC API - Main FastAPI application
+BNCC API — aplicação FastAPI.
+
+Monta a API REST versionada (/api/v1), as páginas server-rendered (landing +
+portal + docs) e a documentação OpenAPI. Registra handlers de erro globais e
+faz fail-fast de configuração no startup (a validação ocorre na importação de
+`settings`, Princípio V / FR-023).
 """
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.api import api_router
 from app.core.config import settings
-from app.services.vector_store import VectorStoreService
+from app.core.errors import register_error_handlers
+from app.web.router import web_router
 
-# Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bncc")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """
-    Application lifespan manager.
-    Initialize services on startup and cleanup on shutdown.
-    """
-    logger.info("Starting BNCC API...")
-    
-    # Initialize vector store service
+    logger.info("Iniciando BNCC API (env=%s)...", settings.ENVIRONMENT)
+
+    # Banco da plataforma: em dev criamos as tabelas; em prod, Alembic é a verdade.
     try:
+        from app.db.base import init_models
+
+        await init_models()
+    except Exception as e:  # pragma: no cover - defensivo
+        logger.error("Falha ao inicializar o banco da plataforma: %s", e)
+
+    # Camada de IA (opcional; degrada graciosamente — Princípio VII).
+    try:
+        from app.services.vector_store import VectorStoreService
+
         vector_service = VectorStoreService()
         await vector_service.initialize()
         app.state.vector_service = vector_service
-        logger.info("Vector store service initialized successfully")
+        logger.info("Vector store inicializado.")
     except Exception as e:
-        logger.error(f"Failed to initialize vector store service: {e}")
-        raise
-    
+        logger.warning("Camada de IA indisponível no startup (degrada): %s", e)
+
     yield
-    
-    # Cleanup
-    logger.info("Shutting down BNCC API...")
-    if hasattr(app.state, 'vector_service'):
-        await app.state.vector_service.cleanup()
+
+    if hasattr(app.state, "vector_service"):
+        try:
+            await app.state.vector_service.cleanup()
+        except Exception:  # pragma: no cover
+            pass
 
 
-# Create FastAPI application
 app = FastAPI(
     title="BNCC API",
-    description="""
-    **API RESTful inteligente para a Base Nacional Comum Curricular (BNCC) do Brasil**
-    
-    Esta API oferece:
-    
-    - 📚 **Dados Estruturados**: Acesso completo às habilidades e competências da BNCC
-    - 🔍 **Busca Semântica**: Pesquise usando linguagem natural
-    - 🤖 **IA Integrada**: Conversas inteligentes sobre o currículo
-    - 🚀 **Alta Performance**: Resposta rápida e escalável
-    - 📖 **Bem Documentada**: Documentação interativa completa
-    
-    ## Como usar
-    
-    1. **Explorar habilidades**: Use `/api/v1/habilidades/` para buscar por código ou filtros
-    2. **Buscar competências**: Acesse `/api/v1/competencias/` para competências gerais e específicas
-    3. **Busca inteligente**: Use `/api/v1/busca-semantica` para perguntas em linguagem natural
-    
-    ## Suporte
-    
-    - 📧 GitHub Issues para reportar bugs
-    - 📝 Documentação completa no repositório
-    - 🔗 Exemplos de uso em curl, Python, JavaScript
-    """,
+    description=(
+        "API pública que expõe toda a Base Nacional Comum Curricular (BNCC) do Brasil: "
+        "dados determinísticos das três etapas, acesso self-service por API keys, "
+        "documentação automática e busca semântica com IA (não-oficial)."
+    ),
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/api/v1/openapi.json",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
-# Configure CORS
+register_error_handlers(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_HOSTS,
@@ -90,31 +84,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API router
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(web_router)
 
-
-@app.get("/", include_in_schema=False)
-async def root():
-    """Redirect root to documentation"""
-    return RedirectResponse(url="/docs")
-
-
-@app.get("/health", tags=["System"])
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "environment": settings.ENVIRONMENT
-    }
+_static_dir = Path(__file__).parent / "web" / "static"
+_static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
-        reload=settings.ENVIRONMENT == "development"
+        reload=settings.ENVIRONMENT == "development",
     )

@@ -1,299 +1,307 @@
 """
-Vector Store Service for semantic search and embeddings
+Servico de armazenamento vetorial e busca semantica (US4 / P4).
+
+Degradacao graciosa (Principio VII / research.md 9): as dependencias pesadas
+(ChromaDB + sentence-transformers) sao importadas **preguicosamente** dentro dos
+metodos, protegidas por try/except. Se indisponiveis (nao instaladas, sem
+snapshot, falha de carga), o servico marca `self.available = False` em vez de
+derrubar a aplicacao. Os endpoints deterministicos NAO dependem deste servico.
+
+Vetores e demais derivados sao **nao-oficiais** (FR-004/FR-017): o texto oficial
+vive apenas no snapshot versionado `data/bncc_v1.json`.
 """
 
-import logging
-import asyncio
-import json
-import os
-from typing import List, Dict, Any, Optional, Tuple
-from pathlib import Path
+from __future__ import annotations
 
-import chromadb
-from chromadb.config import Settings as ChromaSettings
-from sentence_transformers import SentenceTransformer
-import numpy as np
+import json
+import logging
+from pathlib import Path
+from typing import Any
 
 from app.core.config import settings
-from app.models.bncc import Habilidade, CompetenciaEspecifica, DocumentoFonte
 
 logger = logging.getLogger(__name__)
 
+COLLECTION_NAME = "bncc_documents"
+
+
+def _coerce_meta(meta: dict[str, Any]) -> dict[str, Any]:
+    """
+    Sanitiza metadados para o ChromaDB, que aceita apenas str/int/float/bool.
+
+    Campos presentes-porem-None no snapshot (ex.: `etapa`, `area_conhecimento`)
+    viram string vazia. `dict.get(k, "")` nao basta: seu default so vale quando a
+    chave esta ausente, nao quando o valor e None. Determinismo/fidelidade
+    (Principio IV): a coercao e estavel e nao altera o texto oficial.
+    """
+    return {k: ("" if v is None else v) for k, v in meta.items()}
+
 
 class VectorStoreService:
-    """Service for managing vector storage and semantic search"""
-    
-    def __init__(self):
+    """
+    Recuperacao semantica sobre o snapshot da BNCC.
+
+    Ciclo de vida (chamado pelo lifespan em `app/main.py`):
+        service = VectorStoreService()
+        await service.initialize()   # nunca levanta; seta self.available
+        ...
+        await service.cleanup()
+    """
+
+    def __init__(self) -> None:
+        self.available: bool = False
         self.client = None
         self.collection = None
         self.embedding_model = None
-        self.bncc_data = None
-        
-    async def initialize(self):
-        """Initialize the vector store service"""
+        self.bncc_data: dict[str, Any] = {
+            "habilidades": [],
+            "competencias_especificas": [],
+            "competencias_gerais": [],
+        }
+        self._reason: str | None = None
+
+    # ------------------------------------------------------------------ #
+    # Ciclo de vida
+    # ------------------------------------------------------------------ #
+    async def initialize(self) -> None:
+        """
+        Inicializa o modelo de embeddings + ChromaDB e carrega o snapshot.
+
+        NUNCA levanta excecao: qualquer falha marca `available = False` e deixa
+        um motivo em `self._reason`. Isso isola a camada de IA (Principio VII).
+        """
         try:
-            # Initialize embedding model
-            logger.info(f"Loading embedding model: {settings.EMBEDDING_MODEL}")
+            self._load_snapshot()  # dados sao uteis mesmo sem ML (fallback)
+
+            # Imports pesados adiados: se ausentes, degrada.
+            from sentence_transformers import SentenceTransformer  # noqa: WPS433
+
+            logger.info("Carregando modelo de embeddings: %s", settings.EMBEDDING_MODEL)
             self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
-            
-            # Initialize ChromaDB
-            await self._initialize_chromadb()
-            
-            # Load BNCC data
-            await self._load_bncc_data()
-            
-            # Create embeddings if collection is empty
-            if self.collection.count() == 0:
-                logger.info("Creating initial embeddings...")
-                await self._create_embeddings()
-            else:
-                logger.info(f"Vector store already contains {self.collection.count()} documents")
-                
-        except Exception as e:
-            logger.error(f"Error initializing vector store service: {e}")
-            raise
-    
-    async def _initialize_chromadb(self):
-        """Initialize ChromaDB client and collection"""
-        try:
-            # Create data directory if it doesn't exist
-            data_dir = Path(settings.CHROMADB_PATH)
-            data_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Initialize ChromaDB client
-            self.client = chromadb.PersistentClient(
-                path=str(data_dir),
-                settings=ChromaSettings(
-                    anonymized_telemetry=False,
-                    allow_reset=True
+
+            self._init_chromadb()
+
+            count = self.collection.count() if self.collection is not None else 0
+            if count == 0:
+                logger.info(
+                    "Colecao vetorial vazia. Rode scripts/generate_embeddings.py "
+                    "para popular. Busca semantica ficara sem correspondencias."
                 )
-            )
-            
-            # Get or create collection
-            self.collection = self.client.get_or_create_collection(
-                name="bncc_documents",
-                metadata={"description": "BNCC habilidades e competências"}
-            )
-            
-            logger.info("ChromaDB initialized successfully")
-            
-        except Exception as e:
-            logger.error(f"Error initializing ChromaDB: {e}")
-            raise
-    
-    async def _load_bncc_data(self):
-        """Load BNCC data from JSON file"""
-        try:
-            data_path = Path(settings.BNCC_DATA_PATH)
-            if not data_path.exists():
-                logger.warning(f"BNCC data file not found at {data_path}")
-                self.bncc_data = {"habilidades": [], "competencias_especificas": []}
-                return
-            
-            with open(data_path, 'r', encoding='utf-8') as f:
-                self.bncc_data = json.load(f)
-            
-            logger.info(f"Loaded BNCC data: {len(self.bncc_data.get('habilidades', []))} habilidades, "
-                       f"{len(self.bncc_data.get('competencias_especificas', []))} competências específicas")
-                       
-        except Exception as e:
-            logger.error(f"Error loading BNCC data: {e}")
-            self.bncc_data = {"habilidades": [], "competencias_especificas": []}
-    
-    async def _create_embeddings(self):
-        """Create embeddings for all BNCC documents"""
-        try:
-            documents = []
-            metadatas = []
-            ids = []
-            
-            # Process habilidades
-            for habilidade in self.bncc_data.get('habilidades', []):
-                doc_text = f"{habilidade['codigo']}: {habilidade['descricao']}"
-                if habilidade.get('objetos_conhecimento'):
-                    doc_text += f" Objetos de conhecimento: {', '.join(habilidade['objetos_conhecimento'])}"
-                
-                documents.append(doc_text)
-                metadatas.append({
-                    "tipo": "habilidade",
-                    "codigo": habilidade['codigo'],
-                    "etapa": habilidade['etapa'],
-                    "area_conhecimento": habilidade['area_conhecimento'],
-                    "componente": habilidade['componente'],
-                    "anos": json.dumps(habilidade.get('anos', [])),
-                    "competencias_gerais": json.dumps(habilidade.get('competencias_gerais', [])),
-                })
-                ids.append(f"hab_{habilidade['codigo']}")
-            
-            # Process competências específicas
-            for competencia in self.bncc_data.get('competencias_especificas', []):
-                doc_text = f"{competencia['codigo']}: {competencia['descricao']}"
-                
-                documents.append(doc_text)
-                metadatas.append({
-                    "tipo": "competencia_especifica",
-                    "codigo": competencia['codigo'],
-                    "etapa": competencia['etapa'],
-                    "area_conhecimento": competencia['area_conhecimento'],
-                    "componente": competencia.get('componente', ''),
-                    "numero": str(competencia.get('numero', 0)),
-                })
-                ids.append(f"comp_{competencia['codigo']}")
-            
-            if documents:
-                # Generate embeddings
-                logger.info(f"Generating embeddings for {len(documents)} documents...")
-                embeddings = self.embedding_model.encode(documents, show_progress_bar=True)
-                
-                # Add to ChromaDB
-                self.collection.add(
-                    documents=documents,
-                    metadatas=metadatas,
-                    embeddings=embeddings.tolist(),
-                    ids=ids
-                )
-                
-                logger.info(f"Successfully created embeddings for {len(documents)} documents")
             else:
-                logger.warning("No documents found to create embeddings")
-                
-        except Exception as e:
-            logger.error(f"Error creating embeddings: {e}")
-            raise
-    
-    async def search_semantic(
-        self, 
-        query: str, 
-        max_results: int = 5,
-        similarity_threshold: float = None
-    ) -> List[DocumentoFonte]:
-        """
-        Perform semantic search
-        
-        Args:
-            query: Search query in natural language
-            max_results: Maximum number of results to return
-            similarity_threshold: Minimum similarity score (0-1)
-            
-        Returns:
-            List of DocumentoFonte objects with search results
-        """
-        try:
-            if not self.collection or self.collection.count() == 0:
-                logger.warning("Vector store is empty")
-                return []
-            
-            # Use default threshold if not provided
-            if similarity_threshold is None:
-                similarity_threshold = settings.SIMILARITY_THRESHOLD
-            
-            # Generate query embedding
-            query_embedding = self.embedding_model.encode([query])
-            
-            # Search in ChromaDB
-            results = self.collection.query(
-                query_embeddings=query_embedding.tolist(),
-                n_results=min(max_results, settings.MAX_SEARCH_RESULTS),
-                include=['documents', 'metadatas', 'distances']
+                logger.info("Colecao vetorial com %d documentos.", count)
+
+            self.available = True
+            self._reason = None
+        except Exception as exc:  # noqa: BLE001 - degradacao graciosa deliberada
+            self.available = False
+            self._reason = f"{type(exc).__name__}: {exc}"
+            logger.warning(
+                "Camada de IA (vector store) indisponivel - degradando: %s",
+                self._reason,
             )
-            
-            # Process results
-            fontes = []
-            if results['ids'] and results['ids'][0]:
-                for i, doc_id in enumerate(results['ids'][0]):
-                    distance = results['distances'][0][i]
-                    # Convert distance to similarity (ChromaDB uses cosine distance)
-                    similarity = 1 - distance
-                    
-                    if similarity >= similarity_threshold:
-                        metadata = results['metadatas'][0][i]
-                        
-                        fonte = DocumentoFonte(
-                            codigo=metadata['codigo'],
-                            tipo=metadata['tipo'],
-                            relevancia=round(similarity, 3),
-                            titulo=self._get_document_title(metadata)
-                        )
-                        fontes.append(fonte)
-            
-            logger.info(f"Semantic search for '{query}' returned {len(fontes)} results")
-            return fontes
-            
-        except Exception as e:
-            logger.error(f"Error in semantic search: {e}")
-            return []
-    
-    def _get_document_title(self, metadata: Dict[str, Any]) -> str:
-        """Generate a title for a document based on its metadata"""
-        if metadata['tipo'] == 'habilidade':
-            return f"Habilidade {metadata['codigo']} - {metadata['componente'].replace('_', ' ').title()}"
-        elif metadata['tipo'] == 'competencia_especifica':
-            return f"Competência Específica {metadata['codigo']} - {metadata['area_conhecimento'].replace('_', ' ').title()}"
-        return metadata['codigo']
-    
-    async def get_document_by_codigo(self, codigo: str) -> Optional[Dict[str, Any]]:
-        """Get a specific document by its codigo"""
-        try:
-            # Search in habilidades
-            for habilidade in self.bncc_data.get('habilidades', []):
-                if habilidade['codigo'] == codigo:
-                    return habilidade
-            
-            # Search in competências específicas
-            for competencia in self.bncc_data.get('competencias_especificas', []):
-                if competencia['codigo'] == codigo:
-                    return competencia
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error getting document by codigo {codigo}: {e}")
-            return None
-    
-    async def get_collection_stats(self) -> Dict[str, Any]:
-        """Get collection statistics"""
-        try:
-            if not self.collection:
-                return {"total_documents": 0, "status": "not_initialized"}
-            
-            count = self.collection.count()
-            
-            # Get type distribution
-            results = self.collection.get(include=['metadatas'])
-            type_counts = {}
-            if results['metadatas']:
-                for metadata in results['metadatas']:
-                    doc_type = metadata.get('tipo', 'unknown')
-                    type_counts[doc_type] = type_counts.get(doc_type, 0) + 1
-            
-            return {
-                "total_documents": count,
-                "type_distribution": type_counts,
-                "embedding_model": settings.EMBEDDING_MODEL,
-                "status": "initialized"
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting collection stats: {e}")
-            return {"total_documents": 0, "status": "error", "error": str(e)}
-    
-    async def cleanup(self):
-        """Cleanup resources"""
-        try:
-            if self.client:
-                # ChromaDB client doesn't need explicit cleanup
+
+    def _load_snapshot(self) -> None:
+        """Carrega o snapshot versionado da BNCC (read-only)."""
+        data_path = Path(settings.BNCC_DATA_PATH)
+        if not data_path.exists():
+            logger.warning("Snapshot da BNCC ausente em %s.", data_path)
+            return
+        with open(data_path, encoding="utf-8") as fh:
+            self.bncc_data = json.load(fh)
+        logger.info(
+            "Snapshot carregado: %d habilidades.",
+            len(self.bncc_data.get("habilidades", [])),
+        )
+
+    def _init_chromadb(self) -> None:
+        """Inicializa o cliente ChromaDB persistente (import adiado)."""
+        import chromadb  # noqa: WPS433
+        from chromadb.config import Settings as ChromaSettings  # noqa: WPS433
+
+        data_dir = Path(settings.CHROMADB_PATH)
+        data_dir.mkdir(parents=True, exist_ok=True)
+
+        self.client = chromadb.PersistentClient(
+            path=str(data_dir),
+            settings=ChromaSettings(anonymized_telemetry=False, allow_reset=True),
+        )
+        self.collection = self.client.get_or_create_collection(
+            name=COLLECTION_NAME,
+            # `hnsw:space=cosine`: search() calcula `similarity = 1 - distance`,
+            # valido apenas para distancia coseno. Sem isto o ChromaDB usa L2
+            # (padrao) e a similaridade fica incorreta (nada passa no limiar).
+            metadata={
+                "description": "BNCC habilidades e competencias (derivado nao-oficial)",
+                "hnsw:space": "cosine",
+            },
+        )
+
+    async def cleanup(self) -> None:
+        """Libera recursos (ChromaDB nao exige teardown explicito)."""
+        self.available = False
+        logger.info("Vector store cleanup concluido.")
+
+    # ------------------------------------------------------------------ #
+    # Busca
+    # ------------------------------------------------------------------ #
+    async def search(
+        self,
+        query: str,
+        k: int = 5,
+        similarity_threshold: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Busca semantica por similaridade coseno.
+
+        Aplica o limiar `settings.SIMILARITY_THRESHOLD` (FR-017): candidatos
+        abaixo do limiar NAO sao retornados (nao sao oficiais). Devolve uma lista
+        de dicts: {codigo, tipo, relevancia, titulo, descricao}.
+
+        Levanta `RuntimeError` se o servico estiver indisponivel (para que o
+        `ai_service` mapeie para 503). Retorna [] quando disponivel mas sem
+        correspondencia confiavel.
+        """
+        if not self.available or self.collection is None or self.embedding_model is None:
+            raise RuntimeError(self._reason or "Vector store indisponivel (embeddings/ChromaDB).")
+
+        threshold = (
+            similarity_threshold
+            if similarity_threshold is not None
+            else settings.SIMILARITY_THRESHOLD
+        )
+        n_results = max(1, min(k, settings.MAX_SEARCH_RESULTS))
+
+        query_embedding = self.embedding_model.encode([query])
+        results = self.collection.query(
+            query_embeddings=query_embedding.tolist(),
+            n_results=n_results,
+            include=["documents", "metadatas", "distances"],
+        )
+
+        fontes: list[dict[str, Any]] = []
+        ids = results.get("ids") or [[]]
+        if ids and ids[0]:
+            for i, _doc_id in enumerate(ids[0]):
+                distance = results["distances"][0][i]
+                similarity = 1.0 - float(distance)  # ChromaDB usa distancia coseno
+                if similarity < threshold:
+                    continue
+                metadata = results["metadatas"][0][i] or {}
+                document = (results.get("documents") or [[None]])[0][i]
+                fontes.append(
+                    {
+                        "codigo": metadata.get("codigo", ""),
+                        "tipo": metadata.get("tipo", "habilidade"),
+                        "relevancia": round(similarity, 3),
+                        "titulo": self._title(metadata),
+                        "descricao": document or "",
+                    }
+                )
+
+        logger.info("Busca '%s' -> %d fontes acima do limiar.", query, len(fontes))
+        return fontes
+
+    def get_document_by_codigo(self, codigo: str) -> dict[str, Any] | None:
+        """Recupera o documento oficial completo do snapshot pelo codigo."""
+        for key in ("habilidades", "competencias_especificas", "competencias_gerais"):
+            for doc in self.bncc_data.get(key, []):
+                if isinstance(doc, dict) and doc.get("codigo") == codigo:
+                    return doc
+        return None
+
+    @staticmethod
+    def _title(metadata: dict[str, Any]) -> str:
+        codigo = metadata.get("codigo", "")
+        tipo = metadata.get("tipo", "")
+        componente = str(metadata.get("componente", "")).replace("_", " ").title()
+        if tipo == "habilidade" and componente:
+            return f"Habilidade {codigo} - {componente}"
+        if tipo == "competencia_especifica":
+            area = str(metadata.get("area_conhecimento", "")).replace("_", " ").title()
+            return f"Competencia Especifica {codigo} - {area}".strip(" -")
+        return codigo
+
+    # ------------------------------------------------------------------ #
+    # Indexacao (usada por scripts/generate_embeddings.py)
+    # ------------------------------------------------------------------ #
+    def index_snapshot(self, *, reset: bool = False) -> int:
+        """
+        (Re)indexa o snapshot no ChromaDB. Requer libs de ML disponiveis e
+        `initialize()` bem-sucedido. Retorna o numero de documentos indexados.
+        """
+        if not self.available or self.collection is None or self.embedding_model is None:
+            raise RuntimeError(self._reason or "Vector store indisponivel (embeddings/ChromaDB).")
+
+        if reset and self.client is not None:
+            try:
+                self.client.delete_collection(COLLECTION_NAME)
+            except Exception:  # noqa: BLE001 - colecao pode nao existir
                 pass
-            logger.info("Vector store service cleanup completed")
-        except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
+            self._init_chromadb()
+
+        documents: list[str] = []
+        metadatas: list[dict[str, Any]] = []
+        ids: list[str] = []
+
+        for hab in self.bncc_data.get("habilidades", []):
+            text = f"{hab['codigo']}: {hab['descricao']}"
+            objetos = hab.get("objetos_conhecimento") or []
+            if objetos:
+                text += " Objetos de conhecimento: " + ", ".join(objetos)
+            documents.append(text)
+            metadatas.append(
+                _coerce_meta(
+                    {
+                        "tipo": "habilidade",
+                        "codigo": hab["codigo"],
+                        "etapa": hab.get("etapa", ""),
+                        "area_conhecimento": hab.get("area_conhecimento", ""),
+                        "componente": hab.get("componente", ""),
+                        "oficial": False,
+                    }
+                )
+            )
+            ids.append(f"hab_{hab['codigo']}")
+
+        for comp in self.bncc_data.get("competencias_especificas", []):
+            documents.append(f"{comp['codigo']}: {comp['descricao']}")
+            metadatas.append(
+                _coerce_meta(
+                    {
+                        "tipo": "competencia_especifica",
+                        "codigo": comp["codigo"],
+                        "etapa": comp.get("etapa", ""),
+                        "area_conhecimento": comp.get("area_conhecimento", ""),
+                        "componente": comp.get("componente", ""),
+                        "oficial": False,
+                    }
+                )
+            )
+            ids.append(f"comp_{comp['codigo']}")
+
+        if not documents:
+            logger.warning("Nenhum documento no snapshot para indexar.")
+            return 0
+
+        embeddings = self.embedding_model.encode(documents)
+        self.collection.add(
+            documents=documents,
+            metadatas=metadatas,
+            embeddings=embeddings.tolist(),
+            ids=ids,
+        )
+        logger.info("Indexados %d documentos (derivados nao-oficiais).", len(documents))
+        return len(documents)
 
 
-# Singleton instance
-_vector_service = None
+# --------------------------------------------------------------------------- #
+# Singleton de modulo (compat.: app.main usa VectorStoreService() diretamente)
+# --------------------------------------------------------------------------- #
+_vector_service: VectorStoreService | None = None
 
 
 async def get_vector_service() -> VectorStoreService:
-    """Get the global vector service instance"""
+    """Devolve (criando/iniciando sob demanda) a instancia global do servico."""
     global _vector_service
     if _vector_service is None:
         _vector_service = VectorStoreService()

@@ -1,148 +1,84 @@
 """
-Endpoints for semantic search functionality
+Endpoint da Busca Semantica com IA (US4 / P4).
+
+POST /api/v1/busca-semantica
+- Auth: API key (Bearer) + cota de IA (bucket `ai`: 20/min + teto 500/dia) via
+  a dependencia `AiRateLimited` (deps.py).
+- 200: resposta gerada (nao-oficial) + fontes oficiais rastreaveis, ou mensagem
+  de "sem resultados confiaveis" quando abaixo do limiar (nao inventa).
+- 400: query invalida/vazia/curta/longa -> tratado pelos validators do schema
+  (RequestValidationError -> 400 no handler global) + sanitizacao.
+- 429: cota de IA excedida -> tratado por AiRateLimited.
+- 503: camada de IA indisponivel -> AIUnavailableError mapeada com detalhe
+  acionavel; NAO afeta endpoints deterministicos (SC-009).
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from __future__ import annotations
+
 import logging
 
-from app.models.bncc import BuscaSemanticaRequest, BuscaSemanticaResponse
-from app.services.vector_store import VectorStoreService
-from app.services.ai_service import create_ai_service
-from app.core.deps import get_vector_service
+from fastapi import APIRouter, HTTPException, Request, status
+
+from app.core.deps import AiRateLimited
+from app.models.search import BuscaSemanticaRequest, BuscaSemanticaResponse
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bncc.busca")
 
 
 @router.post(
     "",
     response_model=BuscaSemanticaResponse,
-    summary="Busca semântica inteligente",
-    description="""
-    Realiza uma busca semântica inteligente na BNCC usando processamento de linguagem natural.
-    
-    **Como funciona:**
-    1. 🔍 Sua pergunta é convertida em um vetor semântico
-    2. 📊 O sistema busca por similaridade nas habilidades e competências
-    3. 🤖 Uma IA analisa os resultados e gera uma resposta contextualizada
-    4. 📚 Você recebe a resposta com as fontes utilizadas
-    
-    **Exemplos de perguntas:**
-    - "Quais habilidades de matemática do 5º ano abordam frações?"
-    - "Competências de língua portuguesa sobre leitura no ensino fundamental"
-    - "Habilidades de ciências sobre meio ambiente para anos iniciais"
-    - "O que a BNCC diz sobre educação digital?"
-    
-    **Dicas para melhores resultados:**
-    - Seja específico sobre o ano/etapa
-    - Mencione o componente curricular se souber
-    - Use termos educacionais conhecidos
-    - Faça perguntas diretas e claras
-    
-    **Limitações:**
-    - Máximo de 500 caracteres por pergunta
-    - Resposta baseada apenas no conteúdo da BNCC
-    - Resultados limitados a 20 documentos por busca
-    """
+    summary="Busca semantica com IA (conteudo nao-oficial)",
+    response_description=(
+        "Resposta gerada por IA (nao-oficial) com fontes oficiais rastreaveis, "
+        "ou aviso de ausencia de correspondencia confiavel."
+    ),
+    responses={
+        400: {"description": "Query invalida (vazia/curta/longa) ou payload invalido."},
+        401: {"description": "API key ausente, invalida ou revogada."},
+        429: {"description": "Cota de IA excedida (bucket ai: 20/min ou 500/dia)."},
+        503: {"description": "Camada de IA indisponivel (acionavel)."},
+    },
+    description=(
+        "Responde uma pergunta em linguagem natural com texto **gerado por IA** "
+        "(claramente marcado como **nao-oficial**, `oficial=false`) acompanhado "
+        "das **fontes oficiais rastreaveis** da BNCC (codigo + relevancia). "
+        "Correspondencias abaixo do limiar de similaridade nao sao apresentadas "
+        "como oficiais; na ausencia de correspondencia confiavel a resposta "
+        "sinaliza isso em vez de inventar."
+    ),
 )
 async def busca_semantica(
-    request: BuscaSemanticaRequest,
-    vector_service: VectorStoreService = Depends(get_vector_service)
-):
-    """Perform semantic search with AI-generated response"""
-    
+    payload: BuscaSemanticaRequest,
+    _api_key: AiRateLimited,
+    request: Request,
+) -> BuscaSemanticaResponse:
+    # Import preguicoso: mantem o app importavel mesmo sem libs de IA.
+    from app.services.ai_service import AIUnavailableError, responder
+
+    vector_service = getattr(request.app.state, "vector_service", None)
+
     try:
-        # Create AI service
-        ai_service = await create_ai_service(vector_service)
-        
-        # Perform semantic search
-        response = await ai_service.busca_semantica(request)
-        
-        return response
-        
-    except Exception as e:
-        logger.error(f"Error in semantic search: {e}")
+        return await responder(
+            query=payload.query,
+            max_resultados=payload.max_resultados,
+            incluir_contexto=payload.incluir_contexto,
+            vector_service=vector_service,
+        )
+    except AIUnavailableError as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erro interno durante a busca semântica. Tente novamente."
-        )
-
-
-@router.get(
-    "/stats",
-    summary="Estatísticas da busca semântica",
-    description="""
-    Retorna estatísticas sobre o sistema de busca semântica.
-    
-    **Informações incluídas:**
-    - Total de documentos indexados
-    - Modelo de embedding utilizado
-    - Distribuição por tipo de documento
-    - Status do sistema
-    """
-)
-async def get_search_stats(
-    vector_service: VectorStoreService = Depends(get_vector_service)
-):
-    """Get semantic search system statistics"""
-    
-    try:
-        stats = await vector_service.get_collection_stats()
-        return stats
-        
-    except Exception as e:
-        logger.error(f"Error getting search stats: {e}")
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=exc.detail,
+        ) from exc
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 - nunca vaza stack trace ao cliente
+        logger.error("Erro inesperado na busca semantica: %s", exc)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erro ao obter estatísticas do sistema"
-        )
-
-
-@router.post(
-    "/test",
-    summary="Testar busca vetorial (modo debug)",
-    description="""
-    Endpoint para testes e debug da busca vetorial.
-    
-    **Apenas para desenvolvimento e debug.**
-    
-    Retorna resultados brutos da busca vetorial sem processamento de IA,
-    mostrando scores de similaridade e metadados dos documentos encontrados.
-    """
-)
-async def test_vector_search(
-    request: BuscaSemanticaRequest,
-    vector_service: VectorStoreService = Depends(get_vector_service)
-):
-    """Test vector search functionality (debug mode)"""
-    
-    try:
-        # Perform raw vector search
-        fontes = await vector_service.search_semantic(
-            query=request.query,
-            max_results=request.max_resultados
-        )
-        
-        # Return raw results for debugging
-        return {
-            "query": request.query,
-            "total_results": len(fontes),
-            "results": [
-                {
-                    "codigo": fonte.codigo,
-                    "tipo": fonte.tipo,
-                    "relevancia": fonte.relevancia,
-                    "titulo": fonte.titulo
-                }
-                for fonte in fontes
-            ],
-            "embedding_model": vector_service.embedding_model.get_sentence_embedding_dimension() if hasattr(vector_service.embedding_model, 'get_sentence_embedding_dimension') else "unknown",
-            "collection_size": vector_service.collection.count() if vector_service.collection else 0
-        }
-        
-    except Exception as e:
-        logger.error(f"Error in vector search test: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro no teste de busca vetorial: {str(e)}"
-        )
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Camada de IA temporariamente indisponivel. Endpoints "
+                "deterministicos nao sao afetados."
+            ),
+        ) from exc

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}BNCC API{% endblock %}</title>
+  <meta name="description" content="{% block description %}API pública com toda a Base Nacional Comum Curricular (BNCC) do Brasil.{% endblock %}">
+  {% block head_extra %}{% endblock %}
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/">BNCC&nbsp;API</a>
+      <nav class="nav-links" aria-label="Principal">
+        <a href="/docs">Documentação</a>
+        <a href="/portal/login">Portal</a>
+        <a href="/portal/signup" class="btn btn-secondary">Criar conta</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container section">
+      <p class="muted">BNCC API — dados oficiais da Base Nacional Comum Curricular.
+      Conteúdos gerados por IA são marcados como <strong>não-oficiais</strong>.</p>
+    </div>
+  </footer>
+</body>
+</html>
