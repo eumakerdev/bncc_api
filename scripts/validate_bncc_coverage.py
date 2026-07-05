@@ -103,6 +103,55 @@ def validate(snapshot: dict[str, Any]) -> dict[str, list[str]]:
             f"(encontradas {len(snapshot.get('competencias_gerais', []))})."
         )
 
+    # 5: Complemento de Computação (par oficial `CO`; eixo em EI/EF, ausente no EM)
+    VALID_EIXOS = {"pensamento_computacional", "mundo_digital", "cultura_digital"}
+    computacao = [h for h in habs if str(h.get("codigo", "")).upper()[4:6] == "CO"]
+    if not computacao:
+        errors.append("Cobertura zero para o Complemento de Computação (habilidades `CO`).")
+    for h in computacao:
+        codigo = str(h.get("codigo", "")).upper()
+        etapa = h.get("etapa", "")
+        if h.get("componente") != "computacao" or h.get("area_conhecimento") != "computacao":
+            errors.append(f"{codigo}: Computação deve ter área/componente 'computacao'.")
+        eixo = h.get("eixo")
+        if etapa == "ensino_medio":
+            if eixo is not None:
+                errors.append(
+                    f"{codigo}: Ensino Médio de Computação não deve ter eixo (tem '{eixo}')."
+                )
+        else:  # EI/EF
+            if eixo not in VALID_EIXOS:
+                errors.append(f"{codigo}: eixo de Computação ausente/ inválido ('{eixo}').")
+    logger.info("Habilidades de Computação: %d", len(computacao))
+
+    # 6: Relações navegáveis (FR-005) — coleções e integridade dos objetos.
+    unidades = snapshot.get("unidades_tematicas", [])
+    objetos = snapshot.get("objetos_conhecimento", [])
+    campos = snapshot.get("campos_experiencia", [])
+    comp_esp = snapshot.get("competencias_especificas", [])
+    if not comp_esp:
+        errors.append("Catálogo de competências específicas vazio (FR-005).")
+    if not unidades:
+        errors.append("Coleção de unidades temáticas vazia (FR-005).")
+    if not objetos:
+        errors.append("Coleção de objetos de conhecimento vazia (FR-005).")
+    if not campos:
+        errors.append("Campos de experiência (Educação Infantil) vazios (FR-005).")
+    # Integridade: objeto referenciado por habilidade resolve para o catálogo.
+    objeto_nomes = {str(o.get("nome", "")) for o in objetos}
+    for h in habs:
+        for nome in h.get("objetos_conhecimento", []) or []:
+            if nome not in objeto_nomes:
+                errors.append(f"{h.get('codigo')}: objeto de conhecimento inexistente '{nome}'.")
+                break
+    logger.info(
+        "Relações: %d competências específicas, %d unidades temáticas, %d objetos, %d campos.",
+        len(comp_esp),
+        len(unidades),
+        len(objetos),
+        len(campos),
+    )
+
     return {"errors": errors, "warnings": warnings}
 
 

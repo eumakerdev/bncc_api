@@ -1,0 +1,837 @@
+<style>
+  :root {
+    --ground: #f6f8f7;
+    --surface: #ffffff;
+    --surface-2: #eef2f0;
+    --ink: #14201d;
+    --ink-soft: #40514c;
+    --muted: #6a7a75;
+    --line: #dde4e1;
+    --line-strong: #c6d1cd;
+    --accent: #0f766e;
+    --accent-ink: #0b5a54;
+    --accent-wash: #e2f1ee;
+    --pass: #15803d;
+    --pass-wash: #e3f3e8;
+    --warn: #a15c07;
+    --warn-wash: #f6ecd9;
+    --code-bg: #0f1b18;
+    --code-ink: #d6e2dd;
+    --code-line: #26382f;
+    --code-key: #7fd8c4;
+    --code-str: #e6c98a;
+    --code-num: #9ec5ff;
+    --code-mut: #6f8880;
+    --shadow: 0 1px 2px rgba(20,32,29,.05), 0 8px 24px -12px rgba(20,32,29,.18);
+    --radius: 14px;
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0c1210;
+      --surface: #121c19;
+      --surface-2: #182420;
+      --ink: #e9efec;
+      --ink-soft: #b3c1bc;
+      --muted: #8397908f;
+      --muted: #869790;
+      --line: #24322d;
+      --line-strong: #33443d;
+      --accent: #4fd1c0;
+      --accent-ink: #7ee0d2;
+      --accent-wash: #14322d;
+      --pass: #5cc98a;
+      --pass-wash: #12301f;
+      --warn: #e0ab5e;
+      --warn-wash: #33270f;
+      --code-bg: #0a1310;
+      --code-ink: #d6e2dd;
+      --code-line: #1e2c26;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f6f8f7; --surface: #ffffff; --surface-2: #eef2f0;
+    --ink: #14201d; --ink-soft: #40514c; --muted: #6a7a75;
+    --line: #dde4e1; --line-strong: #c6d1cd;
+    --accent: #0f766e; --accent-ink: #0b5a54; --accent-wash: #e2f1ee;
+    --pass: #15803d; --pass-wash: #e3f3e8; --warn: #a15c07; --warn-wash: #f6ecd9;
+    --code-bg: #0f1b18; --code-ink: #d6e2dd; --code-line: #26382f;
+    --shadow: 0 1px 2px rgba(20,32,29,.05), 0 8px 24px -12px rgba(20,32,29,.18);
+  }
+  :root[data-theme="dark"] {
+    --ground: #0c1210; --surface: #121c19; --surface-2: #182420;
+    --ink: #e9efec; --ink-soft: #b3c1bc; --muted: #869790;
+    --line: #24322d; --line-strong: #33443d;
+    --accent: #4fd1c0; --accent-ink: #7ee0d2; --accent-wash: #14322d;
+    --pass: #5cc98a; --pass-wash: #12301f; --warn: #e0ab5e; --warn-wash: #33270f;
+    --code-bg: #0a1310; --code-ink: #d6e2dd; --code-line: #1e2c26;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .page {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 22px; }
+  .prose { max-width: 68ch; }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.18; }
+  a { color: var(--accent-ink); }
+  code:not(pre code) {
+    font-family: var(--mono); font-size: .86em;
+    background: var(--surface-2); border: 1px solid var(--line);
+    padding: .08em .38em; border-radius: 6px; white-space: nowrap;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(120% 90% at 85% -20%, var(--accent-wash) 0%, transparent 55%),
+      var(--surface);
+  }
+  .hero-inner { padding: 56px 0 44px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--accent-ink); font-weight: 600;
+    display: flex; align-items: center; gap: 10px; margin: 0 0 20px;
+  }
+  .eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--accent); display: inline-block; }
+  .hero h1 { font-size: clamp(30px, 5vw, 46px); margin: 0 0 14px; letter-spacing: -.01em; }
+  .hero .lede { font-size: 19px; color: var(--ink-soft); margin: 0 0 30px; max-width: 60ch; }
+
+  .verdict {
+    display: inline-flex; align-items: center; gap: 14px;
+    background: var(--pass-wash); border: 1px solid color-mix(in srgb, var(--pass) 35%, transparent);
+    border-radius: 999px; padding: 8px 18px 8px 10px; margin-bottom: 30px;
+  }
+  .verdict .dot {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--pass);
+    color: #fff; display: grid; place-items: center; font-weight: 700; flex: none;
+  }
+  :root[data-theme="dark"] .verdict .dot, @media (prefers-color-scheme: dark) { }
+  .verdict b { color: var(--pass); font-family: var(--sans); }
+  .verdict span { font-size: 15px; color: var(--ink-soft); }
+
+  .meta {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .meta div { background: var(--surface); padding: 14px 16px; }
+  .meta dt { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-family: var(--mono); }
+  .meta dd { margin: 5px 0 0; font-weight: 600; font-size: 15px; }
+  .meta dd.mono { font-family: var(--mono); font-size: 12.5px; font-weight: 500; word-break: break-all; }
+
+  /* ---------- Sticky nav ---------- */
+  nav.toc {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .toc-inner { display: flex; gap: 4px; overflow-x: auto; padding: 8px 22px; max-width: 940px; margin: 0 auto; scrollbar-width: thin; }
+  .toc a {
+    flex: none; text-decoration: none; color: var(--ink-soft);
+    font-size: 13.5px; font-weight: 600; padding: 7px 13px; border-radius: 8px; white-space: nowrap;
+  }
+  .toc a:hover { background: var(--surface-2); color: var(--ink); }
+  .toc a.active { background: var(--accent); color: #fff; }
+
+  /* ---------- Sections ---------- */
+  section { padding: 52px 0; border-bottom: 1px solid var(--line); }
+  .sec-head { margin-bottom: 30px; }
+  .sec-num { font-family: var(--mono); font-size: 13px; color: var(--accent-ink); font-weight: 600; letter-spacing: .1em; }
+  section h2 { font-size: clamp(23px, 3.5vw, 30px); margin: 6px 0 0; }
+  section h3 { font-size: 20px; margin: 34px 0 12px; }
+  p { margin: 0 0 16px; }
+  .muted { color: var(--muted); }
+
+  /* Glossary + generic tables */
+  .tbl { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 15px; }
+  .tbl th, .tbl td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tbl thead th { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td:first-child { font-weight: 600; white-space: nowrap; }
+  .tbl-wrap { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .tbl-scroll { overflow-x: auto; }
+
+  /* Code decode diagram */
+  .decode {
+    background: var(--code-bg); border-radius: var(--radius); padding: 22px 24px;
+    font-family: var(--mono); color: var(--code-ink); overflow-x: auto; margin: 4px 0 8px;
+  }
+  .decode .row1 { font-size: 26px; letter-spacing: .5em; font-weight: 700; }
+  .decode .seg { color: var(--code-key); }
+  .decode small { display: block; color: var(--code-mut); font-size: 12px; line-height: 1.5; margin-top: 10px; letter-spacing: .02em; }
+
+  /* ---------- Steps ---------- */
+  .step { display: flex; gap: 18px; margin-bottom: 10px; }
+  .step .idx {
+    flex: none; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent-wash); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    display: grid; place-items: center; font-weight: 700; font-family: var(--mono); font-size: 15px;
+  }
+  .step .body { flex: 1; min-width: 0; padding-bottom: 22px; }
+  .step .body h3 { margin: 3px 0 10px; font-size: 18px; }
+
+  /* ---------- Exchange card ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    margin: 0 0 22px; overflow: hidden;
+  }
+  .card > header {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 15px 18px; border-bottom: 1px solid var(--line);
+  }
+  .card .tag { font-family: var(--mono); font-size: 12px; color: var(--muted); font-weight: 600; }
+  .card > header h3 { margin: 0; font-size: 17px; font-family: var(--sans); flex: 1; min-width: 140px; }
+
+  .pill { font-family: var(--mono); font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; letter-spacing: .02em; white-space: nowrap; }
+  .pill.ok { background: var(--pass-wash); color: var(--pass); }
+  .pill.rej { background: var(--warn-wash); color: var(--warn); }
+  .pill.time { background: var(--surface-2); color: var(--muted); font-weight: 600; }
+
+  .exchange { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 680px) { .exchange { grid-template-columns: 1fr; } }
+  .panel { padding: 0; min-width: 0; }
+  .panel + .panel { border-left: 1px solid var(--line); }
+  @media (max-width: 680px) { .panel + .panel { border-left: none; border-top: 1px solid var(--line); } }
+  .panel .plabel {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--muted); padding: 12px 16px 0; font-weight: 600; display: flex; align-items: center; gap: 7px;
+  }
+  .panel .plabel::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+  .panel.req .plabel::before { background: var(--accent); }
+  .panel.res .plabel::before { background: var(--pass); }
+  pre {
+    margin: 8px 0 0; padding: 6px 16px 16px; overflow-x: auto;
+    font-family: var(--mono); font-size: 12.8px; line-height: 1.6; color: var(--ink);
+  }
+  pre .k { color: var(--accent-ink); }
+  pre .s { color: var(--warn); }
+  pre .n { color: #2f6fb0; }
+  :root[data-theme="dark"] pre .n { color: #9ec5ff; }
+  @media (prefers-color-scheme: dark) { pre .n { color: #9ec5ff; } }
+  pre .c { color: var(--muted); }
+  pre .m { color: var(--accent); font-weight: 600; }
+
+  .plain {
+    display: flex; gap: 11px; align-items: flex-start;
+    background: var(--accent-wash); border-top: 1px solid var(--line);
+    padding: 13px 18px; font-size: 14.5px; color: var(--ink-soft);
+  }
+  .plain b { color: var(--accent-ink); }
+  .plain .ico { flex: none; font-family: var(--serif); font-weight: 700; color: var(--accent); font-size: 15px; }
+  .plain.warn { background: var(--warn-wash); }
+  .plain.warn .ico { color: var(--warn); }
+  .plain.warn b { color: var(--warn); }
+
+  /* relevance bars for semantic search */
+  .sources { padding: 4px 18px 16px; }
+  .src { display: grid; grid-template-columns: 116px 1fr 46px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13.5px; }
+  .src code { background: none; border: none; padding: 0; color: var(--accent-ink); font-weight: 700; }
+  .bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #7fd8c4)); border-radius: 999px; }
+  .src .val { font-family: var(--mono); font-size: 12.5px; text-align: right; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .airesp { padding: 4px 18px 16px; font-size: 14.5px; }
+  .airesp .q { border-left: 3px solid var(--line-strong); padding: 4px 0 4px 14px; margin: 8px 0 0; color: var(--ink-soft); font-style: italic; }
+
+  /* callouts */
+  .callout { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 16px 18px; margin: 20px 0; font-size: 15px; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout p { margin: 0; }
+  .callout b { color: var(--ink); }
+
+  /* Conclusion columns */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+  @media (max-width: 680px) { .cols { grid-template-columns: 1fr; } }
+  .col { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; }
+  .col h3 { margin: 0 0 14px; font-size: 17px; display: flex; align-items: center; gap: 9px; }
+  .col ul { margin: 0; padding: 0; list-style: none; }
+  .col li { position: relative; padding: 7px 0 7px 26px; font-size: 14.5px; color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .col li:first-child { border-top: none; }
+  .col li::before { position: absolute; left: 0; top: 7px; font-family: var(--serif); font-weight: 700; }
+  .col.good li::before { content: "✓"; color: var(--pass); }
+  .col.todo li::before { content: "!"; color: var(--warn); }
+  .col li b { color: var(--ink); }
+
+  footer.foot { padding: 40px 0 64px; color: var(--muted); font-size: 13.5px; }
+  footer.foot .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+    .bar > i { transition: width .6s ease; }
+  }
+  section { scroll-margin-top: 60px; }
+</style>
+
+<div class="page">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap hero-inner">
+      <p class="eyebrow">Relatório de Teste · Ambiente de Produção</p>
+      <h1>BNCC API — o que foi testado e como respondeu</h1>
+      <p class="lede">Um relatório em linguagem simples: 20 requisições reais enviadas à API pública da
+        Base Nacional Comum Curricular, com tudo o que foi <strong>pedido</strong> e tudo o que foi
+        <strong>respondido</strong>.</p>
+
+      <div class="verdict">
+        <span class="dot">✓</span>
+        <b>Aprovado — 20 / 20</b>
+        <span>todas as requisições responderam como esperado</span>
+      </div>
+
+      <dl class="meta">
+        <div><dt>Data</dt><dd>05 / 07 / 2026</dd></div>
+        <div><dt>Ambiente</dt><dd>Produção · Cloud Run</dd></div>
+        <div><dt>Endereço</dt><dd class="mono">bncc-api-esjlky3g3a-rj.a.run.app</dd></div>
+        <div><dt>Resultado</dt><dd style="color:var(--pass)">Sem falhas</dd></div>
+      </dl>
+    </div>
+  </header>
+
+  <!-- STICKY NAV -->
+  <nav class="toc" aria-label="Índice">
+    <div class="toc-inner">
+      <a href="#intro">O que é a API</a>
+      <a href="#acesso">Como obter acesso</a>
+      <a href="#dados">Testes de dados</a>
+      <a href="#erros">Testes de erro</a>
+      <a href="#ia">Busca com IA</a>
+      <a href="#conclusao">Conclusão</a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>O que é esta API?</h2>
+      </div>
+      <div class="prose">
+        <p>A <b>BNCC</b> (Base Nacional Comum Curricular) é o documento oficial que define <b>o que cada
+          aluno deve aprender</b> em cada ano da escola, da creche ao ensino médio. Ela é enorme e vive
+          em PDFs difíceis de consultar.</p>
+        <p>Esta <b>API</b> funciona como um "garçom digital": um programa faz um <b>pedido</b>
+          (“me traga as habilidades de matemática do 4º ano”) e a API <b>devolve a resposta</b> já
+          organizada, num formato que outros programas entendem — o <b>JSON</b>, basicamente uma lista
+          de informações etiquetadas.</p>
+      </div>
+
+      <h3>Um mini-dicionário</h3>
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>Termo</th><th>Em português claro</th></tr></thead>
+          <tbody>
+            <tr><td>Requisição</td><td>O pedido que enviamos para a API.</td></tr>
+            <tr><td>Resposta</td><td>O que a API devolveu.</td></tr>
+            <tr><td>Endpoint</td><td>Um “balcão de atendimento” específico — um só de habilidades, outro só de competências.</td></tr>
+            <tr><td>HTTP 200</td><td>Código de sucesso: “deu certo”.</td></tr>
+            <tr><td>HTTP 400 / 401 / 404</td><td>Códigos de recusa: “seu pedido tem um problema” (vistos na seção 4).</td></tr>
+            <tr><td>API key</td><td>Uma “senha de acesso” pessoal. Sem ela, a API não entrega os dados.</td></tr>
+            <tr><td>Habilidade</td><td>Uma competência específica que o aluno deve desenvolver. Cada uma tem um código.</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+
+      <h3>Como ler um código de habilidade</h3>
+      <div class="decode">
+        <div class="row1"><span class="seg">EF</span> 04 <span class="seg">MA</span> 10</div>
+        <small>EF&nbsp;→ Ensino Fundamental &nbsp;·&nbsp; 04&nbsp;→ 4º ano &nbsp;·&nbsp; MA&nbsp;→ Matemática &nbsp;·&nbsp; 10&nbsp;→ décima habilidade da lista</small>
+      </div>
+    </section>
+
+    <!-- ACESSO -->
+    <section id="acesso">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>Como conseguir acesso</h2>
+      </div>
+      <div class="prose">
+        <p>Antes de pedir qualquer dado, é preciso ter uma <b>API key</b> (a senha de acesso). O caminho
+          é o mesmo que um desenvolvedor de verdade faria — em quatro passos.</p>
+      </div>
+
+      <div class="callout warn">
+        <p><b>Observação:</b> hoje o envio de e-mail está em modo “console” — o link de confirmação
+          <b>não chega numa caixa de entrada real</b>, aparece apenas nos registros internos do
+          servidor. Para o público se cadastrar sozinho, será preciso ativar o envio de e-mail (SMTP).</p>
+      </div>
+
+      <div class="step">
+        <div class="idx">1</div>
+        <div class="body">
+          <h3>Criar conta</h3>
+          <div class="card">
+            <div class="exchange">
+              <div class="panel req">
+                <div class="plabel">Enviamos</div>
+<pre><span class="m">POST</span> /api/v1/auth/signup
+{
+  <span class="k">"email"</span>: <span class="s">"teste@example.com"</span>,
+  <span class="k">"password"</span>: <span class="s">"********"</span>
+}</pre>
+              </div>
+              <div class="panel res">
+                <div class="plabel">Recebemos</div>
+<pre>{
+  <span class="k">"account_id"</span>: <span class="s">"38bf3540-…"</span>,
+  <span class="k">"email"</span>: <span class="s">"teste@example.com"</span>,
+  <span class="k">"email_verified"</span>: <span class="n">false</span>
+}</pre>
+              </div>
+            </div>
+            <div class="plain"><span class="ico">➜</span><div>Conta criada, mas ainda <b>não verificada</b> (<code>email_verified: false</code>).</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="idx">2</div>
+        <div class="body">
+          <h3>Confirmar o e-mail</h3>
+          <div class="card">
+            <div class="exchange">
+              <div class="panel req">
+                <div class="plabel">Enviamos</div>
+<pre><span class="m">POST</span> /api/v1/auth/verify-email
+{
+  <span class="k">"token"</span>: <span class="s">"5hRTphqc…"</span>
+}</pre>
+              </div>
+              <div class="panel res">
+                <div class="plabel">Recebemos</div>
+<pre>{
+  <span class="k">"email_verified"</span>: <span class="n">true</span>
+}</pre>
+              </div>
+            </div>
+            <div class="plain"><span class="ico">➜</span><div>E-mail confirmado. Agora a conta pode gerar chaves.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="idx">3</div>
+        <div class="body">
+          <h3>Login e gerar a API key</h3>
+          <div class="card">
+            <div class="exchange">
+              <div class="panel req">
+                <div class="plabel">Enviamos</div>
+<pre><span class="m">POST</span> /api/v1/keys
+{
+  <span class="k">"name"</span>: <span class="s">"smoke-test"</span>
+}</pre>
+              </div>
+              <div class="panel res">
+                <div class="plabel">Recebemos</div>
+<pre>{
+  <span class="k">"id"</span>: <span class="s">"dfdcf87a-…"</span>,
+  <span class="k">"name"</span>: <span class="s">"smoke-test"</span>,
+  <span class="k">"key"</span>: <span class="s">"bncc_live_zUWBz9Q2…"</span>
+}</pre>
+              </div>
+            </div>
+            <div class="plain"><span class="ico">➜</span><div>A <b>chave completa só aparece uma vez</b>. Depois, o sistema guarda apenas uma versão embaralhada, por segurança. Neste teste, a chave foi <b>apagada ao final</b>.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p>A partir daqui, todo pedido de dados leva a chave no cabeçalho
+          <code>Authorization: Bearer &lt;sua-chave&gt;</code> — como carimbar cada pedido com sua senha de acesso.</p>
+      </div>
+    </section>
+
+    <!-- DADOS -->
+    <section id="dados">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>Testes dos dados oficiais</h2>
+      </div>
+      <div class="prose">
+        <p>Estes “balcões” entregam <b>o texto oficial da BNCC</b>, sem interpretação. A mesma pergunta
+          sempre devolve a mesma resposta — resultado exato e previsível.</p>
+      </div>
+
+      <!-- T1 -->
+      <div class="card">
+        <header><span class="tag">Teste 1</span><h3>A API está no ar? (sem chave)</h3><span class="pill ok">HTTP 200</span><span class="pill time">269 ms</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/sistema/health</pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{ <span class="k">"status"</span>: <span class="s">"ok"</span> }</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> “Estou funcionando.”</div></div>
+      </div>
+
+      <!-- T2 -->
+      <div class="card">
+        <header><span class="tag">Teste 2</span><h3>Qual versão dos dados está publicada?</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/sistema/versao-dados</pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{
+  <span class="k">"versao"</span>: <span class="s">"v1"</span>,
+  <span class="k">"contagens"</span>: {
+    <span class="k">"educacao_infantil"</span>: <span class="n">93</span>,
+    <span class="k">"ensino_fundamental"</span>: <span class="n">1291</span>,
+    <span class="k">"ensino_medio"</span>: <span class="n">179</span>,
+    <span class="k">"total_habilidades"</span>: <span class="n">1563</span>
+  },
+  <span class="k">"missing_sources"</span>: []
+}</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> a base tem <b>1.563 habilidades</b> (93 creche/pré-escola, 1.291 fundamental, 179 médio) e as 10 competências gerais. <code>missing_sources: []</code> = nenhuma fonte oficial ficou de fora.</div></div>
+      </div>
+
+      <!-- T3 -->
+      <div class="card">
+        <header><span class="tag">Teste 3</span><h3>Habilidades da Educação Infantil</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades
+      ?etapa=<span class="s">educacao_infantil</span>&size=<span class="n">2</span></pre></div>
+          <div class="panel res"><div class="plabel">Recebemos (1º item)</div><pre>{
+  <span class="k">"codigo"</span>: <span class="s">"EI01CG01"</span>,
+  <span class="k">"descricao"</span>: <span class="s">"Movimentar as partes do
+     corpo para exprimir emoções…"</span>,
+  <span class="k">"campo_experiencia"</span>:
+     <span class="s">"Corpo, gestos e movimentos"</span>
+}</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> para bebês, uma meta é “mexer o corpo para expressar emoções”. Note o campo próprio da creche: <b>campo de experiência</b> (não há “matérias” na educação infantil).</div></div>
+      </div>
+
+      <!-- T4 -->
+      <div class="card">
+        <header><span class="tag">Teste 4</span><h3>Matemática do Ensino Médio</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades
+      ?etapa=<span class="s">ensino_medio</span>
+      &area_conhecimento=<span class="s">matematica</span></pre></div>
+          <div class="panel res"><div class="plabel">Recebemos (45 no total)</div><pre>{
+  <span class="k">"codigo"</span>: <span class="s">"EM13MAT101"</span>,
+  <span class="k">"descricao"</span>: <span class="s">"Interpretar situações
+     econômicas… pela análise dos
+     gráficos das funções…"</span>
+}</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> dá para filtrar por etapa <b>e</b> área ao mesmo tempo.</div></div>
+      </div>
+
+      <!-- T5 -->
+      <div class="card">
+        <header><span class="tag">Teste 5</span><h3>História do 7º ano</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades
+      ?componente=<span class="s">historia</span>&ano=<span class="n">7</span></pre></div>
+          <div class="panel res"><div class="plabel">Recebemos (17 no total)</div><pre>{
+  <span class="k">"codigo"</span>: <span class="s">"EF07HI01"</span>,
+  <span class="k">"descricao"</span>: <span class="s">"Explicar o significado
+     de 'modernidade' e suas lógicas
+     de inclusão e exclusão…"</span>
+}</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> filtra por <b>matéria</b> e por <b>ano</b> juntos.</div></div>
+      </div>
+
+      <!-- T6 -->
+      <div class="card">
+        <header><span class="tag">Teste 6</span><h3>Buscar uma habilidade pelo código</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades/<span class="s">EF04MA10</span></pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{
+  <span class="k">"codigo"</span>: <span class="s">"EF04MA10"</span>,
+  <span class="k">"descricao"</span>: <span class="s">"…representação decimal
+     de um número racional e relacionar
+     décimos e centésimos com o sistema
+     monetário brasileiro."</span>,
+  <span class="k">"componente"</span>: <span class="s">"matematica"</span>
+}</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> quem já sabe o código vai direto à habilidade, como digitar um CEP.</div></div>
+      </div>
+
+      <!-- T7 -->
+      <div class="card">
+        <header><span class="tag">Teste 7</span><h3>Relações de uma habilidade</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades/EF04MA10/relacoes</pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{
+  <span class="k">"competencias_gerais"</span>: [],
+  <span class="k">"competencias_especificas"</span>: [],
+  <span class="k">"objetos_conhecimento"</span>: [],
+  <span class="k">"unidades_tematicas"</span>: []
+}</pre></div>
+        </div>
+        <div class="plain warn"><span class="ico">⚠</span><div><b>Atenção:</b> o balcão responde certo, mas as listas vieram <b>vazias</b>. Hoje a base ainda não registra as ligações entre uma habilidade e seus temas relacionados — uma lacuna de dados a avaliar (ver Conclusão).</div></div>
+      </div>
+
+      <!-- T11 -->
+      <div class="card">
+        <header><span class="tag">Teste 11</span><h3>As 10 Competências Gerais</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/competencias/gerais</pre></div>
+          <div class="panel res"><div class="plabel">Recebemos (as 2 primeiras de 10)</div><pre>[
+ { <span class="k">"numero"</span>: <span class="n">1</span>,
+   <span class="k">"titulo"</span>: <span class="s">"Conhecimento"</span> },
+ { <span class="k">"numero"</span>: <span class="n">2</span>,
+   <span class="k">"titulo"</span>: <span class="s">"Pensamento científico,
+             crítico e criativo"</span> }
+]</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> as 10 grandes metas que atravessam toda a educação básica, direto do texto oficial.</div></div>
+      </div>
+
+      <!-- T12 -->
+      <div class="card">
+        <header><span class="tag">Teste 12</span><h3>A árvore da taxonomia</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/taxonomia</pre></div>
+          <div class="panel res"><div class="plabel">Recebemos (o “mapa” da BNCC)</div><pre>etapa → área → componente
+
+<span class="c">ensino_fundamental</span>
+  └ matematica
+     └ matematica
+  └ linguagens
+     └ lingua_portuguesa, arte…</pre></div>
+        </div>
+        <div class="plain"><span class="ico">➜</span><div><b>Em bom português:</b> serve para montar menus de navegação. O último nível (unidades temáticas) ainda vem vazio — mesma lacuna do Teste 7.</div></div>
+      </div>
+    </section>
+
+    <!-- ERROS -->
+    <section id="erros">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>E quando o pedido está errado?</h2>
+      </div>
+      <div class="prose">
+        <p>Uma boa API precisa <b>recusar com clareza</b> pedidos inválidos, sem quebrar. Testamos três
+          erros de propósito — e a recusa (pill âmbar) aqui é o comportamento <b>correto</b>.</p>
+      </div>
+
+      <div class="card">
+        <header><span class="tag">Teste 8</span><h3>Código com formato inválido</h3><span class="pill rej">HTTP 400</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades/<span class="s">CODIGO_INEXISTENTE</span></pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{
+  <span class="k">"detail"</span>: <span class="s">"Código malformado.
+     Formatos aceitos: EI, EF, EM…"</span>
+}</pre></div>
+        </div>
+        <div class="plain warn"><span class="ico">➜</span><div><b>Em bom português:</b> “Esse código nem tem o formato certo.”</div></div>
+      </div>
+
+      <div class="card">
+        <header><span class="tag">Teste 9</span><h3>Pedido sem a chave de acesso</h3><span class="pill rej">HTTP 401</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades
+<span class="c">(sem Authorization)</span></pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{
+  <span class="k">"detail"</span>: <span class="s">"API key ausente."</span>
+}</pre></div>
+        </div>
+        <div class="plain warn"><span class="ico">➜</span><div><b>Em bom português:</b> “Você não se identificou.” — a proteção funciona.</div></div>
+      </div>
+
+      <div class="card">
+        <header><span class="tag">Teste 10</span><h3>Filtro com valor que não existe</h3><span class="pill rej">HTTP 400</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">GET</span> /api/v1/habilidades?etapa=<span class="s">nao_existe</span></pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{
+  <span class="k">"error_code"</span>: <span class="s">"validation_error"</span>,
+  <span class="k">"errors"</span>: [{
+    <span class="k">"campo"</span>: <span class="s">"query.etapa"</span>,
+    <span class="k">"msg"</span>: <span class="s">"deve ser educacao_infantil,
+      ensino_fundamental ou ensino_medio"</span>
+  }]
+}</pre></div>
+        </div>
+        <div class="plain warn"><span class="ico">➜</span><div><b>Em bom português:</b> “Essa etapa não existe; use uma destas.” Todos os erros vêm com mensagem explicativa e <b>sem vazar detalhes internos</b> do servidor.</div></div>
+      </div>
+    </section>
+
+    <!-- IA -->
+    <section id="ia">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Busca semântica com Inteligência Artificial</h2>
+      </div>
+      <div class="prose">
+        <p>O recurso mais avançado. Em vez de filtros exatos, você faz uma <b>pergunta em linguagem
+          natural</b> e a IA (modelo <b>Google Gemini</b>) monta uma resposta baseada nos trechos
+          oficiais mais parecidos <em>em significado</em> — cada achado ganha uma nota de
+          <b>relevância</b> de 0 a 1.</p>
+      </div>
+
+      <div class="callout">
+        <p><b>Regra de ouro do sistema:</b> a IA <b>nunca inventa</b>. Se não achar nada confiável, ela
+          avisa. Toda resposta vem marcada como <b>não-oficial</b> e lista as <b>fontes</b> (os códigos
+          oficiais) para você conferir no texto original.</p>
+      </div>
+
+      <!-- S1 -->
+      <div class="card">
+        <header><span class="tag">Busca S1</span><h3>“frações e números decimais nos anos iniciais”</h3><span class="pill ok">HTTP 200</span><span class="pill time">≈4 s</span></header>
+        <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">POST</span> /api/v1/busca-semantica
+{ <span class="k">"query"</span>: <span class="s">"frações e números decimais nos anos iniciais…"</span> }</pre></div>
+        <div class="panel res"><div class="plabel">Fontes encontradas</div></div>
+        <div class="sources">
+          <div class="src"><code>EF05MA06</code><div class="bar"><i style="width:52%"></i></div><span class="val">0.52</span></div>
+          <div class="src"><code>EF06MA13</code><div class="bar"><i style="width:47%"></i></div><span class="val">0.47</span></div>
+          <div class="src"><code>EF09MA05</code><div class="bar"><i style="width:46%"></i></div><span class="val">0.46</span></div>
+        </div>
+        <div class="airesp"><div class="plabel" style="padding-left:0">Resposta da IA (não-oficial)</div>
+          <div class="q">“…a habilidade que aborda frações e números decimais no 5º ano é a <b>EF05MA06</b>, que associa representações percentuais (10%, 25%, 50%…) às frações correspondentes…”</div>
+        </div>
+        <div class="plain"><span class="ico">✓</span><div>Achou habilidades de Matemática pertinentes e explicou de forma didática.</div></div>
+      </div>
+
+      <!-- S2 -->
+      <div class="card">
+        <header><span class="tag">Busca S2</span><h3>“educação ambiental e sustentabilidade”</h3><span class="pill ok">HTTP 200</span><span class="pill time">≈5,8 s</span></header>
+        <div class="sources">
+          <div class="src"><code>EM13CNT206</code><div class="bar"><i style="width:63%"></i></div><span class="val">0.63</span></div>
+          <div class="src"><code>EF09CI12</code><div class="bar"><i style="width:60%"></i></div><span class="val">0.60</span></div>
+          <div class="src"><code>EF89EF19</code><div class="bar"><i style="width:59%"></i></div><span class="val">0.59</span></div>
+          <div class="src"><code>EM13CHS304</code><div class="bar"><i style="width:56%"></i></div><span class="val">0.56</span></div>
+        </div>
+        <div class="plain"><span class="ico">✓</span><div>Uma pergunta ampla trouxe habilidades de <b>várias matérias e etapas</b> (Ciências, Ed. Física, Ciências Humanas) — exatamente o valor da busca por significado.</div></div>
+      </div>
+
+      <!-- S3 -->
+      <div class="card">
+        <header><span class="tag">Busca S3</span><h3>“alfabetização e consciência fonológica”</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="sources">
+          <div class="src"><code>EF02LP26</code><div class="bar"><i style="width:63%"></i></div><span class="val">0.63</span></div>
+          <div class="src"><code>EF69LP49</code><div class="bar"><i style="width:60%"></i></div><span class="val">0.60</span></div>
+          <div class="src"><code>EF69LP54</code><div class="bar"><i style="width:59%"></i></div><span class="val">0.59</span></div>
+        </div>
+        <div class="airesp"><div class="q">“…o contexto oficial <b>não menciona explicitamente</b> os termos ‘alfabetização’ ou ‘consciência fonológica’ para o início do Ensino Fundamental…”</div></div>
+        <div class="plain"><span class="ico">✓</span><div><b>Ponto alto de honestidade:</b> em vez de inventar, a IA <b>admitiu</b> o que não estava nas fontes.</div></div>
+      </div>
+
+      <!-- S4 -->
+      <div class="card">
+        <header><span class="tag">Busca S4</span><h3>“bebês expressarem emoções com o corpo”</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="sources">
+          <div class="src"><code>EI03CG01</code><div class="bar"><i style="width:67%"></i></div><span class="val">0.67</span></div>
+          <div class="src"><code>EI01CG01</code><div class="bar"><i style="width:59%"></i></div><span class="val">0.59</span></div>
+          <div class="src"><code>EI02EO01</code><div class="bar"><i style="width:55%"></i></div><span class="val">0.55</span></div>
+        </div>
+        <div class="plain"><span class="ico">✓</span><div>Maior relevância de todos os testes (<b>0,67</b>). A busca funciona muito bem também para a <b>Educação Infantil</b>.</div></div>
+      </div>
+
+      <!-- S5 -->
+      <div class="card">
+        <header><span class="tag">Busca S5</span><h3>“pensamento computacional e algoritmos”</h3><span class="pill ok">HTTP 200</span></header>
+        <div class="sources">
+          <div class="src"><code>EF04MA06</code><div class="bar"><i style="width:66%"></i></div><span class="val">0.66</span></div>
+          <div class="src"><code>EF05MA07</code><div class="bar"><i style="width:63%"></i></div><span class="val">0.63</span></div>
+          <div class="src"><code>EF04MA03</code><div class="bar"><i style="width:63%"></i></div><span class="val">0.63</span></div>
+        </div>
+        <div class="airesp"><div class="q">“…encontrou o termo ‘algoritmos’ em habilidades de Matemática, mas avisou que <b>‘pensamento computacional’ não é mencionado</b> no texto oficial.”</div></div>
+        <div class="plain warn"><span class="ico">⚠</span><div>Pedimos o extra <code>incluir_contexto: true</code> (ver os trechos brutos), mas a resposta não trouxe esse campo. Vale confirmar se a opção está ativa.</div></div>
+      </div>
+
+      <!-- S6 -->
+      <div class="card">
+        <header><span class="tag">Busca S6</span><h3>Fora de assunto: “bolo de chocolate”</h3><span class="pill ok">HTTP 200</span><span class="pill time">0,4 s</span></header>
+        <div class="panel req"><div class="plabel">Enviamos</div><pre><span class="m">POST</span> /api/v1/busca-semantica
+{ <span class="k">"query"</span>: <span class="s">"como fazer um bolo de chocolate fofinho"</span> }</pre></div>
+        <div class="airesp"><div class="plabel" style="padding-left:0">Resposta — 0 documentos consultados</div>
+          <div class="q">“Não encontrei na BNCC habilidades com correspondência confiável para a sua pergunta. Tente reformular… <b>Nenhuma informação foi inventada.</b>”</div>
+        </div>
+        <div class="plain"><span class="ico">✓</span><div><b>Talvez o teste mais importante:</b> a IA <b>não alucinou</b>. Percebeu que não havia nada relacionado e avisou honestamente — a “regra de ouro” funcionando na prática.</div></div>
+      </div>
+
+      <!-- S7/S8 -->
+      <div class="card">
+        <header><span class="tag">Buscas S7 · S8</span><h3>Perguntas vazias ou curtas demais</h3><span class="pill rej">HTTP 400</span></header>
+        <div class="exchange">
+          <div class="panel req"><div class="plabel">Enviamos</div><pre>{ <span class="k">"query"</span>: <span class="s">""</span> }
+{ <span class="k">"query"</span>: <span class="s">"a"</span> }</pre></div>
+          <div class="panel res"><div class="plabel">Recebemos</div><pre>{
+  <span class="k">"msg"</span>: <span class="s">"deve ter ao menos
+     3 caracteres"</span>
+}</pre></div>
+        </div>
+        <div class="plain warn"><span class="ico">➜</span><div>A API recusa perguntas sem sentido <b>antes</b> de acionar a IA — economiza tempo e custo.</div></div>
+      </div>
+    </section>
+
+    <!-- CONCLUSAO -->
+    <section id="conclusao" style="border-bottom:none">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Conclusão</h2>
+      </div>
+      <div class="cols">
+        <div class="col good">
+          <h3>✓ O que está funcionando bem</h3>
+          <ul>
+            <li><b>Disponibilidade:</b> no ar; respondeu todas as 20 requisições.</li>
+            <li><b>Velocidade:</b> dados em ~250–290 ms; buscas com IA de 0,4 a 7,7 s.</li>
+            <li><b>Acentuação correta</b> em tudo (<code>décimos</code>, <code>frações</code>, <code>emoções</code>).</li>
+            <li><b>Segurança:</b> sem chave bloqueia; erros explicados sem vazar detalhes internos.</li>
+            <li><b>IA responsável:</b> nunca inventou; admite quando não sabe e sempre cita fontes.</li>
+          </ul>
+        </div>
+        <div class="col todo">
+          <h3>! Pontos a decidir / melhorar</h3>
+          <ul>
+            <li><b>Ligações entre dados vazias</b> (Testes 7 e 12): relações e unidades temáticas ainda não populadas.</li>
+            <li><b>Opção <code>incluir_contexto</code></b> (S5) não retornou os trechos brutos esperados — confirmar.</li>
+            <li><b>E-mail em modo “console”:</b> enquanto não houver envio real (SMTP), o público não consegue se cadastrar sozinho.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:24px">
+        <p><b>Metodologia:</b> foi criada uma conta de teste real, verificada e usada para gerar uma API
+          key; a chave foi <b>apagada ao final</b> (confirmação <code>HTTP 204</code>). Todas as
+          requisições e respostas acima são reproduções fiéis do que a API enviou e devolveu em
+          05/07/2026.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <div class="wrap">
+      <span>BNCC API · Relatório de teste em produção</span>
+      <span>05 / 07 / 2026 · 20 requisições · 0 falhas</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = links.map(function (a) {
+      return { link: a, sec: document.querySelector(a.getAttribute('href')) };
+    }).filter(function (m) { return m.sec; });
+    if (!('IntersectionObserver' in window) || !map.length) return;
+    var current = null;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) current = e.target;
+      });
+      map.forEach(function (m) { m.link.classList.toggle('active', m.sec === current); });
+    }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+    map.forEach(function (m) { io.observe(m.sec); });
+  })();
+</script>

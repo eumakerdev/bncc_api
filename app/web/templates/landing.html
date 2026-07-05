@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}BNCC API — toda a Base Nacional Comum Curricular, via API{% endblock %}
+{% block title %}BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita{% endblock %}
 
-{% block description %}API pública e gratuita para começar: acesse toda a Base Nacional Comum Curricular (BNCC) — Educação Infantil, Fundamental e Médio — por uma API REST determinística, com API keys self-service, documentação automática e busca semântica com IA.{% endblock %}
+{% block description %}1.703 habilidades da BNCC — Educação Infantil, Fundamental e Médio, incluindo o Complemento de Computação — em uma API REST gratuita: códigos e textos oficiais preservados, busca semântica com IA e API keys self-service.{% endblock %}
 
 {% block head_extra %}
 {% set site_url = (request.base_url|string).rstrip('/') %}
 <meta property="og:type" content="website">
-<meta property="og:title" content="BNCC API — toda a Base Nacional Comum Curricular, via API">
-<meta property="og:description" content="API pública com toda a BNCC (EI/EF/EM) determinística e versionada, acesso self-service por API keys, documentação automática e busca semântica com IA (não-oficial).">
+<meta property="og:title" content="BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita">
+<meta property="og:description" content="1.703 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.">
 <meta property="og:url" content="{{ site_url }}/">
 <meta property="og:image" content="{{ site_url }}/static/og-image.svg">
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="BNCC API — toda a Base Nacional Comum Curricular, via API">
-<meta name="twitter:description" content="Dados oficiais da BNCC (EI/EF/EM), self-service por API keys, docs automáticas e busca semântica com IA.">
+<meta name="twitter:title" content="BNCC API — toda a BNCC em uma API gratuita">
+<meta name="twitter:description" content="1.703 habilidades (EI/EF/EM + Computação), códigos oficiais preservados, busca semântica com IA, API keys self-service. Grátis e open-source.">
 <meta name="twitter:image" content="{{ site_url }}/static/og-image.svg">
 <link rel="canonical" href="{{ site_url }}/">
 <script type="application/ld+json">
@@ -23,12 +23,17 @@
   "@type": "WebSite",
   "name": "BNCC API",
   "url": "{{ site_url }}/",
-  "description": "API pública que expõe toda a Base Nacional Comum Curricular (BNCC) do Brasil: dados determinísticos das três etapas, acesso self-service por API keys, documentação automática e busca semântica com IA.",
+  "description": "API pública e gratuita que expõe toda a Base Nacional Comum Curricular (BNCC) do Brasil: dados determinísticos das três etapas, acesso self-service por API keys, documentação automática e busca semântica com IA.",
   "publisher": {
     "@type": "Organization",
-    "name": "BNCC API",
-    "url": "{{ site_url }}/",
-    "logo": "{{ site_url }}/static/og-image.svg"
+    "name": "Expertia · EuMaker",
+    "url": "https://expertia.dev.br",
+    "logo": "{{ site_url }}/static/og-image.svg",
+    "sameAs": [
+      "https://expertia.dev.br",
+      "https://eumaker.dev",
+      "https://github.com/eumakerdev"
+    ]
   },
   "inLanguage": "pt-BR"
 }
@@ -36,79 +41,286 @@
 {% endblock %}
 
 {% block content %}
-<section class="hero container">
-  <h1>Toda a BNCC, pronta para consumir via API</h1>
+<!-- ============================== HERO ============================== -->
+<section class="hero container" aria-labelledby="hero-heading">
+  <div class="hero-grid">
+    <div>
+      <p class="eyebrow">Gratuita · Open-source · Dados fiéis ao documento oficial</p>
+      <h1 id="hero-heading">Toda a BNCC em uma API. Sem depurar centenas de páginas de PDF.</h1>
+      <p class="lead">
+        1.703 habilidades da Educação Infantil ao Ensino Médio — incluindo o Complemento
+        de Computação — com códigos e textos oficiais preservados. Crie sua conta, gere
+        uma API key e faça a primeira chamada em minutos.
+      </p>
+      <p class="cta-row">
+        <a class="btn btn-lg" href="/portal/signup">Criar minha API key grátis</a>
+        <a class="btn btn-secondary btn-lg" href="/guia">Explorar a documentação</a>
+      </p>
+      <p class="muted hero-note">Sem cartão, sem fila de aprovação — a chave sai na hora.</p>
+    </div>
+    <div class="code-window" aria-label="Exemplo de resposta da API">
+      <div class="code-window-bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="code-window-title">GET /api/v1/habilidades/EF05MA07</span>
+      </div>
+<pre><code>{
+  <span class="tk">"codigo"</span>: <span class="tv">"EF05MA07"</span>,
+  <span class="tk">"descricao"</span>: <span class="tv">"Resolver e elaborar problemas
+    de adição e subtração com números
+    naturais e com números racionais…"</span>,
+  <span class="tk">"etapa"</span>: <span class="tv">"ensino_fundamental"</span>,
+  <span class="tk">"anos"</span>: [<span class="tv">"5"</span>],
+  <span class="tk">"componente"</span>: <span class="tv">"matematica"</span>,
+  <span class="tk">"unidade_tematica"</span>: <span class="tv">"Números"</span>
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= PROVA SOCIAL ========================== -->
+<section class="stat-strip" aria-label="Números do projeto">
+  <div class="container stat-grid">
+    <div class="stat"><strong>1.703</strong><span>habilidades oficiais</span></div>
+    <div class="stat"><strong>3</strong><span>etapas: EI, EF e EM</span></div>
+    <div class="stat"><strong>140</strong><span>habilidades de Computação</span></div>
+    <div class="stat"><strong>100%</strong><span>open-source (MIT)</span></div>
+  </div>
+</section>
+
+<!-- =========================== PROBLEMA ============================ -->
+<section class="section container section-narrow" aria-labelledby="problema-heading">
+  <h2 id="problema-heading">Seu produto fala de educação. Ele fala BNCC?</h2>
   <p class="lead">
-    A Base Nacional Comum Curricular completa — Educação Infantil, Ensino Fundamental e
-    Ensino Médio — em endpoints determinísticos, com os códigos e textos oficiais
-    preservados. Crie sua conta, gere uma API key e faça sua primeira chamada em minutos.
-  </p>
-  <p>
-    <a class="btn" href="/portal/signup">Criar conta grátis</a>
-    <a class="btn btn-secondary" href="/guia">Ver documentação</a>
+    Quem constrói para a educação brasileira esbarra sempre nos mesmos muros: LLMs que
+    inventam códigos de habilidade plausíveis, PDFs oficiais que não foram feitos para
+    máquinas e planilhas montadas à mão que envelhecem no dia seguinte. A BNCC API
+    resolve a camada de dados para você focar no seu produto.
   </p>
 </section>
 
+<!-- ========================= CASOS DE USO ========================== -->
+<section class="section container" id="casos-de-uso" aria-labelledby="casos-heading">
+  <h2 id="casos-heading">O que dá para construir com isso</h2>
+  <p class="lead">Cinco casos de uso ancorados em problemas reais das escolas e redes brasileiras.</p>
+  <div class="grid uc-grid">
+
+    <article class="card uc-card">
+      <span class="uc-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+      </span>
+      <h3>Planos de aula com IA, sem códigos inventados</h3>
+      <p class="muted">
+        8 em cada 10 professores já usam IA para planejar — e LLMs genéricos alucinam
+        códigos BNCC. Valide cada código de forma determinística e ancore a geração em
+        fontes oficiais rastreáveis.
+      </p>
+      <p><code class="endpoint">GET /habilidades/{codigo}</code> <code class="endpoint">POST /busca-semantica</code></p>
+    </article>
+
+    <article class="card uc-card">
+      <span class="uc-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+      </span>
+      <h3>Trilhas de recomposição de aprendizagens</h3>
+      <p class="muted">
+        83% das redes municipais executam ações de recomposição pós-pandemia. Navegue as
+        relações entre habilidades e monte trilhas regressivas por ano e componente —
+        mapa de progressão por turma, não por intuição.
+      </p>
+      <p><code class="endpoint">GET /habilidades/{codigo}/relacoes</code></p>
+    </article>
+
+    <article class="card uc-card">
+      <span class="uc-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>
+      </span>
+      <h3>A corrida da BNCC Computação 2026</h3>
+      <p class="muted">
+        O Complemento de Computação vira obrigatório em 2026 e a adequação curricular
+        entrou nos critérios do Fundeb (VAAR). As 140 habilidades, com eixos
+        estruturados, prontas para cruzar com o currículo da sua rede.
+      </p>
+      <p><code class="endpoint">GET /habilidades?componente=computacao&amp;eixo=…</code></p>
+    </article>
+
+    <article class="card uc-card">
+      <span class="uc-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><rect x="7" y="8" width="3" height="8"/><rect x="12" y="5" width="3" height="11"/><rect x="17" y="11" width="3" height="5"/></svg>
+      </span>
+      <h3>Cobertura curricular visível para o gestor</h3>
+      <p class="muted">
+        Lacunas de currículo hoje só aparecem no SAEB — tarde demais. Cruze os
+        planejamentos dos professores com a taxonomia oficial e mostre a cobertura por
+        ano, componente e bimestre, em tempo de intervir.
+      </p>
+      <p><code class="endpoint">GET /taxonomia</code> <code class="endpoint">POST /busca-semantica</code></p>
+    </article>
+
+    <article class="card uc-card">
+      <span class="uc-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/></svg>
+      </span>
+      <h3>Conteúdo educacional etiquetado por habilidade</h3>
+      <p class="muted">
+        Editoras e plataformas catalogam milhares de vídeos e atividades à mão. Use a
+        busca semântica para sugerir os códigos e deixe o especialista apenas confirmar —
+        catálogo pesquisável por habilidade, etapa e ano.
+      </p>
+      <p><code class="endpoint">POST /busca-semantica</code></p>
+    </article>
+
+    <article class="card uc-card uc-card-cta">
+      <h3>Tem outro caso em mente?</h3>
+      <p class="muted">
+        A API é gratuita e o contrato é estável e versionado. Comece pelo guia e monte a
+        sua ideia em cima de dados confiáveis.
+      </p>
+      <p><a class="btn btn-secondary" href="/guia">Ler o guia de início rápido</a></p>
+    </article>
+  </div>
+</section>
+
+<!-- ========================= COMO FUNCIONA ========================= -->
+<section class="section container" aria-labelledby="como-heading">
+  <h2 id="como-heading">Da conta à primeira chamada em 3 passos</h2>
+  <div class="grid steps-grid">
+    <article class="card step">
+      <span class="step-num" aria-hidden="true">1</span>
+      <h3>Crie sua conta</h3>
+      <p class="muted">Cadastro com e-mail e senha, verificação e pronto. Sem aprovação manual, sem cartão.</p>
+    </article>
+    <article class="card step">
+      <span class="step-num" aria-hidden="true">2</span>
+      <h3>Gere sua API key</h3>
+      <p class="muted">No portal, crie e revogue chaves quando quiser e acompanhe o seu uso.</p>
+    </article>
+    <article class="card step">
+      <span class="step-num" aria-hidden="true">3</span>
+      <h3>Chame a API</h3>
+      <p class="muted">Endpoints REST sob <code>/api/v1</code>, documentados no OpenAPI.</p>
+    </article>
+  </div>
+  <pre class="curl-block"><code>curl -H <span class="tv">"Authorization: Bearer SUA_API_KEY"</span> \
+  "{{ (request.base_url|string).rstrip('/') }}/api/v1/habilidades?etapa=ensino_fundamental&amp;ano=5"</code></pre>
+</section>
+
+<!-- =========================== RECURSOS ============================ -->
 <section class="section container" aria-labelledby="recursos-heading">
-  <h2 id="recursos-heading">Recursos</h2>
+  <h2 id="recursos-heading">Feita para quem leva dado educacional a sério</h2>
   <div class="grid">
     <article class="card">
-      <h3>BNCC completa e determinística</h3>
+      <h3>Determinística e versionada</h3>
       <p class="muted">
-        As três etapas (EI/EF/EM) extraídas de forma determinística e versionada a partir
-        das fontes oficiais, com relações navegáveis entre habilidades, competências e
-        objetos de conhecimento.
+        As três etapas extraídas de forma determinística e reproduzível das fontes
+        oficiais, com relações navegáveis entre habilidades, competências e objetos de
+        conhecimento. O contrato da API é versionado — sem quebra dentro do <code>/api/v1</code>.
       </p>
     </article>
     <article class="card">
-      <h3>API keys self-service</h3>
+      <h3>Self-service de verdade</h3>
       <p class="muted">
-        Cadastro por e-mail e senha, verificação obrigatória e geração/revogação de API
-        keys pelo portal — sem burocracia, sem espera por aprovação manual.
+        API keys geradas e revogadas por você no portal, com painel de uso. Cota
+        transparente: 60 req/min nos endpoints determinísticos.
       </p>
     </article>
     <article class="card">
-      <h3>Documentação sempre atualizada</h3>
+      <h3>Documentação sempre em dia</h3>
       <p class="muted">
-        Docs geradas automaticamente a partir do contrato OpenAPI: schemas, exemplos e
-        teste autenticado direto no navegador, sincronizados com o código.
+        Docs geradas do contrato OpenAPI: schemas, exemplos e teste autenticado direto no
+        navegador, sincronizados com o código.
       </p>
     </article>
     <article class="card">
       <h3>Busca semântica com IA <span class="badge badge-muted">não-oficial</span></h3>
       <p class="muted">
-        Faça perguntas em linguagem natural e receba respostas com fontes oficiais
-        rastreáveis. Conteúdo gerado é sempre marcado como não-oficial — os dados
-        determinísticos continuam sendo a fonte da verdade.
+        Perguntas em linguagem natural, respostas com fontes oficiais rastreáveis. Todo
+        conteúdo gerado é marcado como não-oficial — os dados determinísticos continuam
+        sendo a fonte da verdade, e funcionam mesmo se a camada de IA cair.
       </p>
     </article>
   </div>
 </section>
 
-<section class="section container" aria-labelledby="publico-heading">
-  <h2 id="publico-heading">Para quem é</h2>
-  <div class="grid">
-    <article class="card">
-      <h3>Desenvolvedores de edtech</h3>
-      <p class="muted">Integre currículo oficial a plataformas de ensino, planejadores de aula e sistemas de avaliação.</p>
-    </article>
-    <article class="card">
-      <h3>Pesquisadores</h3>
-      <p class="muted">Analise cobertura curricular, componentes e competências em escala, com dados estruturados e versionados.</p>
-    </article>
-    <article class="card">
-      <h3>Governos e redes de ensino</h3>
-      <p class="muted">Alinhe materiais e currículos locais à BNCC com uma fonte oficial, íntegra e auditável.</p>
-    </article>
+<!-- ======================== APOIE O PROJETO ======================== -->
+<section class="section sponsor-section" id="apoie" aria-labelledby="apoie-heading">
+  <div class="container">
+    <h2 id="apoie-heading">Grátis hoje. Sustentado por quem usa.</h2>
+    <p class="lead">
+      A API roda em infraestrutura real (Cloud Run + Postgres) e é mantida nas horas
+      livres. Se ela economizou seu tempo ou entrou em algo que você construiu,
+      considere apoiar — qualquer valor mantém tudo no ar.
+    </p>
+    <div class="grid sponsor-grid">
+      <article class="card sponsor-card">
+        <span class="uc-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/></svg>
+        </span>
+        <h3>GitHub Sponsors</h3>
+        <p class="muted">Apoio avulso ou mensal com cartão internacional, sem taxa de plataforma.</p>
+        <p><a class="btn" href="https://github.com/sponsors/eumakerdev" rel="noopener">Apoiar no GitHub Sponsors</a></p>
+      </article>
+      <article class="card sponsor-card">
+        <span class="uc-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>
+        </span>
+        <h3>Pix</h3>
+        <p class="muted">Aponte a câmera para o QR Code ou copie o código e cole em Pix › Copia e Cola. Você escolhe o valor.</p>
+        <img class="pix-qr" src="/static/pix-qrcode.png" alt="QR Code Pix para apoiar o projeto" width="140" height="140" loading="lazy">
+        <div class="pix-copy">
+          <code id="pix-code">00020126580014br.gov.bcb.pix013636775e59-1e28-45af-88c2-579c24fbe43c5204000053039865802BR5913FABIO SANTANA6006BRASIL62070503***63045A4B</code>
+          <button type="button" class="btn btn-secondary btn-sm" id="pix-copy-btn" aria-label="Copiar código Pix">Copiar código Pix</button>
+        </div>
+      </article>
+      <article class="card sponsor-card">
+        <span class="uc-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.12 2.12 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.12 2.12 0 0 0 1.597-1.16z"/></svg>
+        </span>
+        <h3>Uma estrela no GitHub</h3>
+        <p class="muted">Não custa nada e dá visibilidade para o projeto chegar a mais quem constrói educação no Brasil.</p>
+        <p><a class="btn btn-secondary" href="https://github.com/eumakerdev/bncc_api" rel="noopener">Ver o repositório</a></p>
+      </article>
+    </div>
   </div>
 </section>
 
-<section class="section container" aria-labelledby="cta-heading">
-  <h2 id="cta-heading">Comece agora</h2>
-  <p class="lead">Crie sua conta, gere uma API key e consulte a BNCC completa em minutos.</p>
-  <p>
-    <a class="btn" href="/portal/signup">Criar conta grátis</a>
-    <a class="btn btn-secondary" href="/guia">Ler o guia de início rápido</a>
+<!-- ========================== FOUNDED BY =========================== -->
+<section class="section container section-narrow" aria-labelledby="founders-heading">
+  <h2 id="founders-heading">Uma iniciativa Expertia × EuMaker</h2>
+  <p class="lead">
+    A BNCC API é fundada e mantida pela <a href="https://expertia.dev.br" rel="noopener">Expertia</a>
+    e pela <a href="https://eumaker.dev" rel="noopener">EuMaker</a>, de
+    <a href="https://github.com/eumakerdev" rel="noopener">Fábio Delgado</a> — feita no Brasil,
+    para quem constrói educação no Brasil. O código é aberto (MIT) e contribuições são bem-vindas.
+  </p>
+  <p class="notice">
+    Iniciativa <strong>independente e não-oficial</strong>, sem vínculo com o MEC. Os textos de
+    habilidades e competências são reproduções fiéis dos documentos oficiais da BNCC; qualquer
+    conteúdo gerado por IA é explicitamente marcado como <strong>não-oficial</strong>.
   </p>
 </section>
+
+<!-- =========================== CTA FINAL =========================== -->
+<section class="section container cta-final" aria-labelledby="cta-heading">
+  <h2 id="cta-heading">Comece agora — a primeira chamada sai em minutos</h2>
+  <p class="lead">Conta gratuita, API key na hora e toda a BNCC à disposição do seu produto.</p>
+  <p class="cta-row">
+    <a class="btn btn-lg" href="/portal/signup">Criar minha API key grátis</a>
+    <a class="btn btn-secondary btn-lg" href="/guia">Ler o guia de início rápido</a>
+  </p>
+</section>
+
+<script>
+  (function () {
+    var btn = document.getElementById("pix-copy-btn");
+    var code = document.getElementById("pix-code");
+    if (!btn || !code || !navigator.clipboard) return;
+    btn.addEventListener("click", function () {
+      navigator.clipboard.writeText(code.textContent.trim()).then(function () {
+        var original = btn.textContent;
+        btn.textContent = "Copiado";
+        setTimeout(function () { btn.textContent = original; }, 2500);
+      });
+    });
+  })();
+</script>
 {% endblock %}

@@ -107,6 +107,8 @@ class BNCCDataService:
             hab.get("competencias_gerais") or []
         ):
             return False
+        if f.eixo and hab.get("eixo") != f.eixo.value:
+            return False
         return True
 
     def _filtered_raw(self, f: HabilidadeFiltros) -> list[dict[str, Any]]:

@@ -50,11 +50,33 @@ Alembic (Cloud Run Job) e sobe o serviço; ao final fixa `ALLOWED_HOSTS` com a U
 `-Region` (default `southamerica-east1`), `-Tag`, `-SqlTier` (default `db-f1-micro`),
 `-Service`, `-SqlInstance`. Veja o cabeçalho de `cloudrun.ps1`.
 
+## E-mail de verificação (Brevo)
+Sem credenciais SMTP o serviço sobe com `EMAIL_BACKEND=console` (o link de verificação só aparece
+nos logs do Cloud Run). Para signup self-service **real**, usamos o **Brevo** (ex-Sendinblue):
+free tier de 300 e-mails/dia, SMTP puro.
+
+**Passo a passo (uma vez):**
+1. Crie a conta no Brevo e, em **Senders, Domains & Dedicated IPs → Domains**, adicione
+   `bncc.api.br`. O Brevo mostra os registros **SPF, DKIM e DMARC** — publique-os no DNS do
+   domínio. Sem isso o e-mail cai em spam.
+2. Em **SMTP & API → SMTP**, copie o **login** (algo como `8xxxxx@smtp-brevo.com`) e gere uma
+   **SMTP key** (a senha).
+3. Rode o deploy passando as duas credenciais — elas vão para o **Secret Manager**
+   (`SMTP_USERNAME`/`SMTP_PASSWORD`), e o script liga `EMAIL_BACKEND=smtp` só no serviço:
+
+   ```powershell
+   ./deploy/cloudrun.ps1 -GoogleApiKey "AIza..." `
+     -BrevoSmtpUser "8xxxxx@smtp-brevo.com" -BrevoSmtpKey "<sua-smtp-key>"
+   ```
+
+   Como as credenciais ficam em secrets, **re-execuções não precisam repassá-las** (o script
+   detecta os secrets e mantém `smtp`). O remetente padrão é `no-reply@bncc.api.br`
+   (ajuste com `-EmailFrom`); host/porta são `smtp-relay.brevo.com:587` (`-SmtpHost`/`-SmtpPort`).
+
 ## Follow-ups conhecidos
-- **E-mail**: sobe com `EMAIL_BACKEND=console` (link de verificação aparece nos logs do Cloud
-  Run). Para signup self-service real, configure SMTP (`SMTP_HOST/USERNAME/PASSWORD` + secret) e
-  troque para `EMAIL_BACKEND=smtp`.
-- **Domínio custom**: mapeie no Cloud Run e ajuste `ALLOWED_HOSTS`/`EMAIL_VERIFICATION_BASE_URL`.
+- **Domínio custom**: mapeie `bncc.api.br` no Cloud Run e ajuste
+  `ALLOWED_HOSTS`/`EMAIL_VERIFICATION_BASE_URL` para o domínio (hoje apontam para a URL do Cloud
+  Run gerada no fim do deploy).
 - **Nova versão de dados**: como os embeddings são assados na imagem, regenerar o snapshot exige
   novo build (novo `-Tag`) e redeploy.
 
@@ -62,3 +84,4 @@ Alembic (Cloud Run Job) e sobe o serviço; ao final fixa `ALLOWED_HOSTS` com a U
 Cloud SQL `db-f1-micro` roda continuamente (~US$ 8–10/mês). Cloud Run com `--min-instances=1`
 (escolhido para evitar cold start pesado de ML) mantém 1 instância ativa e também gera custo
 contínuo — baixe para `0` se puder tolerar cold start, ou suba o `min` conforme a carga.
+E-mail via **Brevo** é gratuito no free tier (300/dia) — sem custo adicional nesta fase.

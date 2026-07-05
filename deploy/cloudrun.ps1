@@ -40,6 +40,11 @@ param(
   [string]$GoogleApiKey = "",    # chave Gemini p/ geracao da busca semantica (opcional)
   [string]$LlmModel    = "gemini-2.5-flash",
   [int]$AiMaxOutputTokens = 3000, # teto alto: o thinking do 2.5-flash consome tokens
+  [string]$BrevoSmtpUser = "",   # login SMTP do Brevo (ex.: 8xxxxx@smtp-brevo.com) - habilita e-mail real
+  [string]$BrevoSmtpKey  = "",   # chave/senha SMTP do Brevo (a "SMTP key" do painel)
+  [string]$EmailFrom     = "no-reply@bncc.api.br", # remetente (dominio precisa de SPF/DKIM no Brevo)
+  [string]$SmtpHost      = "smtp-relay.brevo.com",
+  [int]$SmtpPort         = 587,
   [switch]$SkipBuild             # reaproveita a imagem ja publicada (nao rebuilda)
 )
 
@@ -161,11 +166,32 @@ if (-not $useGemini) {
   Write-Host "AVISO: sem GOOGLE_API_KEY - busca semantica usa resumo deterministico (sem Gemini)." -ForegroundColor Yellow
 }
 
+# SMTP/Brevo (e-mail de verificacao real) - opcional; sem ele o backend fica em
+# `console` e o link de verificacao so aparece nos logs do Cloud Run. Login e chave
+# ficam ambos no Secret Manager para o deploy ser idempotente (re-lidos nas proximas
+# execucoes sem precisar repassar -BrevoSmtp*). Precisa domain com SPF/DKIM no Brevo.
+$useSmtp = $false
+if ($BrevoSmtpUser -and $BrevoSmtpKey) {
+  if (Exists { gcloud secrets describe SMTP_USERNAME }) {
+    Set-SecretValue "SMTP_USERNAME" $BrevoSmtpUser -AddVersion
+  } else { Set-SecretValue "SMTP_USERNAME" $BrevoSmtpUser }
+  if (Exists { gcloud secrets describe SMTP_PASSWORD }) {
+    Set-SecretValue "SMTP_PASSWORD" $BrevoSmtpKey -AddVersion
+  } else { Set-SecretValue "SMTP_PASSWORD" $BrevoSmtpKey }
+  $useSmtp = $true
+} elseif ((Exists { gcloud secrets describe SMTP_USERNAME }) -and (Exists { gcloud secrets describe SMTP_PASSWORD })) {
+  $useSmtp = $true
+}
+if (-not $useSmtp) {
+  Write-Host "AVISO: sem SMTP (Brevo) - EMAIL_BACKEND=console; link de verificacao so nos logs." -ForegroundColor Yellow
+}
+
 # Permite ao Cloud Run/Job ler os secrets
 $projNum = gcloud projects describe $Project --format='value(projectNumber)'
 $sa = "$projNum-compute@developer.gserviceaccount.com"
 $secretNames = @("SECRET_KEY", "DB_PASSWORD")
 if ($useGemini) { $secretNames += "GOOGLE_API_KEY" }
+if ($useSmtp) { $secretNames += @("SMTP_USERNAME", "SMTP_PASSWORD") }
 foreach ($s in $secretNames) {
   Exec { gcloud secrets add-iam-policy-binding $s `
     --member="serviceAccount:$sa" --role="roles/secretmanager.secretAccessor" }
@@ -216,6 +242,18 @@ Exec { gcloud run jobs execute $jobName --region=$Region --wait }
 Remove-Item $envFileJob -Force
 
 # 7) Deploy do servico ----------------------------------------------------------
+# So o servico envia e-mail (o job de migracao segue em console). Se ha SMTP,
+# ligamos o backend e injetamos host/porta/TLS/remetente por env; login e senha
+# chegam por referencia de secret (Principio V - segredo nunca em env plano).
+$svcSecrets = $commonSecrets
+if ($useSmtp) {
+  $envBase["EMAIL_BACKEND"] = "smtp"
+  $envBase["EMAIL_FROM"]    = $EmailFrom
+  $envBase["SMTP_HOST"]     = $SmtpHost
+  $envBase["SMTP_PORT"]     = "$SmtpPort"
+  $envBase["SMTP_USE_TLS"]  = "true"
+  $svcSecrets += ",SMTP_USERNAME=SMTP_USERNAME:latest,SMTP_PASSWORD=SMTP_PASSWORD:latest"  # pragma: allowlist secret
+}
 Info "Deploy do servico Cloud Run ($Service)"
 $envFileSvc = Write-EnvFile $envBase
 Exec { gcloud run deploy $Service `
@@ -223,7 +261,7 @@ Exec { gcloud run deploy $Service `
   --add-cloudsql-instances=$Csql `
   --memory=4Gi --cpu=2 --min-instances=1 --max-instances=4 --timeout=120 `
   --env-vars-file=$envFileSvc `
-  --set-secrets="$commonSecrets" }
+  --set-secrets="$svcSecrets" }
 Remove-Item $envFileSvc -Force
 
 # 8) Fixa ALLOWED_HOSTS e e-mail com a URL real ---------------------------------

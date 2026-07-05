@@ -83,6 +83,10 @@ class AreaConhecimento(str, Enum):
     CIENCIAS_NATUREZA = "ciencias_natureza"
     CIENCIAS_HUMANAS = "ciencias_humanas"
     ENSINO_RELIGIOSO = "ensino_religioso"
+    # Complemento de Computação à BNCC (Parecer CNE/CP 02/2022, homologado 2022).
+    # A Computação permeia as áreas oficiais; aqui é representada como uma área
+    # própria para ser filtrável de forma uniforme nas três etapas.
+    COMPUTACAO = "computacao"
 
 
 class ComponenteCurricular(str, Enum):
@@ -97,6 +101,18 @@ class ComponenteCurricular(str, Enum):
     GEOGRAFIA = "geografia"
     HISTORIA = "historia"
     ENSINO_RELIGIOSO = "ensino_religioso"
+    # Complemento de Computação à BNCC (componente transversal às três etapas).
+    COMPUTACAO = "computacao"
+
+
+class EixoComputacao(str, Enum):
+    """Eixos do Complemento de Computação à BNCC (Educação Infantil e Ensino
+    Fundamental). O Ensino Médio não é organizado por eixos, mas por competências
+    específicas de Computação (ver `Habilidade.competencia_especifica`)."""
+
+    PENSAMENTO_COMPUTACIONAL = "pensamento_computacional"
+    MUNDO_DIGITAL = "mundo_digital"
+    CULTURA_DIGITAL = "cultura_digital"
 
 
 # --------------------------------------------------------------------------- #
@@ -218,6 +234,15 @@ class Habilidade(BaseModel):
     )
     itinerario: str | None = Field(None, description="Itinerário formativo (Ensino Médio)")
     unidade_tematica: str | None = Field(None, description="Unidade temática (Ensino Fundamental)")
+    # Complemento de Computação à BNCC (oficial quando presente)
+    eixo: EixoComputacao | None = Field(
+        None,
+        description=(
+            "Eixo do Complemento de Computação (EI/EF): pensamento_computacional, "
+            "mundo_digital ou cultura_digital. Ausente no Ensino Médio, que é "
+            "organizado por competências específicas de Computação."
+        ),
+    )
 
     @field_validator("codigo")
     @classmethod
@@ -291,6 +316,9 @@ class HabilidadeFiltros(BaseModel):
         None, description="Filtrar por componente curricular"
     )
     competencia_geral: int | None = Field(None, description="Filtrar por competência geral (1-10)")
+    eixo: EixoComputacao | None = Field(
+        None, description="Filtrar por eixo do Complemento de Computação (EI/EF)"
+    )
 
     @validator("competencia_geral")
     def validate_competencia_geral(cls, v):
