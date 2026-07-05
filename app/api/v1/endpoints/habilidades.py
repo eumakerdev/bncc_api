@@ -13,6 +13,7 @@ from app.core.deps import DeterministicRateLimited, get_bncc_service
 from app.models.bncc import (
     AreaConhecimento,
     ComponenteCurricular,
+    EixoComputacao,
     ErrorResponse,
     EtapaEnsino,
     Habilidade,
@@ -43,9 +44,9 @@ _AUTH_RESPONSES: dict[int | str, dict] = {
     response_description="Página de habilidades que casam com os filtros informados.",
     description=(
         "Lista as habilidades oficiais da BNCC (EI/EF/EM), com filtros opcionais "
-        "por etapa, ano, área, componente e competência geral. Requer API key "
-        "(`Authorization: Bearer <key>`) e consome a cota determinística "
-        "(60 req/min, burst 10)."
+        "por etapa, ano, área, componente, competência geral e eixo de Computação. "
+        "Requer API key (`Authorization: Bearer <key>`) e consome a cota "
+        "determinística (60 req/min, burst 10)."
     ),
     responses=_AUTH_RESPONSES,
 )
@@ -57,6 +58,8 @@ async def list_habilidades(
     componente: ComponenteCurricular | None = Query(None, description="Componente curricular"),
     competencia_geral: int
     | None = Query(None, ge=1, le=10, description="Competência geral (1-10)"),
+    eixo: EixoComputacao
+    | None = Query(None, description="Eixo do Complemento de Computação (EI/EF)"),
     page: int = Query(1, ge=1, description="Página (>=1)"),
     size: int = Query(20, ge=1, le=100, description="Itens por página (1-100)"),
     bncc_service: BNCCDataService = Depends(get_bncc_service),
@@ -67,6 +70,7 @@ async def list_habilidades(
         area_conhecimento=area_conhecimento,
         componente=componente,
         competencia_geral=competencia_geral,
+        eixo=eixo,
     )
     skip = (page - 1) * size
     habilidades = await bncc_service.search_habilidades(filtros, skip=skip, limit=size)

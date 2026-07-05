@@ -1,21 +1,23 @@
 {
   "metadata": {
     "versao": "v1",
-    "data_publicacao": "2026-07-03",
+    "data_publicacao": "2026-07-05",
     "checksum_fontes": {
       "ensino_fundamental": "81cd44ba5444ff1e8ff7b82d83512a49de9ce54efa72c4d285a452d3321128a4",
       "ensino_medio": "0428abc3790378233fe5e07638e8934dc7ba444b6c7630dd3048272d3547345c",
+      "computacao": "60aab0b192acf867bc582dc06678cd8f3bc597e8f1b65256fc7bf04190bb793d",
       "educacao_infantil": "7d0004aacde591d4d898cbdf950ab7ed28e875f837dab12bb88cb15567cdf180"
     },
     "missing_sources": [],
     "contagens": {
       "por_etapa": {
-        "educacao_infantil": 93,
-        "ensino_fundamental": 1291,
-        "ensino_medio": 179
+        "educacao_infantil": 104,
+        "ensino_fundamental": 1394,
+        "ensino_medio": 205
       },
       "por_componente": {
         "ciencias": 111,
+        "computacao": 140,
         "ensino_religioso": 63,
         "geografia": 123,
         "historia": 151,
@@ -26,7 +28,20 @@
         "arte": 61,
         "sem_componente": 219
       },
-      "total_habilidades": 1563,
+      "computacao": {
+        "total": 140,
+        "por_etapa": {
+          "ensino_fundamental": 103,
+          "educacao_infantil": 11,
+          "ensino_medio": 26
+        },
+        "por_eixo": {
+          "pensamento_computacional": 50,
+          "mundo_digital": 29,
+          "cultura_digital": 35
+        }
+      },
+      "total_habilidades": 1703,
       "total_competencias_gerais": 10
     }
   },
@@ -164,6 +179,104 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF01CO01",
+      "descricao": "Organizar objetos físicos ou digitais considerando diferentes características para esta organização, explicitando semelhanças (padrões) e diferenças.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF01CO02",
+      "descricao": "Identificar e seguir sequências de passos aplicados no dia a dia para resolver problemas.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF01CO03",
+      "descricao": "Reorganizar e criar sequências de passos em meios físicos ou digitais, relacionando essas sequências à palavra ‘Algoritmos’.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF01CO04",
+      "descricao": "Reconhecer o que é a informação, que ela pode ser armazenada, transmitida como mensagem por diversos meios e descrita em várias linguagens.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF01CO05",
+      "descricao": "Representar informação usando diferentes codificações.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF01CO06",
+      "descricao": "Reconhecer e explorar artefatos computacionais voltados a atender necessidades pessoais ou coletivas.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF01CO07",
+      "descricao": "Conhecer as possibilidades de uso seguro das tecnologias computacionais para proteção dos dados pessoais e para garantir a própria segurança.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF01ER01",
@@ -1217,6 +1330,90 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF02CO01",
+      "descricao": "Criar e comparar modelos (representações) de objetos, identificando padrões e atributos essenciais.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "2"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF02CO02",
+      "descricao": "Criar e simular algoritmos representados em linguagem oral, escrita ou pictográfica, construídos como sequências com repetições simples (iterações definidas) com base em instruções preestabelecidas ou criadas, analisando como a precisão da instrução impacta na execução do algoritmo.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "2"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF02CO03",
+      "descricao": "Identificar que máquinas diferentes executam conjuntos próprios de instruções e que podem ser usadas para definir algoritmos.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "2"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF02CO04",
+      "descricao": "Diferenciar componentes físicos (hardware) e programas que fornecem as instruções (software) para o hardware.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "2"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF02CO05",
+      "descricao": "Reconhecer as características e usos das tecnologias computacionais no cotidiano dentro e fora da escola.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "2"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF02CO06",
+      "descricao": "Reconhecer os cuidados com a segurança no uso de dispositivos computacionais.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "2"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF02ER01",
@@ -2402,6 +2599,132 @@
       "objetos_conhecimento": []
     },
     {
+      "codigo": "EF03CO01",
+      "descricao": "Associar os valores 'verdadeiro' e 'falso' a sentenças lógicas que dizem respeito a situações do dia a dia, fazendo uso de termos que indicam negação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF03CO02",
+      "descricao": "Criar e simular algoritmos representados em linguagem oral, escrita ou pictográfica, que incluam sequências e repetições simples com condição (iterações indefinidas), para resolver problemas de forma independente e em colaboração.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF03CO03",
+      "descricao": "Aplicar a estratégia de decomposição para resolver problemas complexos, dividindo esse problema em partes menores, resolvendo-as e combinando suas soluções.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF03CO04",
+      "descricao": "Relacionar o conceito de informação com o de dado.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF03CO05",
+      "descricao": "Compreender que dados são estruturados em formatos específicos dependendo da informação armazenada.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF03CO06",
+      "descricao": "Reconhecer que, para um computador realizar tarefas, ele se comunica com o mundo exterior com o uso de interfaces físicas (dispositivos de entrada e saída).",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF03CO07",
+      "descricao": "Utilizar diferentes navegadores e ferramentas de busca para pesquisar e acessar informações.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF03CO08",
+      "descricao": "Usar ferramentas computacionais em situações didáticas para se expressar em diferentes formatos digitais.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF03CO09",
+      "descricao": "Reconhecer o potencial impacto do compartilhamento de informações pessoais ou de seus pares em meio digital.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
       "codigo": "EF03ER01",
       "descricao": "Identificar e respeitar os diferentes espaços e territórios religiosos de diferentes tradições e movimentos religiosos.",
       "etapa": "ensino_fundamental",
@@ -3531,6 +3854,118 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF04CO01",
+      "descricao": "Reconhecer objetos do mundo real e/ou digital que podem ser representados através de matrizes que estabelecem uma organização na qual cada componente está em uma posição definida por coordenadas, fazendo manipulações simples sobre estas representações.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF04CO02",
+      "descricao": "Reconhecer objetos do mundo real e/ou digital que podem ser representados através de registros que estabelecem uma organização na qual cada componente é identificado por um nome, fazendo manipulações sobre estas representações.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF04CO03",
+      "descricao": "Criar e simular algoritmos representados em linguagem oral, escrita ou pictográfica, que incluam sequências e repetições simples e aninhadas (iterações definidas e indefinidas), para resolver problemas de forma independente e em colaboração.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF04CO04",
+      "descricao": "Entender que para guardar, manipular e transmitir dados deve-se codificá-los de alguma forma que seja compreendida pela máquina (formato digital).",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF04CO05",
+      "descricao": "Codificar diferentes informações para representação em computador (binária, ASCII, atributos de pixel, como RGB etc.).",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF04CO06",
+      "descricao": "Usar diferentes ferramentas computacionais para criação de conteúdo (textos, apresentações, vídeos etc.).",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF04CO07",
+      "descricao": "Demonstrar postura ética nas atividades de coleta, transferência, guarda e uso de dados.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF04CO08",
+      "descricao": "Reconhecer a importância de verificar a confiabilidade das fontes de informações obtidas na Internet.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "4"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF04ER01",
@@ -4727,6 +5162,146 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF05CO01",
+      "descricao": "Reconhecer objetos do mundo real e/ou digital que podem ser representados através de listas que estabelecem uma organização na qual há um número variável de itens dispostos em sequência, fazendo manipulações simples sobre estas representações.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF05CO02",
+      "descricao": "Reconhecer objetos do mundo real e digital que podem ser representados através de grafos que estabelecem uma organização com uma quantidade variável de vértices conectados por arestas, fazendo manipulações simples sobre estas representações.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF05CO03",
+      "descricao": "Realizar operações de negação, conjunção e disjunção sobre sentenças lógicas e valores 'verdadeiro' e 'falso'.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF05CO04",
+      "descricao": "Criar e simular algoritmos representados em linguagem oral, escrita ou pictográfica, que incluam sequências, repetições e seleções condicionais para resolver problemas de forma independente e em colaboração.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF05CO05",
+      "descricao": "Identificar os componentes principais de um computador (dispositivos de entrada/saída, processadores e armazenamento).",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF05CO06",
+      "descricao": "Reconhecer que os dados podem ser armazenados em um dispositivo local ou remoto.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF05CO07",
+      "descricao": "Reconhecer a necessidade de um sistema operacional para a execução de programas e gerenciamento do hardware.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF05CO08",
+      "descricao": "Acessar as informações na Internet de forma crítica para distinguir os conteúdos confiáveis de não confiáveis.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF05CO09",
+      "descricao": "Usar informações considerando aplicações e limites dos direitos autorais em diferentes mídias digitais.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF05CO10",
+      "descricao": "Expressar-se crítica e criativamente na compreensão das mudanças tecnológicas no mundo do trabalho e sobre a evolução da sociedade. (EF05CO011) Identificar a adequação de diferentes tecnologias computacionais na resolução de problemas.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF05ER01",
@@ -5975,6 +6550,146 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF06CO01",
+      "descricao": "Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um ‘tipo de dados’",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF06CO02",
+      "descricao": "Elaborar algoritmos que envolvam instruções sequenciais, de repetição e de seleção usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF06CO03",
+      "descricao": "Descrever com precisão a solução de um problema, construindo o programa que implementa a solução descrita.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF06CO04",
+      "descricao": "Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF06CO05",
+      "descricao": "Identificar os recursos ou insumos necessários (entradas) para a resolução de problemas, bem como os resultados esperados (saídas), determinando os respectivos tipos de dados, e estabelecendo a definição de problema como uma relação entre entrada e saída.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF06CO06",
+      "descricao": "Comparar diferentes casos particulares (instâncias) de um mesmo problema, identificando as semelhanças e diferenças entre eles, e criar um algoritmo para resolver todos, fazendo uso de variáveis (parâmetros) para permitir o tratamento de todos os casos de forma genérica.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF06CO07",
+      "descricao": "Entender o processo de transmissão de dados, como a informação é quebrada em pedaços, transmitida em pacotes através de múltiplos equipamentos, e reconstruída no destino.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF06CO08",
+      "descricao": "Compreender e utilizar diferentes formas de armazenar, manipular, compactar e recuperar arquivos, documentos e metadados.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF06CO09",
+      "descricao": "Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital, considerando a ética e o respeito.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF06CO10",
+      "descricao": "Analisar o consumo de tecnologia na sociedade, compreendendo criticamente o caminho da produção dos recursos bem como aspectos ligados à obsolescência e a sustentabilidade.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF06ER01",
@@ -7628,6 +8343,160 @@
       "objetos_conhecimento": []
     },
     {
+      "codigo": "EF07CO01",
+      "descricao": "Criar soluções de problemas para os quais seja adequado o uso de registros e matrizes unidimensionais para descrever suas informações e automatizá-las usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF07CO02",
+      "descricao": "Analisar programas para detectar e remover erros, ampliando a confiança na sua correção.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF07CO03",
+      "descricao": "Construir soluções computacionais de problemas de diferentes áreas do conhecimento, de forma individual e colaborativa, selecionando as estruturas de dados e técnicas adequadas, aperfeiçoando e articulando saberes escolares.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF07CO04",
+      "descricao": "Explorar propriedades básicas de grafos.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF07CO05",
+      "descricao": "Criar algoritmos fazendo uso da decomposição e do reúso no processo de solução de forma colaborativa e cooperativa e automatizá-los usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF07CO06",
+      "descricao": "Compreender o papel de protocolos para a transmissão de dados.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF07CO07",
+      "descricao": "Identificar problemas de segurança cibernética e experimentar formas de proteção.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF07CO08",
+      "descricao": "Demonstrar empatia sobre opiniões divergentes na web.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF07CO09",
+      "descricao": "Reconhecer e debater sobre cyberbullying.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF07CO10",
+      "descricao": "Identificar os impactos ambientais do descarte de peças de computadores e eletrônicos, bem como sua relação com a sustentabilidade.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF07CO11",
+      "descricao": "Criar, documentar e publicar, de forma individual ou colaborativa, produtos (vídeos, podcasts, web sites) usando recursos de tecnologia.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "7"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
       "codigo": "EF07ER01",
       "descricao": "Reconhecer e respeitar as práticas de comunicação com as divindades em distintas manifestações e tradições religiosas.",
       "etapa": "ensino_fundamental",
@@ -9277,6 +10146,160 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF08CO01",
+      "descricao": "Construir soluções de problemas usando a técnica de recursão e automatizar tais soluções usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF08CO02",
+      "descricao": "Criar soluções de problemas para os quais seja adequado o uso de listas para descrever suas informações e automatizá-las usando uma linguagem de programação, empregando ou não a recursão como uma técnica de resolver o problema.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF08CO03",
+      "descricao": "Utilizar algoritmos clássicos de manipulação sobre listas.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF08CO04",
+      "descricao": "Construir soluções computacionais de problemas de diferentes áreas do conhecimento, de forma individual e colaborativa, selecionando as estruturas de dados e técnicas adequadas, aperfeiçoando e articulando saberes escolares.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF08CO05",
+      "descricao": "Compreender os conceitos de paralelismo, concorrência e armazenamento/ processamento distribuídos.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF08CO06",
+      "descricao": "Entender como é a estrutura e funcionamento da internet.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF08CO07",
+      "descricao": "Compartilhar informações por meio de redes sociais, compreendendo a sua dinâmica de funcionamento, de forma responsável e avaliando sua confiabilidade, considerando o respeito e a ética.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF08CO08",
+      "descricao": "Distinguir os tipos de dados pessoais que são solicitados em espaços digitais e os riscos associados.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF08CO09",
+      "descricao": "Analisar criticamente as políticas de termos de uso das redes sociais e demais plataformas.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF08CO10",
+      "descricao": "Discutir questões sobre segurança e privacidade relacionadas ao uso dos ambientes virtuais.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF08CO11",
+      "descricao": "Avaliar a precisão, relevância, adequação, abrangência e vieses que ocorrem em fontes de informação eletrônica.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "8"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF08ER01",
@@ -11071,6 +12094,146 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF09CO01",
+      "descricao": "Criar soluções de problemas para os quais seja adequado o uso de árvores e grafos para descrever suas informações e automatizá-las usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF09CO02",
+      "descricao": "Construir soluções computacionais de problemas de diferentes áreas do conhecimento, de forma individual e colaborativa, selecionando as estruturas de dados e técnicas adequadas, aperfeiçoando e articulando saberes escolares.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF09CO03",
+      "descricao": "Usar autômatos para descrever comportamentos de forma abstrata automatizando-os através de uma linguagem de programação baseada em eventos.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF09CO04",
+      "descricao": "Compreender o funcionamento de malwares e outros ataques cibernéticos.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF09CO05",
+      "descricao": "Analisar técnicas de criptografia para armazenamento e transmissão de dados.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF09CO06",
+      "descricao": "Analisar problemas sociais de sua cidade e estado a partir de ambientes digitais, propondo soluções.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF09CO07",
+      "descricao": "Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais para propor alternativas aos desafios do mundo contemporâneo, incluindo aqueles relativos ao mundo do trabalho.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF09CO08",
+      "descricao": "Discutir como a distribuição desigual de recursos de computação em uma economia global levanta questões de equidade, acesso e poder.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF09CO09",
+      "descricao": "Criar ou utilizar conteúdo em meio digital, compreendendo questões éticas relacionadas a direitos autorais e de uso de imagem.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF09CO10",
+      "descricao": "Avaliar a veracidade, credibilidade e relevância da informação em seus diferentes formatos, sendo capaz de identificar o propósito pelo qual foi disseminada.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF09ER01",
@@ -13455,6 +14618,168 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF15CO01",
+      "descricao": "Identificar as principais formas de organizar e representar a informação de maneira estruturada (matrizes, registros, listas e grafos) ou não estruturada (números, palavras, valores verdade).",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF15CO02",
+      "descricao": "Construir e simular algoritmos, de forma independente ou em colaboração, que resolvam problemas simples e do cotidiano com uso de sequências, seleções condicionais e repetições de instruções.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF15CO03",
+      "descricao": "Realizar operações de negação, conjunção e disjunção sobre sentenças lógicas e valores 'verdadeiro' e 'falso'.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF15CO04",
+      "descricao": "Aplicar a estratégia de decomposição para resolver problemas complexos, dividindo esse problema em partes menores, resolvendo-as e combinando suas soluções.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF15CO05",
+      "descricao": "Codificar a informação de diferentes formas, entendendo a importância desta codificação para o armazenamento, manipulação e transmissão em dispositivos computacionais.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF15CO06",
+      "descricao": "Conhecer os componentes básicos de dispositivos computacionais, entendendo os princípios de seu funcionamento.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF15CO07",
+      "descricao": "Conhecer o conceito de Sistema Operacional e sua importância na integração entre software e hardware.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF15CO08",
+      "descricao": "Reconhecer e utilizar tecnologias computacionais para pesquisar e acessar informações, expressar-se crítica e criativamente e resolver problemas.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF15CO09",
+      "descricao": "Entender que as tecnologias devem ser utilizadas de maneira segura, ética e responsável, respeitando direitos autorais, de imagem e as leis vigentes.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF15LP01",
@@ -15854,6 +17179,210 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EF69CO01",
+      "descricao": "Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um ‘tipo de dado’.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF69CO02",
+      "descricao": "Elaborar algoritmos que envolvam instruções sequenciais, de repetição e de seleção usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF69CO03",
+      "descricao": "Descrever com precisão a solução de um problema, construindo o programa que implementa a solução descrita.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF69CO04",
+      "descricao": "Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF69CO05",
+      "descricao": "Identificar os recursos ou insumos necessários (entradas) para a resolução de problemas, bem como os resultados esperados (saídas), determinando os respectivos tipos de dados, e estabelecendo a definição de problema como uma relação entre entrada e saída.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF69CO06",
+      "descricao": "Comparar diferentes casos particulares (instâncias) de um mesmo problema, identificando as semelhanças e diferenças entre eles, e criar um algoritmo para resolver todos, fazendo uso de variáveis (parâmetros) para permitir o tratamento de todos os casos de forma genérica.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EF69CO07",
+      "descricao": "Entender o processo de transmissão de dados, como a informação é quebrada em pedaços, transmitida em pacotes através de múltiplos equipamentos, e reconstruída no destino.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF69CO08",
+      "descricao": "Compreender e utilizar diferentes formas de armazenar, manipular, compactar e recuperar arquivos, documentos e metadados.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF69CO09",
+      "descricao": "Compreender os conceitos de paralelismo, concorrência e armazenamento/ processamento distribuídos.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EF69CO10",
+      "descricao": "Entender como é a estrutura e funcionamento da internet.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF69CO11",
+      "descricao": "Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital, considerando a ética e o respeito.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EF69CO12",
+      "descricao": "Analisar o consumo de tecnologia na sociedade, compreendendo criticamente o caminho da produção dos recursos bem como aspectos ligados à obsolescência e a sustentabilidade.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
     },
     {
       "codigo": "EF69LP01",
@@ -18488,6 +20017,160 @@
       "campo_experiencia": "Corpo, gestos e movimentos"
     },
     {
+      "codigo": "EI03CO01",
+      "descricao": "Reconhecer padrão de repetição em sequência de sons, movimentos, desenhos.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EI03CO02",
+      "descricao": "Expressar as etapas para a realização de uma tarefa de forma clara e ordenada.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EI03CO03",
+      "descricao": "Experienciar a execução de algoritmos brincando com objetos (des)plugados.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EI03CO04",
+      "descricao": "Criar e representar algoritmos para resolver problemas.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EI03CO05",
+      "descricao": "Comparar soluções algorítmicas para resolver um mesmo problema.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EI03CO06",
+      "descricao": "Compreender decisões em dois estados (verdadeiro ou falso).",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "pensamento_computacional"
+    },
+    {
+      "codigo": "EI03CO07",
+      "descricao": "Reconhecer dispositivos eletrônicos (e não-eletrônicos), identificando quando estão ligados ou desligados (abertos ou fechados).",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EI03CO08",
+      "descricao": "Compreender o conceito de interfaces para comunicação com objetos (des)plugados.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EI03CO09",
+      "descricao": "Identificar dispositivos computacionais e as diferentes formas de interação.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "mundo_digital"
+    },
+    {
+      "codigo": "EI03CO10",
+      "descricao": "Utilizar tecnologia digital de maneira segura, consciente e respeitosa.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
+      "codigo": "EI03CO11",
+      "descricao": "Adotar hábitos saudáveis de uso de artefatos computacionais, seguindo recomendações de órgãos de saúde competentes.",
+      "etapa": "educacao_infantil",
+      "anos": [
+        "03"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital"
+    },
+    {
       "codigo": "EI03EF01",
       "descricao": "Expressar ideias, desejos e sentimentos sobre suas vivências, por meio da linguagem oral e escrita (escrita espontânea), de fotos, desenhos e outras formas de expressão.",
       "etapa": "educacao_infantil",
@@ -19674,6 +21357,422 @@
       "competencias_gerais": [],
       "competencias_especificas": [],
       "objetos_conhecimento": []
+    },
+    {
+      "codigo": "EM13CO01",
+      "descricao": "Explorar e construir a solução de problemas por meio da reutilização de partes de soluções existentes.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO02",
+      "descricao": "Explorar e construir a solução de problemas por meio de refinamentos, utilizando diversos níveis de abstração desde a especificação até a implementação.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO03",
+      "descricao": "Identificar o comportamento dos algoritmos no que diz respeito ao consumo de recursos como tempo de execução, espaço de memória e energia, entre outros.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO04",
+      "descricao": "Reconhecer o conceito de metaprogramação como uma forma de generalização na construção de programas, permitindo que algoritmos sejam entrada ou saída para outros algoritmos.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO05",
+      "descricao": "Identificar os limites da Computação para diferenciar o que pode ou não ser automatizado, buscando uma compreensão mais ampla dos limites dos processos mentais envolvidos na resolução de problemas.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO06",
+      "descricao": "Avaliar software levando em consideração diferentes características e métricas associadas.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO07",
+      "descricao": "Compreender as diferentes tecnologias, bem como equipamentos, protocolos e serviços envolvidos no funcionamento de redes de computadores, identificando suas possibilidades de escala e confiabilidade.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO08",
+      "descricao": "Entender como mudanças na tecnologia afetam a segurança, incluindo novas maneiras de preservar sua privacidade e dados pessoais on-line, reportando suspeitas e buscando ajuda em situações de risco.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO09",
+      "descricao": "Identificar tecnologias digitais, sua presença e formas de uso, nas diferentes atividades no mundo do trabalho.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO10",
+      "descricao": "Conhecer os fundamentos da Inteligência Artificial, comparando-a com a inteligência humana, analisando suas potencialidades, riscos e limites.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO11",
+      "descricao": "Criar e explorar modelos computacionais simples para simular e fazer previsões, identificando sua importância no desenvolvimento científico.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO12",
+      "descricao": "Produzir, analisar, gerir e compartilhar informações a partir de dados, utilizando princípios de ciência de dados.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO13",
+      "descricao": "Analisar e utilizar as diferentes formas de representação e consulta a dados em formato digital para pesquisas científicas.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO14",
+      "descricao": "Avaliar a confiabilidade das informações encontradas em meio digital, investigando seus modos de construção e considerando a autoria, a estrutura e o propósito da mensagem.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO15",
+      "descricao": "Analisar a interação entre usuários e artefatos computacionais, abordando aspectos da experiência do usuário e promovendo reflexão sobre a qualidade do uso dos artefatos nas esferas do trabalho, do lazer e do estudo.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO16",
+      "descricao": "Desenvolver projetos com robótica, utilizando artefatos físicos ou simuladores.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO17",
+      "descricao": "Construir redes virtuais de interação e colaboração, favorecendo o desenvolvimento de projetos de forma segura, legal e ética.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO18",
+      "descricao": "Planejar e gerenciar projetos integrados às áreas de conhecimento de forma colaborativa, solucionando problemas, usando diversos artefatos computacionais.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO19",
+      "descricao": "Expor, argumentar e negociar propostas, produtos e serviços, utilizando diferentes mídias e ferramentas digitais.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO20",
+      "descricao": "Criar conteúdos, disponibilizando-os em ambientes virtuais para publicação e compartilhamento, avaliando a confiabilidade e as consequências da disseminação dessas informações.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO21",
+      "descricao": "Comunicar ideias complexas de forma clara por meio de objetos digitais como mapas conceituais, infográficos, hipertextos e outros.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO22",
+      "descricao": "Produzir e publicar conteúdo como textos, imagens, áudios, vídeos e suas associações, bem como ferramentas para sua integração, organização e apresentação, utilizando diferentes mídias digitais.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO23",
+      "descricao": "Analisar criticamente as experiências em comunidades virtuais e as relações advindas da interação e comunicação com outras pessoas, bem como seus impactos na sociedade.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO24",
+      "descricao": "Identificar e reconhecer como as redes sociais e artefatos computacionais em geral interferem na saúde física e mental de seus usuários.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO25",
+      "descricao": "Dialogar em ambientes virtuais com segurança e respeito às diferenças culturais e pessoais, reconhecendo e denunciando atitudes abusivas.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
+    },
+    {
+      "codigo": "EM13CO26",
+      "descricao": "Aplicar os conceitos e pressupostos do direito digital em sua conduta e experiências com o cotidiano da cultura digital, bem como na produção e uso de artefatos computacionais.",
+      "etapa": "ensino_medio",
+      "anos": [
+        "1",
+        "2",
+        "3"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": null
     },
     {
       "codigo": "EM13LGG101",

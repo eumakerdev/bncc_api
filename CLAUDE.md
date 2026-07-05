@@ -48,5 +48,10 @@ pre-commit run --all-files             # portões locais (segredos, lint, format
 > `data/bncc_ensino_medio.pdf` (pdfplumber, isolamento de coluna). A **Educação Infantil** vem do
 > documento oficial completo `data/BNCC_20dez_site.pdf` (472 págs.): como seu page tree comprimido
 > impede o pdfplumber, o script o **normaliza com pikepdf** antes de extrair as 3 colunas de faixa
-> etária. Contagens atuais do snapshot: EI 93, EF 1291, EM 179 (`missing_sources: []`). Os PDFs são
-> grandes e ficam fora do versionamento (`data/` no .gitignore); apenas `data/bncc_v1.json` é versionado.
+> etária. O **Complemento de Computação** (Parecer CNE/CP 02/2022) vem de
+> `data/BNCCComputaoCompletodiagramado (1).pdf` via `scripts/extract_bncc_computacao.py` (chamado por
+> `extract_bncc_data.py`): recupera espaços posicionais com `x_tolerance`, isola a coluna HABILIDADE
+> e lê o **eixo** (horizontal na EI; rotacionado 90° no EF). Contagens atuais do snapshot: EI 104,
+> EF 1394, EM 205 — inclui **140 habilidades de Computação** (`componente=computacao`), com eixos
+> em EI/EF (`missing_sources: []`). Ver `specs/002-bncc-computacao/`. Os PDFs são grandes e ficam
+> fora do versionamento (`data/` no .gitignore); apenas `data/bncc_v1.json` é versionado.

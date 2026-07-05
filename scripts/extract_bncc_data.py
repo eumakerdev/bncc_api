@@ -59,6 +59,8 @@ PDF_EM = DATA_DIR / "bncc_ensino_medio.pdf"
 PDF_EI_SITE = DATA_DIR / "BNCC_20dez_site.pdf"
 # Fallback opcional: PDF dedicado da EI (mesma estrutura de 3 colunas por faixa).
 PDF_EI = DATA_DIR / "bncc_educacao_infantil.pdf"
+# Complemento de Computação à BNCC (Normas de Computação na Educação Básica).
+PDF_COMPUTACAO = DATA_DIR / "BNCCComputaoCompletodiagramado (1).pdf"
 OUTPUT = DATA_DIR / "bncc_v1.json"
 
 # EI: no `BNCC_20dez_site.pdf` as tabelas de objetivos ficam além do prefácio; a
@@ -451,6 +453,20 @@ def build_snapshot() -> dict[str, Any]:
         logger.warning("Fonte do Ensino Médio ausente: %s", PDF_EM)
         missing_sources.append("ensino_medio")
 
+    # Complemento de Computação à BNCC (Parecer CNE/CP 02/2022) — habilidades das
+    # três etapas com o par oficial `CO`. Extração isolada em módulo próprio.
+    if PDF_COMPUTACAO.exists():
+        from scripts.extract_bncc_computacao import extract as extract_computacao
+
+        logger.info("Extraindo Complemento de Computação de %s ...", PDF_COMPUTACAO.name)
+        comp = extract_computacao(PDF_COMPUTACAO)
+        habilidades.extend(comp)
+        checksums["computacao"] = sha256_of(PDF_COMPUTACAO)
+        logger.info("  -> %d habilidades de Computação", len(comp))
+    else:
+        logger.warning("Fonte da Computação ausente: %s", PDF_COMPUTACAO)
+        missing_sources.append("computacao")
+
     ei_source = PDF_EI_SITE if PDF_EI_SITE.exists() else (PDF_EI if PDF_EI.exists() else None)
     if ei_source is not None:
         logger.info(
@@ -483,10 +499,16 @@ def build_snapshot() -> dict[str, Any]:
         "ensino_medio": 0,
     }
     por_componente: dict[str, int] = {}
+    computacao_por_etapa: dict[str, int] = {}
+    computacao_por_eixo: dict[str, int] = {}
     for h in habilidades:
         por_etapa[h["etapa"]] = por_etapa.get(h["etapa"], 0) + 1
         comp = h.get("componente") or "sem_componente"
         por_componente[comp] = por_componente.get(comp, 0) + 1
+        if h.get("componente") == "computacao":
+            computacao_por_etapa[h["etapa"]] = computacao_por_etapa.get(h["etapa"], 0) + 1
+            if h.get("eixo"):
+                computacao_por_eixo[h["eixo"]] = computacao_por_eixo.get(h["eixo"], 0) + 1
 
     metadata = {
         "versao": SNAPSHOT_VERSION,
@@ -496,6 +518,11 @@ def build_snapshot() -> dict[str, Any]:
         "contagens": {
             "por_etapa": por_etapa,
             "por_componente": por_componente,
+            "computacao": {
+                "total": sum(computacao_por_etapa.values()),
+                "por_etapa": computacao_por_etapa,
+                "por_eixo": computacao_por_eixo,
+            },
             "total_habilidades": len(habilidades),
             "total_competencias_gerais": len(COMPETENCIAS_GERAIS),
         },
