@@ -1,6 +1,11 @@
 <div align="center">
 
-# 📚 BNCC API
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="app/web/static/logo-dark.svg">
+  <img alt="BNCC API" src="app/web/static/logo.svg" width="340">
+</picture>
+
+# BNCC API
 
 **Toda a Base Nacional Comum Curricular do Brasil, em uma API pública, gratuita e open-source.**
 
@@ -14,8 +19,10 @@ busca semântica com IA.
 [![Cobertura](https://img.shields.io/badge/coverage-%E2%89%A580%25-brightgreen.svg)](#-testes-e-qualidade)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-como-contribuir)
 
-[Demo ao vivo](https://bncc-api-esjlky3g3a-rj.a.run.app) ·
-[Documentação (Swagger)](https://bncc-api-esjlky3g3a-rj.a.run.app/docs) ·
+**[bncc.api.br](https://bncc.api.br)**
+
+[Demo ao vivo](https://bncc.api.br) ·
+[Documentação (Swagger)](https://bncc.api.br/docs) ·
 [Reportar bug](https://github.com/eumakerdev/bncc_api/issues) ·
 [Apoiar o projeto](#-apoie-o-projeto-)
 
@@ -99,10 +106,10 @@ Base: `/api/v1` · Autenticação por API key (`Authorization: Bearer <sua-key>`
 ```bash
 # Buscar uma habilidade de Matemática do 5º ano
 curl -H "Authorization: Bearer $KEY" \
-  https://bncc-api-esjlky3g3a-rj.a.run.app/api/v1/habilidades/EF05MA07
+  https://bncc.api.br/api/v1/habilidades/EF05MA07
 
 # Perguntar em linguagem natural
-curl -X POST https://bncc-api-esjlky3g3a-rj.a.run.app/api/v1/busca-semantica \
+curl -X POST https://bncc.api.br/api/v1/busca-semantica \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
   -d '{"query":"quais habilidades de matemática do 5º ano tratam de frações?"}'

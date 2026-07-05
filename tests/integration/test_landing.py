@@ -48,6 +48,45 @@ def test_landing_page_is_semantic_html_with_single_h1(client):
     assert len(h1_matches) == 1
 
 
+def test_landing_page_has_use_cases_section(client):
+    """A landing apresenta os 5 casos de uso reais como prova de valor (SC-008)."""
+    body = client.get("/").text
+
+    assert 'id="casos-de-uso"' in body
+    # Os 5 casos pesquisados, ancorados em problemas reais:
+    assert "plano" in body.lower()  # planos de aula com IA
+    assert "recomposi" in body.lower()  # recomposição de aprendizagens
+    assert "Computação" in body  # BNCC Computação 2026
+    assert "cobertura" in body.lower()  # cobertura curricular
+    assert "conteúdo" in body.lower()  # etiquetagem de conteúdo
+
+
+def test_landing_page_shows_founders(client):
+    """Evidencia Expertia e EuMaker como responsáveis pelo projeto."""
+    body = client.get("/").text
+
+    assert "expertia.dev.br" in body
+    assert "eumaker.dev" in body
+    assert "github.com/eumakerdev" in body
+
+
+def test_landing_page_replicates_github_funding(client):
+    """Replica os meios de apoio do GitHub: Sponsors + Pix (FUNDING.yml/README)."""
+    body = client.get("/").text
+
+    assert "github.com/sponsors/eumakerdev" in body
+    assert "pix-qrcode.png" in body
+    # Código Pix copia-e-cola presente (mesmo do README):
+    assert "00020126580014br.gov.bcb.pix" in body
+
+
+def test_landing_page_keeps_ai_marked_non_official(client):
+    """Princípio IV/VII: conteúdo de IA sempre marcado como não-oficial."""
+    body = client.get("/").text
+
+    assert "não-oficial" in body
+
+
 def test_sitemap_xml(client):
     response = client.get("/sitemap.xml")
     assert response.status_code == 200

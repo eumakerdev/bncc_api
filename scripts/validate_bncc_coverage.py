@@ -124,6 +124,34 @@ def validate(snapshot: dict[str, Any]) -> dict[str, list[str]]:
                 errors.append(f"{codigo}: eixo de Computação ausente/ inválido ('{eixo}').")
     logger.info("Habilidades de Computação: %d", len(computacao))
 
+    # 6: Relações navegáveis (FR-005) — coleções e integridade dos objetos.
+    unidades = snapshot.get("unidades_tematicas", [])
+    objetos = snapshot.get("objetos_conhecimento", [])
+    campos = snapshot.get("campos_experiencia", [])
+    comp_esp = snapshot.get("competencias_especificas", [])
+    if not comp_esp:
+        errors.append("Catálogo de competências específicas vazio (FR-005).")
+    if not unidades:
+        errors.append("Coleção de unidades temáticas vazia (FR-005).")
+    if not objetos:
+        errors.append("Coleção de objetos de conhecimento vazia (FR-005).")
+    if not campos:
+        errors.append("Campos de experiência (Educação Infantil) vazios (FR-005).")
+    # Integridade: objeto referenciado por habilidade resolve para o catálogo.
+    objeto_nomes = {str(o.get("nome", "")) for o in objetos}
+    for h in habs:
+        for nome in h.get("objetos_conhecimento", []) or []:
+            if nome not in objeto_nomes:
+                errors.append(f"{h.get('codigo')}: objeto de conhecimento inexistente '{nome}'.")
+                break
+    logger.info(
+        "Relações: %d competências específicas, %d unidades temáticas, %d objetos, %d campos.",
+        len(comp_esp),
+        len(unidades),
+        len(objetos),
+        len(campos),
+    )
+
     return {"errors": errors, "warnings": warnings}
 
 

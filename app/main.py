@@ -68,11 +68,38 @@ app = FastAPI(
         "documentação automática e busca semântica com IA (não-oficial)."
     ),
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None,
+    redoc_url=None,
     openapi_url="/api/v1/openapi.json",
     lifespan=lifespan,
 )
+
+
+# Docs interativas com favicon/marca da BNCC API (Swagger UI + ReDoc).
+_FAVICON = "/static/logo-icon.svg"
+
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_ui_html():  # pragma: no cover - HTML estático do FastAPI
+    from fastapi.openapi.docs import get_swagger_ui_html
+
+    return get_swagger_ui_html(
+        openapi_url=str(app.openapi_url),
+        title=f"{app.title} — Documentação",
+        swagger_favicon_url=_FAVICON,
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_html():  # pragma: no cover - HTML estático do FastAPI
+    from fastapi.openapi.docs import get_redoc_html
+
+    return get_redoc_html(
+        openapi_url=str(app.openapi_url),
+        title=f"{app.title} — Referência",
+        redoc_favicon_url=_FAVICON,
+    )
+
 
 register_error_handlers(app)
 

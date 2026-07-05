@@ -276,6 +276,249 @@ def _split_by_codes(text: str, regex: re.Pattern) -> list[tuple[str, str]]:
 
 
 # --------------------------------------------------------------------------- #
+# Relações do Ensino Fundamental: unidade temática + objeto de conhecimento
+# --------------------------------------------------------------------------- #
+# As tabelas do EF têm 3 colunas: a esquerda agrupa (UNIDADES TEMÁTICAS, ou
+# PRÁTICAS DE LINGUAGEM/CAMPOS DE ATUAÇÃO em Língua Portuguesa, ou EIXOS em Língua
+# Inglesa), a do meio traz os OBJETOS DE CONHECIMENTO e a direita as HABILIDADES.
+# `right_column_text` já isola a descrição das habilidades; aqui reconstruímos as
+# duas colunas da esquerda alinhadas por linha para associar cada código à sua
+# unidade temática e ao seu objeto de conhecimento (relação navegável — FR-005).
+# Coordenadas: cada "spread" oficial aparece como duas páginas espelhadas (uma
+# deslocada ~-595pt); o cabeçalho se repete em ambas, então usamos a posição dos
+# rótulos do cabeçalho para delimitar as colunas em qualquer página.
+RE_CODE_EF = re.compile(r"^\(?(" + RE_EF + r")\)?[.,;:]?$")
+# Rótulo do cabeçalho na coluna da esquerda (varia por componente).
+_LEFT_HEADER = {"UNIDADES", "PRÁTICAS", "CAMPOS", "EIXOS", "EIXO"}
+# Ruído que nunca é nome de unidade temática/objeto (cabeçalho/rodapé/seção).
+_REL_NOISE = re.compile(
+    r"BASE NACIONAL|COMUM CURRICULAR|UNIDADES TEM|OBJETOS DE CONHE|^HABILIDADES$|"
+    r"COMPET[ÊE]NCIAS|PR[ÁA]TICAS DE LINGUAGEM|CAMPOS? DE ATUA|^EIXOS?$|"
+    r"ENSINO\s+FUNDAMENTAL|ANO$|^\d+.?$"
+)
+
+
+def _clean_rel(s: str) -> str:
+    s = re.sub(r"\s+", " ", s).strip()
+    # Cabeçalhos de continuação de página repetem o nome como "(Continuação) X" —
+    # remove o prefixo para não duplicar a unidade temática/objeto.
+    s = re.sub(r"^\(\s*continua[çc][ãa]o\s*\)\s*", "", s, flags=re.IGNORECASE)
+    return s
+
+
+def _ef_header_bounds(words: list[dict[str, Any]]) -> tuple[float, float, float] | None:
+    """Deriva (x da coluna esquerda, x de OBJETOS, x de HABILIDADES) do cabeçalho."""
+    by_line: dict[int, dict[str, float]] = {}
+    for w in words:
+        t = w["text"].upper()
+        line = by_line.setdefault(round(w["top"]), {})
+        if t in _LEFT_HEADER:
+            line.setdefault("ut", w["x0"])
+        elif t == "OBJETOS":
+            line["obj"] = w["x0"]
+        elif t == "HABILIDADES":
+            line["hab"] = w["x0"]
+    for d in by_line.values():
+        if "obj" in d and "hab" in d:
+            return d.get("ut", d["obj"] - 230.0), d["obj"], d["hab"]
+    return None
+
+
+def _group_by_line(words: list[dict[str, Any]], tol: int = 3) -> list[list[dict[str, Any]]]:
+    lines: dict[int, list[dict[str, Any]]] = {}
+    for w in words:
+        lines.setdefault(round(w["top"] / tol), []).append(w)
+    return [sorted(ws, key=lambda w: w["x0"]) for _, ws in sorted(lines.items())]
+
+
+def ef_relations(pdf_path: Path) -> dict[str, tuple[str, str]]:
+    """Mapeia cada código EF -> (unidade_tematica, objeto_conhecimento).
+
+    Reconstrói as colunas esquerda/meio por coordenada (cabeçalho define as bordas;
+    reaproveitado entre páginas quando ausente) e faz fluxo vertical: a unidade
+    temática e o objeto "grudam" para baixo até surgir um novo valor na coluna;
+    o objeto acumula linhas até o código a que pertence (nomes multi-linha).
+    """
+    assoc: dict[str, tuple[str, str]] = {}
+    carry: tuple[float, float, float] | None = None
+    with pdfplumber.open(str(pdf_path)) as pdf:
+        for page in pdf.pages:
+            try:
+                words = page.extract_words(use_text_flow=False, keep_blank_chars=False)
+            except Exception as e:  # pragma: no cover - página problemática
+                logger.warning("Falha ao ler página de relações EF: %s", e)
+                continue
+            if not any(RE_CODE_EF.match(w["text"]) for w in words):
+                continue
+            bounds = _ef_header_bounds(words)
+            if bounds:
+                carry = bounds
+            if carry is None:
+                continue
+            ut_x, obj_x, hab_x = carry
+            cur_ut = ""
+            ut_parts: list[str] = []
+            obj_parts: list[str] = []
+            ut_emitted = False
+            obj_emitted = False
+            for ws in _group_by_line(words):
+                ut = _clean_rel(" ".join(w["text"] for w in ws if ut_x - 6 <= w["x0"] < obj_x - 6))
+                obj = _clean_rel(
+                    " ".join(w["text"] for w in ws if obj_x - 6 <= w["x0"] < hab_x - 6)
+                )
+                codes = [
+                    RE_CODE_EF.match(w["text"]).group(1)  # type: ignore[union-attr]
+                    for w in ws
+                    if RE_CODE_EF.match(w["text"]) and w["x0"] >= hab_x - 6
+                ]
+                if ut and not _REL_NOISE.search(ut):
+                    if ut_emitted:
+                        ut_parts = []
+                        ut_emitted = False
+                    ut_parts.append(ut)
+                    cur_ut = _clean_rel(" ".join(ut_parts))
+                if obj and not _REL_NOISE.search(obj):
+                    if obj_emitted:
+                        obj_parts = []
+                        obj_emitted = False
+                    obj_parts.append(obj)
+                if codes:
+                    cur_obj = _clean_rel(" ".join(obj_parts))
+                    for c in codes:
+                        assoc.setdefault(c, (cur_ut, cur_obj))
+                    ut_emitted = True
+                    obj_emitted = True
+    return assoc
+
+
+# --------------------------------------------------------------------------- #
+# Competências específicas (catálogo oficial por área/componente)
+# --------------------------------------------------------------------------- #
+# As competências específicas aparecem em seções com cabeçalho em CAIXA ALTA
+# "COMPETÊNCIAS ESPECÍFICAS DE <área/componente> ... PARA O ENSINO <etapa>",
+# seguidas de uma lista numerada (1..N). Diferente das tabelas de habilidades, o
+# texto em prosa dessas seções sofre corrupção de ligaduras fi/fl na extração
+# (ex.: "classifi cá-la"); reparamos isso para restaurar o texto oficial fiel.
+_CE_HEAD = re.compile(
+    r"COMPET[ÊE]NCIAS?\s+ESPEC[ÍI]FICAS?\s+DE\s+(.+?)\s+PARA\s+O\s+ENSINO", re.IGNORECASE | re.S
+)
+_CE_NUM = re.compile(r"(?ms)^\s*(\d{1,2})\.\s+(.+?)(?=^\s*\d{1,2}\.\s|\Z)")
+_CE_FOOTER = re.compile(
+    r"BASE NACIONAL|COMUM CURRICULAR|^\d{1,4}$|ENSINO\s+M[ÉE]DIO$|"
+    r"ENSINO\s+FUNDAMENTAL$|E SUAS TECNOLOGIAS$|SOCIAIS APLICADAS$",
+    re.IGNORECASE,
+)
+_LIG1 = re.compile(r"([a-zá-úâ-ûà-ù0-9])f([il])\s+([a-zá-úâ-ûà-ù])", re.IGNORECASE)
+_LIG2 = re.compile(r"([a-zá-úâ-ûà-ù])-\s*f([il])\s+([a-zá-úâ-ûà-ù])", re.IGNORECASE)
+
+
+def _fix_ligatures(s: str) -> str:
+    """Rejunta palavras quebradas pela falha de ligadura fi/fl na extração."""
+    prev = None
+    while prev != s:
+        prev = s
+        s = _LIG1.sub(r"\1f\2\3", s)
+        s = _LIG2.sub(r"\1f\2\3", s)
+    s = re.sub(r"\bfl\s+([a-zá-úâ-û])", r"fl\1", s, flags=re.IGNORECASE)
+    return s
+
+
+# Cabeçalho (normalizado, sem acentos-issue) -> (área, componente, tag do código).
+# O tag do Ensino Médio coincide com o trigrama do código (LGG/MAT/CNT/CHS) para
+# permitir o vínculo determinístico habilidade→competência.
+_CE_MAP: dict[str, tuple[str, str | None, str]] = {
+    # Ensino Médio (áreas)
+    "LINGUAGENS E SUAS TECNOLOGIAS": ("linguagens", None, "LGG"),
+    "MATEMÁTICA E SUAS TECNOLOGIAS": ("matematica", None, "MAT"),
+    "CIÊNCIAS DA NATUREZA E SUAS TECNOLOGIAS": ("ciencias_natureza", None, "CNT"),
+    "CIÊNCIAS HUMANAS E SOCIAIS APLICADAS": ("ciencias_humanas", None, "CHS"),
+    # Ensino Fundamental (áreas)
+    "LINGUAGENS": ("linguagens", None, "LGG"),
+    "MATEMÁTICA": ("matematica", None, "MAT"),
+    "CIÊNCIAS DA NATUREZA": ("ciencias_natureza", None, "CNT"),
+    "CIÊNCIAS HUMANAS": ("ciencias_humanas", None, "CHS"),
+    # Ensino Fundamental (componentes)
+    "LÍNGUA PORTUGUESA": ("linguagens", "lingua_portuguesa", "LP"),
+    "ARTE": ("linguagens", "arte", "AR"),
+    "EDUCAÇÃO FÍSICA": ("linguagens", "educacao_fisica", "EF"),
+    "LÍNGUA INGLESA": ("linguagens", "lingua_inglesa", "LI"),
+    "GEOGRAFIA": ("ciencias_humanas", "geografia", "GE"),
+    "HISTÓRIA": ("ciencias_humanas", "historia", "HI"),
+    "CIÊNCIAS": ("ciencias_natureza", "ciencias", "CI"),
+    "ENSINO RELIGIOSO": ("ensino_religioso", "ensino_religioso", "ER"),
+}
+
+
+def extract_competencias_especificas(pdf_path: Path, etapa: str) -> list[dict[str, Any]]:
+    """Extrai o catálogo oficial de competências específicas por área/componente.
+
+    Retorna entidades navegáveis (código, número, área, componente, etapa,
+    descrição). NÃO afirma vínculo por habilidade — a fonte não o codifica para
+    EF/EM-Língua Portuguesa (Princípio IV; escolha "catálogo sem vínculo").
+    """
+    prefix = "EM" if etapa == "ensino_medio" else "EF"
+    with pdfplumber.open(str(pdf_path)) as pdf:
+        pages = [p.extract_text() or "" for p in pdf.pages]
+
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for i, txt in enumerate(pages):
+        m = _CE_HEAD.search(txt.replace("\n", " "))
+        if not m:
+            continue
+        area_txt = _fix_ligatures(re.sub(r"\s+", " ", m.group(1)).strip()).upper()
+        mapping = _CE_MAP.get(area_txt)
+        if not mapping:
+            logger.warning("Cabeçalho de competência específica não mapeado: %r", area_txt)
+            continue
+        area, componente, tag = mapping
+        if tag in seen:
+            continue  # primeira ocorrência (cabeçalho pode repetir em páginas de tabela)
+        # Acumula o texto do cabeçalho por algumas páginas, parando nas habilidades.
+        buf: list[str] = []
+        for j in range(i, min(i + 5, len(pages))):
+            stop = False
+            for line in pages[j].split("\n"):
+                if re.search(r"\((?:EM|EF)\d", line):
+                    stop = True
+                    break
+                if _CE_FOOTER.search(line.strip()):
+                    continue
+                buf.append(line)
+            if stop:
+                break
+        # Começa a leitura na LINHA do cabeçalho em CAIXA ALTA (a prosa introdutória
+        # usa "competências específicas" em minúsculas; o cabeçalho real é maiúsculo).
+        # Não ancoramos em "PARA O ENSINO": quando o cabeçalho quebra em duas linhas,
+        # a 2ª ("ENSINO FUNDAMENTAL/MÉDIO") é removida como rodapé e a âncora falharia.
+        start = 0
+        for k, line in enumerate(buf):
+            if re.match(r"\s*COMPET[ÊE]NCIAS?\s+ESPEC[ÍI]FICAS?\b", line):
+                start = k
+                break
+        chunk = "\n".join(buf[start:])
+        numero = 0
+        for n_str, raw in _CE_NUM.findall(chunk):
+            desc = _fix_ligatures(re.sub(r"\s+", " ", raw).strip())
+            if int(n_str) != numero + 1 or len(desc) < 40:
+                break  # lista deve ser consecutiva 1..N; corta ruído
+            numero += 1
+            out.append(
+                {
+                    "codigo": f"{prefix}{tag}{numero:02d}",
+                    "numero": numero,
+                    "area_conhecimento": area,
+                    "componente": componente,
+                    "descricao": desc,
+                    "etapa": etapa,
+                }
+            )
+        if numero:
+            seen.add(tag)
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # Parsers por etapa
 # --------------------------------------------------------------------------- #
 def _dedup_longest(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -432,13 +675,32 @@ def build_snapshot() -> dict[str, Any]:
     habilidades: list[dict[str, Any]] = []
     checksums: dict[str, str] = {}
     missing_sources: list[str] = []
+    competencias_especificas: list[dict[str, Any]] = []
 
     if PDF_EF.exists():
         logger.info("Extraindo Ensino Fundamental de %s ...", PDF_EF.name)
         ef = parse_ef(right_column_text(PDF_EF))
+        # Associa unidade temática + objeto de conhecimento (relações navegáveis).
+        rel = ef_relations(PDF_EF)
+        n_ut = 0
+        for h in ef:
+            ut, obj = rel.get(h["codigo"], ("", ""))
+            if ut:
+                h["unidade_tematica"] = ut
+                n_ut += 1
+            if obj:
+                h["objetos_conhecimento"] = [obj]
         habilidades.extend(ef)
+        # Catálogo de competências específicas do EF (sem vínculo por habilidade).
+        ce_ef = extract_competencias_especificas(PDF_EF, "ensino_fundamental")
+        competencias_especificas.extend(ce_ef)
         checksums["ensino_fundamental"] = sha256_of(PDF_EF)
-        logger.info("  -> %d habilidades EF", len(ef))
+        logger.info(
+            "  -> %d habilidades EF (%d com unidade temática); %d competências específicas",
+            len(ef),
+            n_ut,
+            len(ce_ef),
+        )
     else:
         logger.warning("Fonte do Ensino Fundamental ausente: %s", PDF_EF)
         missing_sources.append("ensino_fundamental")
@@ -446,9 +708,20 @@ def build_snapshot() -> dict[str, Any]:
     if PDF_EM.exists():
         logger.info("Extraindo Ensino Médio de %s ...", PDF_EM.name)
         em = parse_em(right_column_text(PDF_EM))
+        # Competência específica por código: EM13AAAn## → competência n da área AAA.
+        # (EM Língua Portuguesa — EM13LP## — não codifica a competência; fica sem
+        # vínculo, mas o catálogo de Linguagens está disponível para navegação.)
+        for h in em:
+            c = h["codigo"]
+            if len(c) == 10:
+                h["competencias_especificas"] = [f"EM{c[4:7]}{int(c[7]):02d}"]
         habilidades.extend(em)
+        ce_em = extract_competencias_especificas(PDF_EM, "ensino_medio")
+        competencias_especificas.extend(ce_em)
         checksums["ensino_medio"] = sha256_of(PDF_EM)
-        logger.info("  -> %d habilidades EM", len(em))
+        logger.info(
+            "  -> %d habilidades EM; %d competências específicas de área", len(em), len(ce_em)
+        )
     else:
         logger.warning("Fonte do Ensino Médio ausente: %s", PDF_EM)
         missing_sources.append("ensino_medio")
@@ -493,6 +766,62 @@ def build_snapshot() -> dict[str, Any]:
     # Deduplicação global final por código.
     habilidades = _dedup_longest(habilidades)
 
+    # ------------------------------------------------------------------ #
+    # Coleções navegáveis de topo, derivadas das relações das habilidades.
+    # ------------------------------------------------------------------ #
+    unidades_tematicas: list[dict[str, Any]] = []
+    objetos_conhecimento: list[dict[str, Any]] = []
+    seen_ut: set[tuple[str, str | None, str]] = set()
+    seen_obj: set[tuple[str, str, str | None, str]] = set()
+    for h in habilidades:
+        etapa = h["etapa"]
+        comp = h.get("componente")
+        ut = h.get("unidade_tematica")
+        if ut:
+            key_ut = (ut, comp, etapa)
+            if key_ut not in seen_ut:
+                seen_ut.add(key_ut)
+                unidades_tematicas.append({"nome": ut, "componente": comp, "etapa": etapa})
+        for obj in h.get("objetos_conhecimento") or []:
+            key_obj = (obj, ut or "", comp, etapa)
+            if key_obj not in seen_obj:
+                seen_obj.add(key_obj)
+                objetos_conhecimento.append(
+                    {
+                        "nome": obj,
+                        "unidade_tematica": ut,
+                        "componente": comp,
+                        "etapa": etapa,
+                    }
+                )
+    unidades_tematicas.sort(key=lambda u: (u["etapa"], u["componente"] or "", u["nome"]))
+    objetos_conhecimento.sort(
+        key=lambda o: (o["etapa"], o["componente"] or "", o["unidade_tematica"] or "", o["nome"])
+    )
+
+    # Campos de experiência da Educação Infantil (com seus objetivos).
+    nome_para_cod = {v: k for k, v in EI_CAMPO.items()}
+    objetivos_por_campo: dict[str, list[dict[str, str]]] = {}
+    for h in habilidades:
+        if h["etapa"] != "educacao_infantil":
+            continue
+        nome = h.get("campo_experiencia")
+        if not nome:
+            continue
+        objetivos_por_campo.setdefault(nome, []).append(
+            {"codigo": h["codigo"], "descricao": h["descricao"]}
+        )
+    campos_experiencia: list[dict[str, Any]] = []
+    for nome, objetivos in objetivos_por_campo.items():
+        campos_experiencia.append(
+            {
+                "codigo": nome_para_cod.get(nome, nome),
+                "nome": nome,
+                "objetivos_aprendizagem": sorted(objetivos, key=lambda o: o["codigo"]),
+            }
+        )
+    campos_experiencia.sort(key=lambda c: c["codigo"])
+
     por_etapa: dict[str, int] = {
         "educacao_infantil": 0,
         "ensino_fundamental": 0,
@@ -525,15 +854,19 @@ def build_snapshot() -> dict[str, Any]:
             },
             "total_habilidades": len(habilidades),
             "total_competencias_gerais": len(COMPETENCIAS_GERAIS),
+            "total_competencias_especificas": len(competencias_especificas),
+            "total_unidades_tematicas": len(unidades_tematicas),
+            "total_objetos_conhecimento": len(objetos_conhecimento),
+            "total_campos_experiencia": len(campos_experiencia),
         },
     }
     return {
         "metadata": metadata,
         "competencias_gerais": COMPETENCIAS_GERAIS,
-        "competencias_especificas": [],
-        "campos_experiencia": [],
-        "unidades_tematicas": [],
-        "objetos_conhecimento": [],
+        "competencias_especificas": competencias_especificas,
+        "campos_experiencia": campos_experiencia,
+        "unidades_tematicas": unidades_tematicas,
+        "objetos_conhecimento": objetos_conhecimento,
         "habilidades": habilidades,
     }
 
