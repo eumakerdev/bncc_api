@@ -22,4 +22,4 @@ router = APIRouter()
 @router.get("/guia", response_class=HTMLResponse, include_in_schema=False)
 async def guia(request: Request) -> Response:
     """Página de documentação: guia de início rápido + link ao Swagger/ReDoc."""
-    return templates.TemplateResponse("docs.html", {"request": request})
+    return templates.TemplateResponse(request, "docs.html")

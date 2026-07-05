@@ -79,9 +79,17 @@ def test_full_authenticated_flow(client, verified_account):
 
     created = client.post("/portal/keys", data={"name": "minha-key"}, follow_redirects=False)
     assert created.status_code == 303
-    assert "new_key=" in created.headers["location"]
+    # A key completa nunca vai na URL (histórico/logs/Referer) — trafega via
+    # cookie httponly de uso único.
+    assert created.headers["location"] == "/portal/dashboard"
+    assert "flash_new_key" in created.cookies
 
-    # dashboard agora lista a key recém-criada
+    # dashboard agora lista a key recém-criada e exibe o segredo uma única vez
     dash2 = client.get("/portal/dashboard")
     assert dash2.status_code == 200
     assert "minha-key" in dash2.text
+    assert "Sua nova API key" in dash2.text
+
+    # segunda visita: o cookie de uso único já foi limpo, segredo não reaparece
+    dash3 = client.get("/portal/dashboard")
+    assert "Sua nova API key" not in dash3.text

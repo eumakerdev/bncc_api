@@ -38,6 +38,19 @@ deterministic_limiter = SlidingWindowLimiter(
 )
 ai_limiter = SlidingWindowLimiter(max_requests=settings.RATE_LIMIT_AI_PER_MIN, window_seconds=60)
 
+# Limitadores por IP dos endpoints de sessão (login/signup/verify-email não usam
+# API key, então não passam pelos limitadores acima — força bruta e spam de
+# contas ficariam sem nenhuma cota sem isto).
+login_ip_limiter = SlidingWindowLimiter(
+    max_requests=settings.RATE_LIMIT_LOGIN_PER_MIN, window_seconds=60
+)
+signup_ip_limiter = SlidingWindowLimiter(
+    max_requests=settings.RATE_LIMIT_SIGNUP_PER_MIN, window_seconds=60
+)
+verify_ip_limiter = SlidingWindowLimiter(
+    max_requests=settings.RATE_LIMIT_VERIFY_PER_MIN, window_seconds=60
+)
+
 
 # --------------------------------------------------------------------------- #
 # Serviços de domínio
@@ -182,3 +195,40 @@ async def rate_limit_ai(api_key: ApiKeyAuth, session: SessionDep) -> ApiKey:
 
 DeterministicRateLimited = Annotated[ApiKey, Depends(rate_limit_deterministic)]
 AiRateLimited = Annotated[ApiKey, Depends(rate_limit_ai)]
+
+
+# --------------------------------------------------------------------------- #
+# Rate limiting por IP (endpoints de sessão — sem API key)
+# --------------------------------------------------------------------------- #
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def _enforce_ip(limiter: SlidingWindowLimiter, bucket: str, request: Request) -> None:
+    allowed, retry_after = limiter.check(f"{bucket}:{_client_ip(request)}")
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas. Tente novamente mais tarde.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+
+async def rate_limit_login_ip(request: Request) -> None:
+    """Cota por IP para login (força bruta de credenciais)."""
+    _enforce_ip(login_ip_limiter, "login-ip", request)
+
+
+async def rate_limit_signup_ip(request: Request) -> None:
+    """Cota por IP para signup (spam/esgotamento de contas)."""
+    _enforce_ip(signup_ip_limiter, "signup-ip", request)
+
+
+async def rate_limit_verify_ip(request: Request) -> None:
+    """Cota por IP para verify-email (higiene contra DoS; token já é inadivinhável)."""
+    _enforce_ip(verify_ip_limiter, "verify-ip", request)
+
+
+LoginRateLimited = Annotated[None, Depends(rate_limit_login_ip)]
+SignupRateLimited = Annotated[None, Depends(rate_limit_signup_ip)]
+VerifyRateLimited = Annotated[None, Depends(rate_limit_verify_ip)]

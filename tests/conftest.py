@@ -43,10 +43,19 @@ async def _prepare_db():
 @pytest.fixture(autouse=True)
 def _reset_rate_limiters():
     """Zera os limitadores in-process (globais de módulo) entre testes."""
-    from app.core.deps import ai_limiter, deterministic_limiter
+    from app.core.deps import (
+        ai_limiter,
+        deterministic_limiter,
+        login_ip_limiter,
+        signup_ip_limiter,
+        verify_ip_limiter,
+    )
 
     deterministic_limiter.reset()
     ai_limiter.reset()
+    login_ip_limiter.reset()
+    signup_ip_limiter.reset()
+    verify_ip_limiter.reset()
     yield
 
 

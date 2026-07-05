@@ -32,6 +32,11 @@ _LOGIN_FAILED = "Credenciais inválidas ou e-mail não verificado."
 _TOKEN_INVALID = "Token de verificação inválido."
 _TOKEN_EXPIRED = "Token de verificação expirado ou já utilizado."
 
+# Hash Argon2 fixo (senha nunca usada por conta real) para gastar o mesmo tempo
+# de verificação quando a conta não existe — sem isto, `verify_password` só
+# roda para e-mails cadastrados, o que vaza timing e permite enumerar contas.
+_DUMMY_PASSWORD_HASH = hash_password("nao-e-uma-senha-real-so-para-timing-000")
+
 
 def _now() -> datetime:
     return datetime.now(UTC)
@@ -129,7 +134,8 @@ async def login(session: AsyncSession, email: str, password: str) -> str:
     )
     account = result.scalar_one_or_none()
 
-    password_ok = verify_password(password, account.password_hash) if account is not None else False
+    hash_to_check = account.password_hash if account is not None else _DUMMY_PASSWORD_HASH
+    password_ok = verify_password(password, hash_to_check)
     if account is None or not password_ok or not account.email_verified:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=_LOGIN_FAILED)
 

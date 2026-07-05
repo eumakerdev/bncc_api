@@ -3,11 +3,12 @@
 # ---------------------------------------------------------------------------
 
 # Web framework / API
-fastapi==0.104.1
+fastapi==0.139.0  # >=0.115.3 corrige CVE-2024-47874; >=0.130 exige starlette/pydantic abaixo
 uvicorn[standard]==0.24.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
-python-multipart==0.0.6
+starlette==1.3.1  # >=1.0.1 corrige CVE-2026-48710 (BadHost: bypass de auth via Host header); pin explícito
+pydantic==2.13.4  # exigido por fastapi>=0.130 (>=2.9.0)
+pydantic-settings==2.14.2  # acompanha o bump de pydantic (exige pydantic>=2.7.0)
+python-multipart==0.0.32  # >=0.0.7 corrige CVE-2024-24762 (ReDoS no parsing de boundary multipart)
 
 # Plataforma: banco relacional (SQLAlchemy 2.0 async + Alembic)
 # SQLite (aiosqlite) em dev; Postgres (asyncpg) em produção / Cloud SQL.
