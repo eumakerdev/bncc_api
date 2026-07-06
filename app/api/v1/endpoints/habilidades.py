@@ -56,10 +56,12 @@ async def list_habilidades(
     ano: str | None = Query(None, description="Ano escolar (ex.: '5')"),
     area_conhecimento: AreaConhecimento | None = Query(None, description="Área de conhecimento"),
     componente: ComponenteCurricular | None = Query(None, description="Componente curricular"),
-    competencia_geral: int
-    | None = Query(None, ge=1, le=10, description="Competência geral (1-10)"),
-    eixo: EixoComputacao
-    | None = Query(None, description="Eixo do Complemento de Computação (EI/EF)"),
+    competencia_geral: int | None = Query(
+        None, ge=1, le=10, description="Competência geral (1-10)"
+    ),
+    eixo: EixoComputacao | None = Query(
+        None, description="Eixo do Complemento de Computação (EI/EF)"
+    ),
     page: int = Query(1, ge=1, description="Página (>=1)"),
     size: int = Query(20, ge=1, le=100, description="Itens por página (1-100)"),
     bncc_service: BNCCDataService = Depends(get_bncc_service),

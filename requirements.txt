@@ -60,7 +60,7 @@ httpx==0.28.1
 
 # Qualidade de código
 ruff==0.15.20
-black==23.11.0
+black==26.5.1
 mypy==2.1.0
 pre-commit==4.6.0
 
