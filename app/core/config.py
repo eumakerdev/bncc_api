@@ -6,7 +6,6 @@ em produção. Em ENVIRONMENT=production a aplicação FALHA RÁPIDO na iniciali
 se SECRET_KEY for placeholder/ausente ou se ALLOWED_HOSTS contiver "*".
 """
 
-
 from urllib.parse import quote
 
 from pydantic import Field, field_validator, model_validator
