@@ -27,5 +27,7 @@ RUN mkdir -p /app/data \
     && python scripts/generate_embeddings.py --reset
 
 # O Cloud Run injeta a porta em $PORT (default 8080); localmente cai para 8000.
+# --proxy-headers/--forwarded-allow-ips: atrás do proxy TLS do Cloud Run, honra
+# X-Forwarded-Proto para request.base_url gerar URLs https (canonical/og:url).
 EXPOSE 8080
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
