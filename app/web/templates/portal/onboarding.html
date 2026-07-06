@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Boas-vindas — BNCC API{% endblock %}
+{% block content %}
+<div class="container section onb-wrap">
+  <p class="eyebrow">Boas-vindas ao portal</p>
+
+  <div class="onb-progress">
+    <p class="onb-progress-label" aria-live="polite">Pergunta {{ step }} de {{ total }}</p>
+    <div class="onb-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ total }}"
+         aria-valuenow="{{ step - 1 }}" aria-label="Progresso do onboarding">
+      <span class="onb-bar-fill" style="width: {{ progress_pct }}%;"></span>
+    </div>
+  </div>
+
+  <form method="post" action="/portal/onboarding" class="card onb-card">
+    <input type="hidden" name="step" value="{{ step }}">
+
+    <fieldset class="onb-fieldset">
+      <legend class="onb-title">{{ question.title }}</legend>
+      <p class="onb-subtitle muted">{{ question.subtitle }}</p>
+
+      {% if error %}
+      <div class="notice onb-error" role="alert" style="border-left-color: var(--danger);">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <div class="onb-options">
+        {% for option in question.options %}
+        <label class="onb-option">
+          <input type="{{ 'checkbox' if question.multiple else 'radio' }}"
+                 name="resposta" value="{{ option.value }}"
+                 {% if option.value in selected %}checked{% endif %}
+                 {% if not question.multiple %}required{% endif %}>
+          <span class="onb-option-body">
+            <strong>{{ option.label }}</strong>
+            {% if option.description %}<span class="muted">{{ option.description }}</span>{% endif %}
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="onb-actions">
+      {% if step > 1 %}
+      <a class="btn btn-secondary" href="/portal/onboarding?step={{ step - 1 }}">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12.5 4.5 7 10l5.5 5.5"/>
+        </svg>
+        Voltar
+      </a>
+      {% else %}
+      <span></span>
+      {% endif %}
+      <button class="btn" type="submit">
+        {{ "Concluir e ir para o painel" if is_last else "Continuar" }}
+      </button>
+    </div>
+  </form>
+
+  <p class="muted onb-note">
+    Leva menos de um minuto e nos ajuda a evoluir a API para o seu uso.
+    Suas respostas ficam só com a gente — nada é publicado.
+  </p>
+</div>
+{% endblock %}

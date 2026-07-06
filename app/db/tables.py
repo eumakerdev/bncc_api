@@ -61,6 +61,39 @@ class DeveloperAccount(Base):
     verification_tokens: Mapped[list[EmailVerificationToken]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )
+    onboarding: Mapped[OnboardingProfile | None] = relationship(
+        back_populates="account", cascade="all, delete-orphan", uselist=False
+    )
+
+
+class OnboardingProfile(Base):
+    """
+    Perfil de onboarding do portal (1:1 com a conta).
+
+    Cada coluna de resposta guarda slugs do catálogo fixo de
+    ``onboarding_service`` (multi-seleção vem separada por vírgula) — nunca
+    texto livre do usuário. ``completed_at`` marca a conclusão do fluxo;
+    enquanto nulo, o portal exige o preenchimento antes do dashboard.
+    """
+
+    __tablename__ = "onboarding_profiles"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    account_id: Mapped[str] = mapped_column(
+        ForeignKey("developer_accounts.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    role: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    org_context: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    use_case: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    etapas: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    project_stage: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, onupdate=_now
+    )
+
+    account: Mapped[DeveloperAccount] = relationship(back_populates="onboarding")
 
 
 class EmailVerificationToken(Base):

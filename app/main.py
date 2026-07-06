@@ -78,7 +78,7 @@ app = FastAPI(
         "dados determinísticos das três etapas, acesso self-service por API keys, "
         "documentação automática e busca semântica com IA (não-oficial)."
     ),
-    version="1.0.0",
+    version="1.1.0",
     docs_url=None,
     redoc_url=None,
     openapi_url="/api/v1/openapi.json",

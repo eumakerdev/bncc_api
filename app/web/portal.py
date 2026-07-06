@@ -19,7 +19,7 @@ from app.core.deps import rate_limit_login_ip, rate_limit_signup_ip
 from app.core.security import decode_access_token
 from app.db.base import async_session_factory
 from app.db.tables import DeveloperAccount
-from app.services import account_service, apikey_service, usage_service
+from app.services import account_service, apikey_service, onboarding_service, usage_service
 from app.web.router import templates
 
 router = APIRouter()
@@ -141,13 +141,93 @@ async def verify_email_page(request: Request, token: str | None = None):
 
 
 # --------------------------------------------------------------------------- #
-# Dashboard (requer sessão)
+# Onboarding (requer sessão; obrigatório antes do dashboard)
+# --------------------------------------------------------------------------- #
+def _onboarding_context(
+    question: onboarding_service.OnboardingQuestion,
+    selected: list[str],
+    error: str | None = None,
+) -> dict:
+    total = onboarding_service.TOTAL_STEPS
+    return {
+        "question": question,
+        "step": question.step,
+        "total": total,
+        "progress_pct": round((question.step - 1) * 100 / total),
+        "is_last": question.step == total,
+        "selected": selected,
+        "error": error,
+    }
+
+
+async def _onboarding_pending(account_id: str) -> bool:
+    """True quando a conta ainda não concluiu o onboarding (gate do portal)."""
+    async with async_session_factory() as session:
+        profile = await onboarding_service.get_or_create_profile(session, account_id)
+    return not onboarding_service.is_complete(profile)
+
+
+@router.get("/onboarding")
+async def onboarding_page(request: Request, step: int | None = None):
+    account = await _account_from_request(request)
+    if account is None:
+        return RedirectResponse(url="/portal/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    async with async_session_factory() as session:
+        profile = await onboarding_service.get_or_create_profile(session, account.id)
+
+    pending = onboarding_service.first_pending_step(profile)
+    if pending is None:
+        return RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+
+    # Revisitar passos já respondidos é permitido; pular à frente, não.
+    current = step if step is not None and 1 <= step <= pending else pending
+    question = onboarding_service.get_question(current)
+    selected = onboarding_service.saved_values(profile, question)
+    return templates.TemplateResponse(
+        request, "portal/onboarding.html", _onboarding_context(question, selected)
+    )
+
+
+@router.post("/onboarding")
+async def onboarding_submit(
+    request: Request,
+    step: int = Form(...),
+    resposta: list[str] = Form(default=[]),
+):
+    account = await _account_from_request(request)
+    if account is None:
+        return RedirectResponse(url="/portal/login", status_code=status.HTTP_303_SEE_OTHER)
+    if not 1 <= step <= onboarding_service.TOTAL_STEPS:
+        return RedirectResponse(url="/portal/onboarding", status_code=status.HTTP_303_SEE_OTHER)
+
+    async with async_session_factory() as session:
+        profile = await onboarding_service.get_or_create_profile(session, account.id)
+        try:
+            await onboarding_service.save_answer(session, profile, step, resposta)
+        except ValueError as exc:
+            question = onboarding_service.get_question(step)
+            return templates.TemplateResponse(
+                request,
+                "portal/onboarding.html",
+                _onboarding_context(question, resposta, error=str(exc)),
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+    # GET decide o próximo passo (ou dashboard, se concluído) — padrão PRG.
+    return RedirectResponse(url="/portal/onboarding", status_code=status.HTTP_303_SEE_OTHER)
+
+
+# --------------------------------------------------------------------------- #
+# Dashboard (requer sessão + onboarding concluído)
 # --------------------------------------------------------------------------- #
 @router.get("/dashboard")
 async def dashboard(request: Request):
     account = await _account_from_request(request)
     if account is None:
         return RedirectResponse(url="/portal/login", status_code=status.HTTP_303_SEE_OTHER)
+    if await _onboarding_pending(account.id):
+        return RedirectResponse(url="/portal/onboarding", status_code=status.HTTP_303_SEE_OTHER)
 
     async with async_session_factory() as session:
         keys = await apikey_service.list_keys(session, account.id)
@@ -174,6 +254,8 @@ async def dashboard_create_key(request: Request, name: str = Form(...)):
     account = await _account_from_request(request)
     if account is None:
         return RedirectResponse(url="/portal/login", status_code=status.HTTP_303_SEE_OTHER)
+    if await _onboarding_pending(account.id):
+        return RedirectResponse(url="/portal/onboarding", status_code=status.HTTP_303_SEE_OTHER)
     if not account.email_verified:
         return RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     async with async_session_factory() as session:

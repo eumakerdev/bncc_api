@@ -94,6 +94,27 @@ async def verified_account(db_session):
 
 
 @pytest_asyncio.fixture
+async def onboarded_account(db_session, verified_account):
+    """Conta verificada com onboarding do portal concluído (acesso pleno)."""
+    from datetime import UTC, datetime
+
+    from app.db.tables import OnboardingProfile
+
+    profile = OnboardingProfile(
+        account_id=verified_account.id,
+        role="dev",
+        org_context="edtech",
+        use_case="app_ia",
+        etapas="ensino_fundamental,ensino_medio",
+        project_stage="prototipo",
+        completed_at=datetime.now(UTC),
+    )
+    db_session.add(profile)
+    await db_session.commit()
+    return verified_account
+
+
+@pytest_asyncio.fixture
 async def api_key(db_session, verified_account):
     """Cria uma API key ativa e devolve (full_key, ApiKey)."""
     full_key, prefix, key_hash = generate_api_key()

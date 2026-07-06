@@ -251,3 +251,66 @@ a:focus-visible, button:focus-visible, .btn:focus-visible {
 .footer-links a { color: var(--fg-muted); }
 .footer-links a:hover { color: var(--brand); }
 .footer-bottom { border-top: 1px solid var(--border); padding: 1rem 1.25rem; font-size: 0.9rem; }
+
+/* =========================================================================
+   Onboarding do portal — wizard de uma pergunta por vez.
+   Mesmas restrições do design system: estático, light+dark, contraste AA,
+   foco visível, alvos de toque ≥ 44px, movimento respeitando reduced-motion.
+   ========================================================================= */
+.onb-wrap { max-width: 34rem; }
+.onb-progress { margin: 0.25rem 0 1.25rem; }
+.onb-progress-label {
+  margin: 0 0 0.4rem; font-size: 0.85rem; font-weight: 600;
+  color: var(--fg-muted); letter-spacing: 0.02em;
+}
+.onb-bar {
+  height: 0.4rem; border-radius: 999px; background: var(--border); overflow: hidden;
+}
+.onb-bar-fill {
+  display: block; height: 100%; border-radius: inherit; background: var(--brand);
+  transition: width 0.25s ease-out;
+}
+.onb-card {
+  padding: 1.75rem 1.5rem; box-shadow: var(--shadow);
+  animation: onb-in 0.22s ease-out;
+}
+@keyframes onb-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.onb-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.onb-title {
+  padding: 0; font-size: 1.45rem; font-weight: 700;
+  line-height: 1.25; letter-spacing: -0.02em;
+}
+.onb-subtitle { margin: 0.5rem 0 1.25rem; }
+.onb-error { margin: 0 0 1rem; }
+.onb-options { display: grid; gap: 0.65rem; }
+.onb-option {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.85rem 1rem; min-height: 44px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); cursor: pointer; font-weight: 400; margin: 0;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+.onb-option:hover { border-color: var(--brand); }
+.onb-option:has(input:checked) {
+  border-color: var(--brand); background: var(--brand-soft);
+}
+.onb-option:has(input:focus-visible) {
+  outline: 3px solid var(--brand); outline-offset: 2px;
+}
+.onb-option input {
+  width: 1.15rem; height: 1.15rem; flex: none; margin: 0.2rem 0 0;
+  accent-color: var(--brand); cursor: pointer;
+}
+.onb-option-body { display: grid; gap: 0.1rem; }
+.onb-option-body .muted { font-size: 0.9rem; line-height: 1.45; }
+.onb-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem; margin-top: 1.5rem;
+}
+.onb-actions .btn-secondary {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+}
+.onb-note { font-size: 0.9rem; margin-top: 1.25rem; }

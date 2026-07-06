@@ -69,7 +69,7 @@ async def test_verify_email_success_via_service(client, db_session):
     assert "verificado" in r.text.lower()
 
 
-def test_full_authenticated_flow(client, verified_account):
+def test_full_authenticated_flow(client, onboarded_account):
     # login segue o redirect até o dashboard e fixa o cookie de sessão
     login = client.post("/portal/login", data={"email": "dev@example.com", "password": VALID_PW})
     assert login.status_code == 200
