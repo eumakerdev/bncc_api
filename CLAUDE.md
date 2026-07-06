@@ -52,13 +52,23 @@ pre-commit run --all-files             # portões locais (segredos, lint, format
 > `data/BNCCComputaoCompletodiagramado (1).pdf` via `scripts/extract_bncc_computacao.py` (chamado por
 > `extract_bncc_data.py`): recupera espaços posicionais com `x_tolerance`, isola a coluna HABILIDADE
 > e lê o **eixo** (horizontal na EI; rotacionado 90° no EF). Contagens atuais do snapshot: EI 104,
-> EF 1407, EM 205 — inclui **140 habilidades de Computação** (`componente=computacao`), com eixos
+> EF 1408, EM 205 — inclui **141 habilidades de Computação** (`componente=computacao`), com eixos
 > em EI/EF (`missing_sources: []`). Ver `specs/002-bncc-computacao/`. Os PDFs são grandes e ficam
 > fora do versionamento (`data/` no .gitignore); apenas `data/bncc_v1.json` é versionado.
 >
+> **Reconciliação de fidelidade (auditoria 2026-07-06):** as descrições foram cruzadas com DUAS
+> testemunhas do texto oficial — o documento `data/BNCC_EI_EF_110518_versaofinal_site.pdf` (600 págs.,
+> normalizado com pikepdf; EI+EF+EM, o **árbitro**) e o dataset `github.com/dfdb76/bncc-mcp` (CSVs da
+> versão final homologada, que casam 100% com o PDF nos códigos EI+EF). Isso corrigiu 59 descrições
+> corrompidas por interleaving de coluna / truncamento / bleed e inseriu `EF05CO11` (antes ausente),
+> via `scripts/reconcile_bncc_descriptions.py` + `scripts/bncc_description_fixes.json` (idempotente,
+> texto oficial de livre uso, Lei 9.610/98 art. 8º IV). **Cuidado:** a seção de EM do PDF é o rascunho
+> de mai/2018 (pré-homologação de dez/2018) — o EM final vem do snapshot/CSV, nunca do PDF.
+>
 > **Qualidade das descrições** é auditada por `scripts/audit_extraction.py` (portão versionado,
-> `tests/contract/test_audit_extraction.py`): checa truncamento/blob/contaminação/fusão além de
-> códigos e contagens. Estado atual: **0 achados ERROR**. Habilidades de anos combinados
+> `tests/contract/test_audit_extraction.py`): checa truncamento/blob/contaminação/fusão/**interleaving**
+> (duplicação adjacente de >=4 palavras, assinatura do splice de coluna) além de códigos e contagens.
+> Estado atual: **0 achados ERROR**. Habilidades de anos combinados
 > (12/35/67/89) têm célula **mesclada** (largura total) recuperada por `recover_descriptions`;
 > objetos com prosa de campo/exemplo são descartados (`_is_rel_bleed`). Computação traz o EF em
 > dois quadros oficiais (por ano `EF0xCO` + por etapa `EF15CO`/`EF69CO`) — texto repetido entre

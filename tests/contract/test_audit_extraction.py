@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from scripts.audit_extraction import audit  # noqa: E402
+from scripts.audit_extraction import _adjacent_dup, audit  # noqa: E402
 
 _SNAP = json.loads((ROOT / "data" / "bncc_v1.json").read_text(encoding="utf-8"))
 _FINDINGS = audit(_SNAP)
@@ -60,6 +60,45 @@ def test_bleed_de_relacoes_sob_controle():
     reescrever ef_relations). Tetos evitam crescimento."""
     assert _count("objeto_longo") <= 16, [f.codigo for f in _FINDINGS if f.check == "objeto_longo"]
     assert _count("ut_longa") <= 16, [f.codigo for f in _FINDINGS if f.check == "ut_longa"]
+
+
+def test_check_interleaving_detecta_duplicacao_adjacente():
+    """O detector de interleaving de coluna (assinatura: sequência de >=4 palavras
+    imediatamente repetida) deve pegar a corrupção e não acusar prosa limpa."""
+    corrompida = (
+        "Produzir artigos de opinião, tendo em vista o contexto de produção "
+        "tendo em vista o contexto de produção dado, a defesa de um ponto de vista."
+    )
+    assert _adjacent_dup(corrompida) == "tendo em vista o contexto de produção"
+    limpa = (
+        "Agrupar palavras pelo critério de aproximação de significado (sinonímia) e "
+        "separar palavras pelo critério de oposição de significado (antonímia)."
+    )
+    assert _adjacent_dup(limpa) is None
+
+
+def test_sem_interleaving_no_snapshot():
+    """Interleaving de coluna (ERROR) foi zerado pela reconciliação com o documento
+    oficial + dataset da versão final homologada — nunca deve reaparecer."""
+    assert _count("interleaving") == 0, [
+        f"{f.codigo}: {f.detail}" for f in _FINDINGS if f.check == "interleaving"
+    ]
+
+
+def test_descricoes_reconciliadas_com_fonte_oficial():
+    """Regressão da auditoria de fidelidade (reconcile_bncc_descriptions.py): amostra
+    de códigos que estavam corrompidos por interleaving/truncamento deve casar com o
+    texto oficial da BNCC, e o código EF05CO11 (antes ausente) deve existir."""
+    assert "EF05CO11" in _HABS, "EF05CO11 (Computação, Cultura Digital) deve existir."
+    esperado = {
+        "EF09LP03": "de autoridade, comprovação, exemplificação princípio etc.",
+        "EF07LP02": "notícias ou reportagens multissemióticas.",
+        "EF35LP30": "no discurso direto, quando for o caso.",
+        "EF89EF14": "Discutir estereótipos e preconceitos relativos às danças de salão",
+    }
+    for cod, marca in esperado.items():
+        desc = _HABS[cod]["descricao"]
+        assert marca in desc, f"{cod} não reconciliada: {desc!r}"
 
 
 def test_descricoes_de_celula_mesclada_recuperadas():

@@ -1,0 +1,322 @@
+{
+  "_meta": {
+    "descricao": "Correções de fidelidade das descrições de habilidades do snapshot BNCC, adjudicadas contra o documento oficial BNCC_EI_EF_110518_versaofinal_site.pdf e o dataset github.com/dfdb76/bncc-mcp (versão final homologada). Texto oficial = domínio público (Lei 9.610/98, art. 8º, IV).",
+    "gerado_por": "scripts/reconcile_bncc_descriptions.py (auditoria 2026-07-06)"
+  },
+  "descricoes": {
+    "EF01CI04": {
+      "descricao": "Comparar características físicas entre os colegas, reconhecendo a diversidade e a importância da valorização, do acolhimento e do respeito às diferenças.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF02LP19": {
+      "descricao": "Planejar e produzir, em colaboração com os colegas e com a ajuda do professor, notícias curtas para público infantil, para compor jornal falado que possa ser repassado oralmente ou em meio digital, em áudio ou vídeo, dentre outros gêneros do campo jornalístico, considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "csv",
+      "motivo": "rep4/badend/foreign"
+    },
+    "EF02LP28": {
+      "descricao": "Reconhecer o conflito gerador de uma narrativa ficcional e sua resolução, além de palavras, expressões e frases que caracterizam personagens e ambientes.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF04LP07": {
+      "descricao": "Identificar em textos e usar na produção textual a concordância entre artigo, substantivo e adjetivo (concordância no grupo nominal).",
+      "fonte": "csv",
+      "motivo": "rep4/badend/foreign"
+    },
+    "EF05LP01": {
+      "descricao": "Grafar palavras utilizando regras de correspondência fonema- -grafema regulares, contextuais e morfológicas e palavras de uso frequente com correspondências irregulares.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF05LP15": {
+      "descricao": "Ler/assistir e compreender, com autonomia, notícias, reportagens, vídeos em vlogs argumentativos, dentre outros gêneros do campo político-cidadão, de acordo com as convenções dos gêneros e considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF05LP17": {
+      "descricao": "Produzir roteiro para edição de uma reportagem digital sobre temas de interesse da turma, a partir de buscas de informações, imagens, áudios e vídeos na internet, de acordo com as convenções do gênero e considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF05LP18": {
+      "descricao": "Roteirizar, produzir e editar vídeo para vlogs argumentativos sobre produtos de mídia para público infantil (filmes, desenhos animados, HQs, games etc.), com base em conhecimentos sobre os mesmos, de acordo com as convenções do gênero e considerando a situação comunicativa e o tema/ assunto/finalidade do texto.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF05LP19": {
+      "descricao": "Argumentar oralmente sobre acontecimentos de interesse social, com base em conhecimentos sobre fatos divulgados em TV, rádio, mídia impressa e digital, respeitando pontos de vista diferentes.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF05LP20": {
+      "descricao": "Analisar a validade e força de argumentos em argumentações sobre produtos de mídia para público infantil (filmes, desenhos animados, HQs, games etc.), com base em conhecimentos sobre os mesmos.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF07CI06": {
+      "descricao": "Discutir e avaliar mudanças econômicas, culturais e sociais, tanto na vida cotidiana quanto no mundo do trabalho, decorrentes do desenvolvimento de novos materiais e tecnologias (como automação e informatização).",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF07LI20": {
+      "descricao": "Empregar, de forma inteligível, o verbo modal can para descrever habilidades (no presente e no passado).",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF07LP02": {
+      "descricao": "Comparar notícias e reportagens sobre um mesmo fato divulgadas em diferentes mídias, analisando as especificidades das mídias, os processos de (re)elaboração dos textos e a convergência das mídias em notícias ou reportagens multissemióticas.",
+      "fonte": "csv",
+      "motivo": "rep4/badend/foreign"
+    },
+    "EF07LP03": {
+      "descricao": "Formar, com base em palavras primitivas, palavras derivadas com os prefixos e sufixos mais produtivos no português.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF07LP14": {
+      "descricao": "Identificar, em textos, os efeitos de sentido do uso de estratégias de modalização e argumentatividade.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF09CI06": {
+      "descricao": "Classificar as radiações eletromagnéticas por suas frequências, fontes e aplicações, discutindo e avaliando as implicações de seu uso em controle remoto, telefone celular, raio X, forno de micro-ondas, fotocélulas etc.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF09LI16": {
+      "descricao": "Empregar, de modo inteligível, os verbos should, must, have to, may e might para indicar recomendação, necessidade ou obrigação e probabilidade.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF09LP01": {
+      "descricao": "Analisar o fenômeno da disseminação de notícias falsas nas redes sociais e desenvolver estratégias para reconhecê-las, a partir da verificação/avaliação do veículo, fonte, data e local da publicação, autoria, URL, da análise da formatação, da comparação de diferentes fontes, da consulta a sites de curadoria que atestam a fidedignidade do relato dos fatos e denunciam boatos etc.",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF09LP03": {
+      "descricao": "Produzir artigos de opinião, tendo em vista o contexto de produção dado, assumindo posição diante de tema polêmico, argumentando de acordo com a estrutura própria desse tipo de texto e utilizando diferentes tipos de argumentos – de autoridade, comprovação, exemplificação princípio etc.",
+      "fonte": "csv",
+      "motivo": "rep4/badend/foreign"
+    },
+    "EF09LP11": {
+      "descricao": "Inferir efeitos de sentido decorrentes do uso de recursos de coesão sequencial (conjunções e articuladores textuais).",
+      "fonte": "csv",
+      "motivo": "bleed"
+    },
+    "EF12LP01": {
+      "descricao": "Ler palavras novas com precisão na decodificação, no caso de palavras de uso frequente, ler globalmente, por memorização.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP03": {
+      "descricao": "Copiar textos breves, mantendo suas características e voltando para o texto sempre que tiver dúvidas sobre sua distribuição gráfica, espaçamento entre as palavras, escrita das palavras e pontuação.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP08": {
+      "descricao": "Ler e compreender, em colaboração com os colegas e com a ajuda do professor, fotolegendas em notícias, manchetes e lides em notícias, álbum de fotos digital noticioso e notícias curtas para público infantil, dentre outros gêneros do campo jornalístico, considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP09": {
+      "descricao": "Ler e compreender, em colaboração com os colegas e com a ajuda do professor, slogans, anúncios publicitários e textos de campanhas de conscientização destinados ao público infantil, dentre outros gêneros do campo publicitário, considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP10": {
+      "descricao": "Ler e compreender, em colaboração com os colegas e com a ajuda do professor, cartazes, avisos, folhetos, regras e regulamentos que organizam a vida na comunidade escolar, dentre outros gêneros do campo da atuação cidadã, considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP11": {
+      "descricao": "Escrever, em colaboração com os colegas e com a ajuda do professor, fotolegendas em notícias, manchetes e lides em notícias, álbum de fotos digital noticioso e notícias curtas para público infantil, digitais ou impressos, dentre outros gêneros do campo jornalístico, considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP12": {
+      "descricao": "Escrever, em colaboração com os colegas e com a ajuda do professor, slogans, anúncios publicitários e textos de campanhas de conscientização destinados ao público infantil, dentre outros gêneros do campo publicitário, considerando a situação comunicativa e o tema/ assunto/finalidade do texto.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP13": {
+      "descricao": "Planejar, em colaboração com os colegas e com a ajuda do professor, slogans e peça de campanha de conscientização destinada ao público infantil que possam ser repassados oralmente por meio de ferramentas digitais, em áudio ou vídeo, considerando a situação comunicativa e o tema/assunto/finalidade do texto.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF12LP18": {
+      "descricao": "Apreciar poemas e outros textos versificados, observando rimas, sonoridades, jogos de palavras, reconhecendo seu pertencimento ao mundo imaginário e sua dimensão de encantamento, jogo e fruição.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF35LP06": {
+      "descricao": "Recuperar relações entre partes de um texto, identificando substituições lexicais (de substantivos por sinônimos) ou pronominais (uso de pronomes anafóricos – pessoais, possessivos, demonstrativos) que contribuem para a continuidade do texto.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF35LP29": {
+      "descricao": "Identificar, em narrativas, cenário, personagem central, conflito gerador, resolução e o ponto de vista com base no qual histórias são narradas, diferenciando narrativas em primeira e terceira pessoas.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF35LP30": {
+      "descricao": "Diferenciar discurso indireto e discurso direto, determinando o efeito de sentido de verbos de enunciação e explicando o uso de variedades linguísticas no discurso direto, quando for o caso.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF35LP31": {
+      "descricao": "Identificar, em textos versificados, efeitos de sentido decorrentes do uso de recursos rítmicos e sonoros e de metáforas.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF67LP02": {
+      "descricao": "Explorar o espaço reservado ao leitor nos jornais, revistas, impressos e on-line, sites noticiosos etc., destacando notícias, fotorreportagens, entrevistas, charges, assuntos, temas, debates em foco, posicionando-se de maneira ética e respeitosa frente a esses textos e opiniões a eles relacionadas, e publicar notícias, notas jornalísticas, fotorreportagem de interesse geral nesses espaços do leitor.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF67LP03": {
+      "descricao": "Comparar informações sobre um mesmo fato divulgadas em diferentes veículos e mídias, analisando e avaliando a confiabilidade.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF67LP04": {
+      "descricao": "Distinguir, em segmentos descontínuos de textos, fato da opinião enunciada em relação a esse mesmo fato.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF67LP05": {
+      "descricao": "Identificar e avaliar teses/opiniões/posicionamentos explícitos e argumentos em textos argumentativos (carta de leitor, comentário, artigo de opinião, resenha crítica etc.), manifestando concordância ou discordância.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF67LP11": {
+      "descricao": "Planejar resenhas, vlogs, vídeos e podcasts variados, e textos e vídeos de apresentação e apreciação próprios das culturas juvenis (algumas possibilidades: fanzines, fanclipes, e-zines, gameplay, detonado etc.), dentre outros, tendo em vista as condições de produção do texto – objetivo, leitores/espectadores, veículos e mídia de circulação etc. –, a partir da escolha de uma produção ou evento cultural para analisar – livro, filme, série, game, canção, videoclipe, fanclipe, show, saraus, slams etc. – da busca de informação sobre a produção ou evento escolhido, da síntese de informações sobre a obra/evento e do elenco/seleção de aspectos, elementos ou recursos que possam ser destacados positiva ou negativamente ou da roteirização do passo a passo do game para posterior gravação dos vídeos.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF67LP12": {
+      "descricao": "Produzir resenhas críticas, vlogs, vídeos, podcasts variados e produções e gêneros próprios das culturas juvenis (algumas possibilidades: fanzines, fanclipes, e-zines, gameplay, detonado etc.), que apresentem/descrevam e/ou avaliem produções culturais (livro, filme, série, game, canção, disco, videoclipe etc.) ou evento (show, sarau, slam etc.), tendo em vista o contexto de produção dado, as características do gênero, os recursos das mídias envolvidas e a textualização adequada dos textos e/ou produções.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF67LP13": {
+      "descricao": "Produzir, revisar e editar textos publicitários, levando em conta o contexto de produção dado, explorando recursos multissemióticos, relacionando elementos verbais e visuais, utilizando adequadamente estratégias discursivas de persuasão e/ou convencimento e criando título ou slogan que façam o leitor motivar-se a interagir com o texto produzido e se sinta atraído pelo serviço, ideia ou produto em questão.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF67LP32": {
+      "descricao": "Escrever palavras com correção ortográfica, obedecendo as convenções da língua escrita.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF67LP37": {
+      "descricao": "Analisar, em diferentes textos, os efeitos de sentido decorrentes do uso de recursos linguístico-discursivos de prescrição, causalidade, sequências descritivas e expositivas e ordenação de eventos.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF69LP05": {
+      "descricao": "Inferir e justificar, em textos multissemióticos – tirinhas, charges, memes, gifs etc. –, o efeito de humor, ironia e/ou crítica pelo uso ambíguo de palavras, expressões ou imagens ambíguas, de clichês, de recursos iconográficos, de pontuação etc.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF69LP09": {
+      "descricao": "Planejar uma campanha publicitária sobre questões/problemas, temas, causas significativas para a escola e/ou comunidade, a partir de um levantamento de material sobre o tema ou evento, da definição do público-alvo, do texto ou peça a ser produzido – cartaz, banner, folheto, panfleto, anúncio impresso e para internet, spot, propaganda de rádio, TV etc. –, da ferramenta de edição de texto, áudio ou vídeo que será utilizada, do recorte e enfoque a ser dado, das estratégias de persuasão que serão utilizadas etc.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF69LP24": {
+      "descricao": "Discutir casos, reais ou simulações, submetidos a juízo, que envolvam (supostos) desrespeitos a artigos, do ECA, do Código de Defesa do Consumidor, do Código Nacional de Trânsito, de regulamentações do mercado publicitário etc., como forma de criar familiaridade com textos legais – seu vocabulário, formas de organização, marcas de estilo etc. -, de maneira a facilitar a compreensão de leis, fortalecer a defesa de direitos, fomentar a escrita de textos normativos (se e quando isso for necessário) e possibilitar a compreensão do caráter interpretativo das leis e as várias perspectivas que podem estar em jogo.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF69LP36": {
+      "descricao": "Produzir, revisar e editar textos voltados para a divulgação do conhecimento e de dados e resultados de pesquisas, tais como artigos de divulgação científica, verbete de enciclopédia, infográfico, infográfico animado, podcast ou vlog científico, relato de experimento, relatório, relatório multimidiático de campo, dentre outros, considerando o contexto de produção e as regularidades dos gêneros em termos de suas construções composicionais e estilos.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF89EF14": {
+      "descricao": "Discutir estereótipos e preconceitos relativos às danças de salão e demais práticas corporais e propor alternativas para sua superação.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF89LP02": {
+      "descricao": "Analisar diferentes práticas (curtir, compartilhar, comentar, curar etc.) e textos pertencentes a diferentes gêneros da cultura digital (meme, gif, comentário, charge digital etc.) envolvidos no trato com a informação e opinião, de forma a possibilitar uma presença mais crítica e ética nas redes.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF89LP04": {
+      "descricao": "Identificar e avaliar teses/opiniões/posicionamentos explícitos e implícitos, argumentos e contra-argumentos em textos argumentativos do campo (carta de leitor, comentário, artigo de opinião, resenha crítica etc.), posicionando-se frente à questão controversa de forma sustentada.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF89LP06": {
+      "descricao": "Analisar o uso de recursos persuasivos em textos argumentativos diversos (como a elaboração do título, escolhas lexicais, construções metafóricas, a explicitação ou a ocultação de fontes de informação) e seus efeitos de sentido.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF89LP07": {
+      "descricao": "Analisar, em notícias, reportagens e peças publicitárias em várias mídias, os efeitos de sentido devidos ao tratamento e à composição dos elementos nas imagens em movimento, à performance, à montagem feita (ritmo, duração e sincronização entre as linguagens – complementaridades, interferências etc.) e ao ritmo, melodia, instrumentos e sampleamentos das músicas e efeitos sonoros.",
+      "fonte": "csv",
+      "motivo": "truncation"
+    },
+    "EF89LP17": {
+      "descricao": "Relacionar textos e documentos legais e normativos de importância universal, nacional ou local que envolvam direitos, em especial, de crianças, adolescentes e jovens – tais como a Declaração dos Direitos Humanos, a Constituição Brasileira, o ECA -, e a regulamentação da organização escolar – por exemplo, regimento escolar -, a seus contextos de produção, reconhecendo e analisando possíveis motivações, finalidades e sua vinculação com experiências humanas e fatos históricos e sociais, como forma de ampliar a compreensão dos direitos e deveres, de fomentar os princípios democráticos e uma atuação pautada pela ética da responsabilidade (o outro tem direito a uma vida digna tanto quanto eu tenho).",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF89LP19": {
+      "descricao": "Analisar, a partir do contexto de produção, a forma de organização das cartas abertas, abaixo-assinados e petições on-line (identificação dos signatários, explicitação da reivindicação feita, acompanhada ou não de uma breve apresentação da problemática e/ou de justificativas que visam sustentar a reivindicação) e a proposição, discussão e aprovação de propostas políticas ou de soluções para problemas de interesse público, apresentadas ou lidas nos canais digitais de participação, identificando suas marcas linguísticas, como forma de possibilitar a escrita ou subscrição consciente de abaixo-assinados e textos dessa natureza e poder se posicionar de forma crítica e fundamentada frente às propostas.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF89LP25": {
+      "descricao": "Divulgar o resultado de pesquisas por meio de apresentações orais, verbetes de enciclopédias colaborativas, reportagens de divulgação científica, vlogs científicos, vídeos de diferentes tipos etc.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EF89LP30": {
+      "descricao": "Analisar a estrutura de hipertexto e hiperlinks em textos de divulgação científica que circulam na Web e proceder à remissão a conceitos e relações por meio de links.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    },
+    "EM13LGG101": {
+      "descricao": "Compreender e analisar processos de produção e circulação de discursos, nas diferentes linguagens, para fazer escolhas fundamentadas em função de interesses pessoais e coletivos.",
+      "fonte": "csv_em",
+      "motivo": "truncation"
+    },
+    "EM13MAT203": {
+      "descricao": "Planejar e executar ações envolvendo a criação e a utilização de aplicativos, jogos (digitais ou não), planilhas para o controle de orçamento familiar, simuladores de cálculos de juros compostos, dentre outros, para aplicar conceitos matemáticos e tomar decisões.",
+      "fonte": "csv_em",
+      "motivo": "bleed"
+    },
+    "EF02LP14": {
+      "descricao": "Planejar e produzir pequenos relatos de observação de processos, de fatos, de experiências pessoais, mantendo as características do gênero, considerando a situação comunicativa e o tema/assunto do texto.",
+      "fonte": "manual(prefixo-limpo+PDF)",
+      "motivo": "bleed"
+    },
+    "EF69LP06": {
+      "descricao": "Produzir e publicar notícias, fotodenúncias, fotorreportagens, reportagens, reportagens multimidiáticas, infográficos, podcasts noticiosos, entrevistas, cartas de leitor, comentários, artigos de opinião de interesse local ou global, textos de apresentação e apreciação de produção cultural – resenhas e outros próprios das formas de expressão das culturas juvenis, tais como vlogs e podcasts culturais, gameplay, detonado etc.– e cartazes, anúncios, propagandas, spots, jingles de campanhas sociais, dentre outros em várias mídias, vivenciando de forma significativa o papel de repórter, de comentador, de analista, de crítico, de editor ou articulista, de booktuber, de vlogger (vlogueiro) etc., como forma de compreender as condições de produção que envolvem a circulação desses textos e poder participar e vislumbrar possibilidades de participação nas práticas de linguagem do campo jornalístico e do campo midiático de forma ética e responsável, levando-se em consideração o contexto da Web 2.0, que amplia a possibilidade de circulação desses textos e “funde” os papéis de leitor e autor, de consumidor e produtor.",
+      "fonte": "csv",
+      "motivo": "reorder"
+    }
+  },
+  "inserir": [
+    {
+      "codigo": "EF05CO11",
+      "descricao": "Identificar a adequação de diferentes tecnologias computacionais na resolução de problemas.",
+      "etapa": "ensino_fundamental",
+      "anos": [
+        "5"
+      ],
+      "area_conhecimento": "computacao",
+      "componente": "computacao",
+      "competencias_gerais": [],
+      "competencias_especificas": [],
+      "objetos_conhecimento": [],
+      "eixo": "cultura_digital",
+      "apos": "EF05CO10",
+      "fonte": "bncc_comp.csv",
+      "motivo": "codigo_ausente"
+    }
+  ]
+}

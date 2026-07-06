@@ -53,6 +53,23 @@ _LIG = re.compile(r"[a-zà-ú]f[il]\s+[a-zà-ú]", re.IGNORECASE)
 _INNER_CODE = re.compile(r"\((?:EF|EM|EI)\d{2}[A-Z]{2,3}\d{2,3}\)")
 # Código de habilidade (para checagem de sequência).
 _CODE = re.compile(r"^(E[FMI]\d{2}[A-Z]{2,3})(\d{2,3})$")
+# Palavras (para detecção de duplicação por interleaving de coluna).
+_WORD = re.compile(r"\w+", re.UNICODE)
+
+
+def _adjacent_dup(desc: str, min_words: int = 4) -> str | None:
+    """Duplicação adjacente: uma sequência de >= min_words palavras seguida
+    imediatamente por si mesma (ex.: 'contexto de produção contexto de produção').
+
+    É a assinatura de alta precisão do interleaving de coluna na extração de PDF
+    multicoluna — não ocorre em prosa real. Retorna o trecho duplicado ou None.
+    """
+    w = _WORD.findall(desc.lower())
+    for i in range(len(w)):
+        for n in range(min_words, (len(w) - i) // 2 + 1):
+            if w[i : i + n] == w[i + n : i + 2 * n]:
+                return " ".join(w[i : i + n])
+    return None
 
 
 class Finding:
@@ -91,6 +108,11 @@ def _desc_checks(habs: list[dict[str, Any]]) -> list[Finding]:
             out.append(Finding("fusao", "ERROR", cod, "contém outro código de habilidade"))
         if _LIG.search(desc):
             out.append(Finding("ligadura", "ERROR", cod, "resíduo de ligadura fi/fl"))
+        frag = _adjacent_dup(desc)
+        if frag:
+            out.append(
+                Finding("interleaving", "ERROR", cod, f"trecho duplicado (coluna): {frag!r}")
+            )
         if desc and not desc.rstrip().endswith((".", ")", ".”", "”", "!", "?", '."', ".’", "’")):
             out.append(Finding("sem_pontuacao", "WARN", cod, f"...{desc[-40:]!r}"))
     for desc, cods in by_desc.items():
