@@ -29,6 +29,9 @@ repos:
       - id: detect-private-key            # bloqueia chaves privadas (PEM/RSA/...)
       - id: check-added-large-files       # evita commitar bancos/dumps por engano
         args: ["--maxkb=1024"]
+        # Bundle do Scalar é um asset de runtime vendorizado de propósito
+        # (self-hosted, sem CDN — Princípio V); não é um dump acidental.
+        exclude: ^app/web/static/vendor/
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: end-of-file-fixer
@@ -39,7 +42,7 @@ repos:
 
   # --- Lint / Format (espelha o gate de CI; versões idênticas) ---------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.6
+    rev: v0.15.20
     hooks:
       - id: ruff
         args: ["--fix"]

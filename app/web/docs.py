@@ -1,12 +1,17 @@
 """
-Guia de documentação estilizado (US3 — T054/T056).
+Superfícies de documentação (US3).
 
-FastAPI já expõe o Swagger UI em `/docs` e o ReDoc em `/redoc` a partir do
-OpenAPI gerado (`/api/v1/openapi.json`, ver `app/main.py`) — este módulo **não**
-sobrescreve `/docs`. Em vez disso, expõe `/guia`: uma página estática no design
-system compartilhado com o guia de início rápido (autenticação, limites,
-versionamento) e links para o Swagger/ReDoc reais, deixando claro que ambos
-são gerados automaticamente a partir do mesmo contrato OpenAPI (FR-013/FR-015).
+Duas páginas complementares, ambas alimentadas pelo **mesmo contrato OpenAPI**
+(`/api/v1/openapi.json`, gerado em `app/main.py`) — nada de endpoints escritos à
+mão que possam divergir do código (Princípio I):
+
+- ``/guia``  — hub de conteúdo (início rápido, autenticação, paginação, erros,
+  limites, busca semântica, versionamento) no design system compartilhado.
+- ``/docs``  — referência interativa renderizada pelo **Scalar** (3 colunas,
+  dark mode, exemplos multi-linguagem, "Try it"). O bundle é **self-hosted** em
+  ``/static/vendor/`` (sem CDN — Princípio V), apontando para o OpenAPI vivo.
+
+ReDoc continua disponível em ``/redoc`` como fallback leve (ver ``app/main.py``).
 """
 
 from __future__ import annotations
@@ -21,5 +26,11 @@ router = APIRouter()
 
 @router.get("/guia", response_class=HTMLResponse, include_in_schema=False)
 async def guia(request: Request) -> Response:
-    """Página de documentação: guia de início rápido + link ao Swagger/ReDoc."""
+    """Hub de documentação: início rápido, autenticação, limites e versionamento."""
     return templates.TemplateResponse(request, "docs.html")
+
+
+@router.get("/docs", response_class=HTMLResponse, include_in_schema=False)
+async def api_reference(request: Request) -> Response:
+    """Referência interativa da API renderizada pelo Scalar (self-hosted)."""
+    return templates.TemplateResponse(request, "reference.html")

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BNCC API — Referência da API</title>
+  <meta name="description" content="Referência interativa da BNCC API: endpoints, schemas e exemplos gerados a partir do contrato OpenAPI.">
+  <link rel="icon" href="/static/logo-icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#1b4dff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
+  <style>
+    /* Marca da BNCC API aplicada sobre o tema padrão do Scalar. */
+    :root {
+      --scalar-color-accent: #1b4dff;
+      --scalar-color-1: #0d0f14;
+      --scalar-font: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .dark-mode {
+      --scalar-color-accent: #4c6bff;
+    }
+    /* Barra de retorno ao site, acima da referência. */
+    .docs-topbar {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .6rem 1.1rem;
+      font: 500 .9rem/1 var(--scalar-font, system-ui);
+      background: #0d0f14; color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .docs-topbar a { color: #fff; text-decoration: none; opacity: .85; }
+    .docs-topbar a:hover { opacity: 1; }
+    .docs-topbar .sep { opacity: .35; }
+    .docs-topbar .grow { flex: 1; }
+  </style>
+</head>
+<body>
+  <nav class="docs-topbar" aria-label="Navegação da documentação">
+    <a href="/">← BNCC API</a>
+    <span class="sep">/</span>
+    <a href="/guia">Guia</a>
+    <span class="sep">/</span>
+    <strong>Referência</strong>
+    <span class="grow"></span>
+    <a href="/portal/signup">Criar chave</a>
+  </nav>
+
+  <script
+    id="api-reference"
+    data-url="/api/v1/openapi.json"
+    data-proxy-url=""></script>
+  <script>
+    document.getElementById('api-reference').dataset.configuration = JSON.stringify({
+      theme: 'default',
+      layout: 'modern',
+      defaultHttpClient: { targetKey: 'shell', clientKey: 'curl' },
+      hideModels: false,
+      metaData: {
+        title: 'BNCC API — Referência',
+        description: 'Referência interativa gerada a partir do contrato OpenAPI.'
+      }
+    });
+  </script>
+  <script src="/static/vendor/scalar.standalone.js"></script>
+</body>
+</html>

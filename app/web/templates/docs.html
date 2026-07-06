@@ -1,82 +1,167 @@
 {% extends "base.html" %}
 
-{% block title %}Documentação — BNCC API{% endblock %}
-{% block description %}Guia de início rápido da BNCC API: autenticação por API key, limites de uso e versionamento. Documentação interativa gerada automaticamente a partir do contrato OpenAPI.{% endblock %}
+{% block title %}Guia — BNCC API{% endblock %}
+{% block description %}Guia da BNCC API: início rápido, autenticação por API key, paginação, erros, limites de uso e versionamento. Referência interativa gerada a partir do contrato OpenAPI.{% endblock %}
 
 {% block content %}
-<section class="hero container">
-  <h1>Documentação</h1>
-  <p class="lead">
-    Esta página reúne um guia de início rápido. A referência completa de endpoints,
-    schemas e exemplos é gerada automaticamente a partir do contrato OpenAPI em
-    <code>/api/v1/openapi.json</code> — qualquer alteração nos endpoints aparece aqui sem
-    edição manual.
-  </p>
-  <p>
-    <a class="btn" href="/docs">Abrir Swagger UI</a>
-    <a class="btn btn-secondary" href="/redoc">Abrir ReDoc</a>
-  </p>
-</section>
+<div class="container docs-layout">
+  <aside class="docs-sidebar" aria-label="Sumário da documentação">
+    <nav class="docs-nav">
+      <p class="docs-nav-title">Guia</p>
+      <a href="#inicio-rapido">Início rápido</a>
+      <a href="#autenticacao">Autenticação</a>
+      <a href="#exemplos">Exemplos</a>
+      <a href="#paginacao">Paginação &amp; filtros</a>
+      <a href="#erros">Erros</a>
+      <a href="#limites">Limites de uso</a>
+      <a href="#busca-semantica">Busca semântica</a>
+      <a href="#versionamento">Versionamento</a>
+      <p class="docs-nav-title">Referência</p>
+      <a href="/docs" class="docs-nav-ext">Referência da API →</a>
+      <a href="/redoc" class="docs-nav-ext">ReDoc (fallback) →</a>
+      <a href="/api/v1/openapi.json" class="docs-nav-ext">openapi.json →</a>
+    </nav>
+  </aside>
 
-<section class="section container" aria-labelledby="auth-heading">
-  <h2 id="auth-heading">Autenticação por API key</h2>
-  <p>
-    A API de dados é autenticada por <strong>API key</strong> enviada no cabeçalho
-    <code>Authorization</code> como <code>Bearer</code>. Gere uma key gratuita no
-    <a href="/portal/signup">portal self-service</a> após verificar seu e-mail.
-  </p>
-  <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  <div class="docs-content">
+    <section id="inicio-rapido" class="docs-section">
+      <span class="eyebrow">Documentação</span>
+      <h1>Guia da BNCC API</h1>
+      <p class="lead">
+        Comece a consumir toda a Base Nacional Comum Curricular em minutos. A
+        <strong>referência completa</strong> de endpoints, schemas e exemplos é
+        gerada automaticamente a partir do contrato OpenAPI — nada aqui é escrito à
+        mão, então nunca diverge do código.
+      </p>
+      <p class="cta-row">
+        <a class="btn btn-lg" href="/docs">Abrir referência interativa</a>
+        <a class="btn btn-secondary" href="/portal/signup">Criar chave gratuita</a>
+      </p>
+      <div class="notice">
+        <strong>3 passos:</strong> crie uma conta e verifique o e-mail → gere uma API key
+        no portal → chame os endpoints com <code>Authorization: Bearer</code>.
+      </div>
+    </section>
+
+    <section id="autenticacao" class="docs-section" aria-labelledby="auth-heading">
+      <h2 id="auth-heading">Autenticação por API key</h2>
+      <p>
+        A API de dados é autenticada por <strong>API key</strong> enviada no cabeçalho
+        <code>Authorization</code> como <code>Bearer</code>. Gere uma key gratuita no
+        <a href="/portal/signup">portal self-service</a> após verificar seu e-mail.
+      </p>
+      <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   https://sua-instancia/api/v1/habilidades/EF05MA07</code></pre>
-  <p class="muted">Requisições sem uma API key válida recebem <code>401</code>.</p>
-</section>
+      <p class="muted">Requisições sem uma API key válida recebem <code>401</code>.</p>
+    </section>
 
-<section class="section container" aria-labelledby="exemplos-heading">
-  <h2 id="exemplos-heading">Exemplos rápidos</h2>
+    <section id="exemplos" class="docs-section" aria-labelledby="exemplos-heading">
+      <h2 id="exemplos-heading">Exemplos rápidos</h2>
 
-  <h3>Consultar uma habilidade por código</h3>
-  <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+      <h3>Consultar uma habilidade por código</h3>
+      <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   https://sua-instancia/api/v1/habilidades/EM13MAT101</code></pre>
 
-  <h3>Listar com filtros e paginação</h3>
-  <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+      <h3>Listar com filtros e paginação</h3>
+      <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   "https://sua-instancia/api/v1/habilidades?etapa=ensino_medio&size=20"</code></pre>
 
-  <h3>Busca semântica com IA (não-oficial)</h3>
-  <pre><code>curl -X POST https://sua-instancia/api/v1/busca-semantica \
+      <h3>Busca semântica com IA (não-oficial)</h3>
+      <pre><code>curl -X POST https://sua-instancia/api/v1/busca-semantica \
   -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   -H "Content-Type: application/json" \
   -d '{"query": "quais habilidades de matemática do 5º ano tratam de frações?"}'</code></pre>
-  <p class="muted">
-    As respostas de busca semântica trazem <code>fontes</code> rastreáveis e são sempre
-    marcadas como conteúdo gerado, <strong>não-oficial</strong> — os dados determinísticos
-    permanecem a fonte da verdade.
-  </p>
-</section>
+      <p class="muted">
+        As respostas de busca semântica trazem <code>fontes</code> rastreáveis e são sempre
+        marcadas como conteúdo gerado, <strong>não-oficial</strong> — os dados determinísticos
+        permanecem a fonte da verdade.
+      </p>
+    </section>
 
-<section class="section container" aria-labelledby="limites-heading">
-  <h2 id="limites-heading">Limites de uso (rate limiting)</h2>
-  <table>
-    <thead>
-      <tr><th>Cota</th><th>Limite</th><th>Aplica-se a</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Determinística</td><td>60 requisições/min</td><td>Habilidades, competências, taxonomia, sistema</td></tr>
-      <tr><td>IA (busca semântica)</td><td>20 requisições/min e teto de 500/dia</td><td><code>/api/v1/busca-semantica</code></td></tr>
-    </tbody>
-  </table>
-  <p class="muted">
-    Acima do limite, a API responde <code>429</code> com o cabeçalho
-    <code>Retry-After</code> indicando quando tentar novamente. As duas cotas são
-    independentes: exceder a cota de IA não afeta os endpoints determinísticos.
-  </p>
-</section>
+    <section id="paginacao" class="docs-section" aria-labelledby="paginacao-heading">
+      <h2 id="paginacao-heading">Paginação &amp; filtros</h2>
+      <p>
+        Endpoints de listagem aceitam <code>page</code> (a partir de 1) e <code>size</code>
+        (itens por página). A resposta traz os itens junto com os metadados de paginação
+        para você percorrer o conjunto completo.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parâmetro</th><th>Descrição</th><th>Padrão</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>page</code></td><td>Número da página (1-based)</td><td><code>1</code></td></tr>
+          <tr><td><code>size</code></td><td>Itens por página</td><td><code>20</code></td></tr>
+          <tr><td><code>etapa</code></td><td>Filtro por etapa (<code>educacao_infantil</code>, <code>ensino_fundamental</code>, <code>ensino_medio</code>)</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <p class="muted">
+        A lista completa de filtros por endpoint (componente, ano, eixo, unidade temática)
+        está na <a href="/docs">referência interativa</a>, sempre em dia com o contrato.
+      </p>
+    </section>
 
-<section class="section container" aria-labelledby="versionamento-heading">
-  <h2 id="versionamento-heading">Versionamento</h2>
-  <p>
-    Todos os endpoints ficam sob <code>/api/v1</code>. Mudanças incompatíveis (breaking
-    changes) são publicadas em uma nova versão (<code>/api/v2</code>), nunca dentro da
-    versão atual.
-  </p>
-</section>
+    <section id="erros" class="docs-section" aria-labelledby="erros-heading">
+      <h2 id="erros-heading">Erros</h2>
+      <p>
+        Erros usam os códigos de status HTTP padrão e um corpo JSON consistente. Respostas
+        de erro <strong>nunca</strong> expõem stack traces ou detalhes de infraestrutura.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Status</th><th>Significado</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>400</code></td><td>Requisição inválida (parâmetro fora do formato)</td></tr>
+          <tr><td><code>401</code></td><td>API key ausente ou inválida</td></tr>
+          <tr><td><code>404</code></td><td>Recurso não encontrado (ex.: código de habilidade inexistente)</td></tr>
+          <tr><td><code>422</code></td><td>Falha de validação de schema</td></tr>
+          <tr><td><code>429</code></td><td>Limite de uso excedido — veja o cabeçalho <code>Retry-After</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="limites" class="docs-section" aria-labelledby="limites-heading">
+      <h2 id="limites-heading">Limites de uso (rate limiting)</h2>
+      <table>
+        <thead>
+          <tr><th>Cota</th><th>Limite</th><th>Aplica-se a</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Determinística</td><td>60 requisições/min</td><td>Habilidades, competências, taxonomia, sistema</td></tr>
+          <tr><td>IA (busca semântica)</td><td>20 requisições/min e teto de 500/dia</td><td><code>/api/v1/busca-semantica</code></td></tr>
+        </tbody>
+      </table>
+      <p class="muted">
+        Acima do limite, a API responde <code>429</code> com o cabeçalho
+        <code>Retry-After</code> indicando quando tentar novamente. As duas cotas são
+        independentes: exceder a cota de IA não afeta os endpoints determinísticos.
+      </p>
+    </section>
+
+    <section id="busca-semantica" class="docs-section" aria-labelledby="busca-heading">
+      <h2 id="busca-heading">Busca semântica <span class="badge badge-muted">não-oficial</span></h2>
+      <p>
+        A busca semântica usa IA para encontrar habilidades por significado, não por
+        palavra-chave exata. É um recurso <strong>opcional</strong>: se a camada de IA
+        estiver indisponível, os endpoints determinísticos continuam funcionando
+        normalmente (degradação graciosa).
+      </p>
+      <p class="muted">
+        Toda resposta traz <code>fontes</code> rastreáveis e é marcada como conteúdo gerado.
+        Ela nunca substitui os dados oficiais da BNCC.
+      </p>
+    </section>
+
+    <section id="versionamento" class="docs-section" aria-labelledby="versionamento-heading">
+      <h2 id="versionamento-heading">Versionamento</h2>
+      <p>
+        Todos os endpoints ficam sob <code>/api/v1</code>. Mudanças incompatíveis (breaking
+        changes) são publicadas em uma nova versão (<code>/api/v2</code>), nunca dentro da
+        versão atual. Adições retrocompatíveis (novos endpoints, novos campos opcionais)
+        acontecem dentro da versão corrente.
+      </p>
+    </section>
+  </div>
+</div>
 {% endblock %}

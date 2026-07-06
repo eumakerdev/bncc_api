@@ -173,6 +173,27 @@
         "title": "Body_login_submit_portal_login_post",
         "type": "object"
       },
+      "Body_onboarding_submit_portal_onboarding_post": {
+        "properties": {
+          "resposta": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Resposta",
+            "type": "array"
+          },
+          "step": {
+            "title": "Step",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "step"
+        ],
+        "title": "Body_onboarding_submit_portal_onboarding_post",
+        "type": "object"
+      },
       "Body_signup_submit_portal_signup_post": {
         "properties": {
           "email": {
@@ -985,9 +1006,21 @@
     }
   },
   "info": {
-    "description": "API pública que expõe toda a Base Nacional Comum Curricular (BNCC) do Brasil: dados determinísticos das três etapas, acesso self-service por API keys, documentação automática e busca semântica com IA (não-oficial).",
+    "contact": {
+      "name": "BNCC API",
+      "url": "https://github.com/eumakerdev/bncc_api"
+    },
+    "description": "API pública e gratuita que expõe **toda a Base Nacional Comum Curricular (BNCC)**\ndo Brasil — Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo o\nComplemento de Computação — de forma estruturada e navegável.\n\n## Autenticação\nOs endpoints de dados exigem uma **API key** enviada no cabeçalho\n`Authorization: Bearer SUA_CHAVE`. Crie uma chave gratuita no\n[portal self-service](/portal/signup) após verificar seu e-mail. Requisições sem\nchave válida recebem `401`.\n\n## Limites de uso\n- **Determinística** (habilidades, competências, taxonomia, sistema): `60 req/min`.\n- **Busca semântica com IA**: `20 req/min` e teto de `500/dia`.\n\nAcima do limite a API responde `429` com o cabeçalho `Retry-After`. As duas cotas\nsão independentes.\n\n## Dados oficiais × derivados\nOs dados determinísticos preservam fielmente a nomenclatura e a estrutura oficiais\nda BNCC. Conteúdos gerados por IA (busca semântica, resumos) são **sempre marcados\ncomo não-oficiais** e nunca substituem a fonte da verdade.\n\n## Versionamento\nTodos os endpoints ficam sob `/api/v1`. Mudanças incompatíveis são publicadas em\numa nova versão de caminho (`/api/v2`), nunca dentro da versão atual.\n\n> Guia de início rápido, exemplos e receitas: **[/guia](/guia)**.",
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/eumakerdev/bncc_api/blob/main/LICENSE"
+    },
     "title": "BNCC API",
-    "version": "1.0.1"
+    "version": "1.1.0",
+    "x-logo": {
+      "altText": "BNCC API",
+      "url": "/static/logo.svg"
+    }
   },
   "openapi": "3.1.0",
   "paths": {
@@ -2418,311 +2451,46 @@
           "Uso"
         ]
       }
-    },
-    "/portal/dashboard": {
-      "get": {
-        "operationId": "dashboard_portal_dashboard_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Dashboard"
-      }
-    },
-    "/portal/keys": {
-      "post": {
-        "operationId": "dashboard_create_key_portal_keys_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_dashboard_create_key_portal_keys_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Dashboard Create Key"
-      }
-    },
-    "/portal/keys/{key_id}/revoke": {
-      "post": {
-        "operationId": "dashboard_revoke_key_portal_keys__key_id__revoke_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "key_id",
-            "required": true,
-            "schema": {
-              "title": "Key Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Dashboard Revoke Key"
-      }
-    },
-    "/portal/login": {
-      "get": {
-        "operationId": "login_page_portal_login_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "error",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Error"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Login Page"
-      },
-      "post": {
-        "operationId": "login_submit_portal_login_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_login_submit_portal_login_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Login Submit"
-      }
-    },
-    "/portal/logout": {
-      "get": {
-        "operationId": "logout_portal_logout_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Logout"
-      }
-    },
-    "/portal/signup": {
-      "get": {
-        "operationId": "signup_page_portal_signup_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "error",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Error"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Signup Page"
-      },
-      "post": {
-        "operationId": "signup_submit_portal_signup_post",
-        "requestBody": {
-          "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_signup_submit_portal_signup_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Signup Submit"
-      }
-    },
-    "/portal/verify-email": {
-      "get": {
-        "operationId": "verify_email_page_portal_verify_email_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Token"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Verify Email Page"
-      }
     }
-  }
+  },
+  "servers": [
+    {
+      "description": "Ambiente atual",
+      "url": "http://localhost:8000"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Habilidades da BNCC por código oficial (EI/EF/EM), com filtros, paginação e relações navegáveis.",
+      "name": "Habilidades"
+    },
+    {
+      "description": "Competências gerais e específicas por componente e etapa.",
+      "name": "Competências"
+    },
+    {
+      "description": "Vocabulário estruturante: etapas, componentes, unidades temáticas e eixos.",
+      "name": "Taxonomia"
+    },
+    {
+      "description": "Busca por significado com IA. **Conteúdo não-oficial** e rastreável por `fontes`; degrada graciosamente se a camada de IA estiver indisponível.",
+      "name": "Busca Semântica"
+    },
+    {
+      "description": "Cadastro, login e verificação de e-mail para acesso ao portal.",
+      "name": "Autenticação"
+    },
+    {
+      "description": "Emissão e revogação de chaves de API (mostradas apenas na criação).",
+      "name": "API Keys"
+    },
+    {
+      "description": "Consumo e limites de uso por chave.",
+      "name": "Uso"
+    },
+    {
+      "description": "Saúde, versão e metadados operacionais da API.",
+      "name": "Sistema"
+    }
+  ]
 }
