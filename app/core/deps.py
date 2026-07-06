@@ -75,7 +75,14 @@ async def get_vector_service():
 # --------------------------------------------------------------------------- #
 # Auth por sessão do portal (JWT)
 # --------------------------------------------------------------------------- #
-_session_bearer = HTTPBearer(auto_error=False)
+_session_bearer = HTTPBearer(
+    auto_error=False,
+    scheme_name="SessionAuth",
+    description=(
+        "JWT de sessão do portal (login self-service). Não usar para chamadas de "
+        "API de dados/IA — use ApiKeyAuth."
+    ),
+)
 
 
 async def get_current_account(
@@ -123,7 +130,14 @@ VerifiedAccount = Annotated[DeveloperAccount, Depends(require_verified_account)]
 # --------------------------------------------------------------------------- #
 # Auth por API key (Bearer) — usado pelos endpoints de dados/IA
 # --------------------------------------------------------------------------- #
-_api_key_bearer = HTTPBearer(auto_error=False)
+_api_key_bearer = HTTPBearer(
+    auto_error=False,
+    scheme_name="ApiKeyAuth",
+    description=(
+        "API key gerada no portal self-service, enviada como 'Authorization: "
+        "Bearer <key>'. Requerida pelos endpoints de dados e busca semântica."
+    ),
+)
 
 
 async def require_api_key(
