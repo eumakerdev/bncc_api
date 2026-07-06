@@ -11,6 +11,16 @@ habilidades usam o par de letras oficial **CO** (Computação):
     EF15CO## / EF69CO##   (blocos 1º-5º e 6º-9º)
     EM13CO##            (Ensino Médio)
 
+**Representação dupla (fidelidade).** O documento organiza o Ensino Fundamental em
+DOIS quadros oficiais: um "por ano" (páginas "COMPUTAÇÃO - Nº ANO", códigos EF0xCO##)
+e outro "por etapa/bloco" (páginas "COMPUTAÇÃO / POR ETAPA - 1º ao 5º / 6º ao 9º ANO",
+códigos EF15CO##/EF69CO##). São o MESMO currículo em granularidades diferentes: por
+isso várias habilidades têm texto idêntico entre os esquemas (ex.: EF06CO02 ≡ EF69CO02,
+EF05CO03 ≡ EF15CO03). Ambos os códigos são oficiais e constam da fonte; servimos os
+dois (remover qualquer um apagaria dado oficial — Princípio IV). A auditoria
+(`audit_extraction.py`) reconhece esse texto repetido entre esquemas de Computação como
+fiel, não como defeito de extração.
+
 **Fidelidade (Princípio IV).** As tabelas do documento diagramado guardam o texto
 em células SEM caracteres de espaço (o espaçamento é posicional); por isso
 recompomos as palavras por coordenada com `x_tolerance` calibrado (recupera os

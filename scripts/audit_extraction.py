@@ -91,10 +91,16 @@ def _desc_checks(habs: list[dict[str, Any]]) -> list[Finding]:
             out.append(Finding("fusao", "ERROR", cod, "contém outro código de habilidade"))
         if _LIG.search(desc):
             out.append(Finding("ligadura", "ERROR", cod, "resíduo de ligadura fi/fl"))
-        if desc and not desc.rstrip().endswith((".", ")", ".”", "”", "!", "?", '."')):
+        if desc and not desc.rstrip().endswith((".", ")", ".”", "”", "!", "?", '."', ".’", "’")):
             out.append(Finding("sem_pontuacao", "WARN", cod, f"...{desc[-40:]!r}"))
     for desc, cods in by_desc.items():
         if len(cods) > 1 and len(desc) < 120:
+            # O Complemento de Computação traz o currículo do EF em DUAS organizações
+            # oficiais na mesma fonte: por ano (EF0xCO##) e por etapa/bloco
+            # (EF15CO##/EF69CO##). Texto idêntico entre os esquemas é representação
+            # dupla fiel ao documento — não defeito de extração (Princípio IV).
+            if all(c[4:6] == "CO" for c in cods):
+                continue
             out.append(
                 Finding("duplicada", "WARN", cods[0], f"{len(cods)} códigos idênticos: {cods[:5]}")
             )

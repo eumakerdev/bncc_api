@@ -194,10 +194,39 @@ def _code_clusters(values: list[float], gap: float = 120.0) -> list[tuple[float,
 
 
 def _ends_sentence(t: str) -> bool:
-    return t.rstrip().endswith((".", ")", "!", "?", ".”", "”", '."'))
+    # Aspas de fechamento também encerram a frase: algumas habilidades terminam num
+    # termo entre aspas sem ponto final na fonte (ex.: Computação EF06CO01 …a um
+    # 'tipo de dados'). Aceitamos aspas curvas duplas (”) e simples (’) de fechamento.
+    return t.rstrip().endswith((".", ")", "!", "?", ".”", "”", '."', ".’", "’"))
 
 
-_SENT_END = re.compile(r"[.!?][)”\"]?(?=\s)")
+_SENT_END = re.compile(r"[.!?][)”’\"]?(?=\s)")
+
+
+def _cell_reading_order(cell: list[dict[str, Any]], line_gap: float = 6.0) -> str:
+    """Reconstroi o texto de uma célula na ordem de leitura (linhas → esquerda→direita).
+
+    Palavras de uma mesma linha podem ter `top` com diferença de 1–2pt (a segunda
+    sub-coluna de uma célula mesclada às vezes fica levemente deslocada). Um sort por
+    `round(top)` separaria essas palavras em "linhas" distintas e embaralharia a frase
+    (ex.: "slogans" caindo depois de "publicitários."). Por isso agrupamos por
+    proximidade vertical (gap ≤ `line_gap`) — as linhas reais da tabela ficam ~11–13pt
+    apart, então o agrupamento não funde linhas distintas.
+    """
+    if not cell:
+        return ""
+    ordered = sorted(cell, key=lambda w: (w["top"], w["x0"]))
+    lines: list[list[dict[str, Any]]] = [[ordered[0]]]
+    for w in ordered[1:]:
+        if w["top"] - lines[-1][-1]["top"] <= line_gap:
+            lines[-1].append(w)
+        else:
+            lines.append([w])
+    parts: list[str] = []
+    for ln in lines:
+        ln.sort(key=lambda w: w["x0"])
+        parts.append(" ".join(w["text"] for w in ln))
+    return " ".join(parts)
 
 
 def _trim_to_sentence(t: str) -> str:
@@ -245,16 +274,35 @@ def recover_descriptions(pdf_path: Path, habilidades: list[dict[str, Any]]) -> i
             present = [c for c, _ in code_ws if c in bad]
             if not present:
                 continue
-            lefts = _code_clusters([w["x0"] for _, w in code_ws], gap=100.0)
-            col_lefts = [left for left, _ in lefts]
+            col_lefts = [
+                left for left, _ in _code_clusters([w["x0"] for _, w in code_ws], gap=100.0)
+            ]
+            # Topos de TODAS as linhas de código da página (a tabela alinha as linhas,
+            # então o topo do próximo código marca o fim da linha atual mesmo quando a
+            # descrição quebra em várias linhas visuais sem código).
+            all_code_tops = sorted({w["top"] for _, w in code_ws})
             for codigo in present:
                 cw = next(w for c, w in code_ws if c == codigo)
-                my = max(cl for cl in col_lefts if cl <= cw["x0"] + 6)
-                mi = col_lefts.index(my)
-                col_right = col_lefts[mi + 1] if mi + 1 < len(col_lefts) else my + 10000.0
                 mt = cw["top"]
-                col_tops = [w["top"] for _, w in code_ws if my - 6 <= w["x0"] < col_right]
-                next_top = min((t for t in col_tops if t > mt + 2), default=1e9)
+                my = max(cl for cl in col_lefts if cl <= cw["x0"] + 6)
+                # Limite inferior da célula = próxima linha de códigos (qualquer coluna),
+                # recuada ~5pt: o `top` do token-código fica ~1–2pt ABAIXO do baseline do
+                # texto da mesma linha, então cortar exatamente em `next_top` deixaria
+                # vazar as primeiras palavras da linha seguinte (que a fundiam à célula
+                # vizinha). As linhas reais distam ~11–13pt, então a recuada não corta a
+                # última linha desta célula.
+                next_top = min((t for t in all_code_tops if t > mt + 2), default=1e9) - 5.0
+                # Limite direito: o código mais à esquerda que esteja NESTA banda de linha
+                # (top em [mt, next_top)) e à direita deste. Se não houver nenhum, a célula
+                # é MESCLADA (largura total) — habilidade de anos combinados (12/35/67/89)
+                # cujo texto atravessa as colunas de ano; lê-la por sub-coluna truncava o
+                # miolo da frase (o "residual difícil"). Sem código à direita ⇒ sem limite.
+                right_codes = [
+                    w["x0"]
+                    for _, w in code_ws
+                    if mt - 3 <= w["top"] < next_top and w["x0"] > cw["x0"] + 6
+                ]
+                col_right = (min(right_codes) - 3.0) if right_codes else float("inf")
                 cell = [
                     w
                     for w in words
@@ -263,8 +311,7 @@ def recover_descriptions(pdf_path: Path, habilidades: list[dict[str, Any]]) -> i
                     and not RE_CODE_TOKEN.match(w["text"])
                     and (w["top"] > mt + 3 or w["x0"] > cw["x0"])
                 ]
-                cell.sort(key=lambda w: (round(w["top"]), w["x0"]))
-                cands[codigo].append(clean_description(" ".join(w["text"] for w in cell)))
+                cands[codigo].append(clean_description(_cell_reading_order(cell)))
 
     fixed = 0
     for codigo, h in bad.items():
@@ -485,6 +532,29 @@ def _clean_rel(s: str) -> str:
     # remove o prefixo para não duplicar a unidade temática/objeto.
     s = re.sub(r"^\(\s*continua[çc][ãa]o\s*\)\s*", "", s, flags=re.IGNORECASE)
     return s
+
+
+# Prosa do "campo de atuação" (Língua Portuguesa) e contaminação de exemplo (Língua
+# Inglesa) que vazam para a coluna de OBJETOS nas páginas de descrição de campo
+# (prosa, não-tabela): o recorte por coordenada intercala as colunas e produz um
+# "objeto de conhecimento" que na verdade é parágrafo introdutório. Um nome real de
+# objeto nunca contém fronteira de sentença nem estes marcadores de prosa. Usado para
+# DESCARTAR o objeto poluído — melhor nenhuma relação do que uma incorreta (Princípio
+# IV). Não se aplica à unidade temática de LP/LI (invariante: todo código tem
+# organizador; a limpeza dela exigiria reescrever `ef_relations`, fora de escopo).
+_REL_BLEED = re.compile(
+    r"[a-zà-ú]\.\s+[A-ZÀ-Ú]"  # fronteira de sentença (prosa) — nomes não têm
+    r"|\bTrata-se\b|neste Campo|deste Campo|em rela[çc][ãa]o a este Campo"
+    r"|nas pr[áa]ticas relativas|media[çc][ãa]o do professor"
+    r"|Tais pr[áa]ticas|l[íi]ngua inglesa relacionados|demais falantes de l[íi]ngua"
+    r"|reflex[ãa]o sobre nos usos",
+    re.IGNORECASE,
+)
+
+
+def _is_rel_bleed(s: str) -> bool:
+    """True se `s` for prosa de campo/exemplo vazada (não um objeto de conhecimento)."""
+    return bool(_REL_BLEED.search(s))
 
 
 def _ef_header_bounds(words: list[dict[str, Any]]) -> tuple[float, float, float] | None:
@@ -990,6 +1060,14 @@ def build_snapshot() -> dict[str, Any]:
         cm = _EMBEDDED_CODE.search(h["descricao"])
         if cm and cm.start() > 30:
             h["descricao"] = h["descricao"][: cm.start()].rstrip()
+
+    # Sanitiza relações: descarta objetos de conhecimento que são prosa/bleed do campo
+    # de atuação (LP) ou contaminação de exemplo (LI) — melhor nenhuma relação do que
+    # uma incorreta (Princípio IV). As coleções de topo são derivadas depois, já limpas.
+    for h in habilidades:
+        objs = h.get("objetos_conhecimento") or []
+        if objs:
+            h["objetos_conhecimento"] = [o for o in objs if not _is_rel_bleed(o)]
 
     # ------------------------------------------------------------------ #
     # Coleções navegáveis de topo, derivadas das relações das habilidades.

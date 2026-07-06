@@ -52,6 +52,14 @@ pre-commit run --all-files             # portões locais (segredos, lint, format
 > `data/BNCCComputaoCompletodiagramado (1).pdf` via `scripts/extract_bncc_computacao.py` (chamado por
 > `extract_bncc_data.py`): recupera espaços posicionais com `x_tolerance`, isola a coluna HABILIDADE
 > e lê o **eixo** (horizontal na EI; rotacionado 90° no EF). Contagens atuais do snapshot: EI 104,
-> EF 1394, EM 205 — inclui **140 habilidades de Computação** (`componente=computacao`), com eixos
+> EF 1407, EM 205 — inclui **140 habilidades de Computação** (`componente=computacao`), com eixos
 > em EI/EF (`missing_sources: []`). Ver `specs/002-bncc-computacao/`. Os PDFs são grandes e ficam
 > fora do versionamento (`data/` no .gitignore); apenas `data/bncc_v1.json` é versionado.
+>
+> **Qualidade das descrições** é auditada por `scripts/audit_extraction.py` (portão versionado,
+> `tests/contract/test_audit_extraction.py`): checa truncamento/blob/contaminação/fusão além de
+> códigos e contagens. Estado atual: **0 achados ERROR**. Habilidades de anos combinados
+> (12/35/67/89) têm célula **mesclada** (largura total) recuperada por `recover_descriptions`;
+> objetos com prosa de campo/exemplo são descartados (`_is_rel_bleed`). Computação traz o EF em
+> dois quadros oficiais (por ano `EF0xCO` + por etapa `EF15CO`/`EF69CO`) — texto repetido entre
+> esquemas é fiel, não duplicata.
