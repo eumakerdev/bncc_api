@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
     ALLOWED_HOSTS: list[str] = Field(default=["*"])
 
+    # --- Superfície pública / SEO ---
+    # URL canônica do site. Vazio em dev = deriva de `request.base_url`. Em produção
+    # deve apontar para o domínio primário (ex.: https://bncc.api.br) para que
+    # canonical/OG/sitemap/robots NÃO vazem a URL interna do Cloud Run: atrás do
+    # Firebase Hosting o container recebe o `Host` do `.run.app`, não o domínio público.
+    SITE_URL: str = Field(default="")
+
     # --- Banco da plataforma ---
     DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./data/platform.db")
     # Senha do banco injetada via secret (Cloud SQL / produção). Quando definida,
@@ -70,6 +77,18 @@ class Settings(BaseSettings):
     RATE_LIMIT_LOGIN_PER_MIN: int = Field(default=10)
     RATE_LIMIT_SIGNUP_PER_MIN: int = Field(default=5)
     RATE_LIMIT_VERIFY_PER_MIN: int = Field(default=30)
+    RATE_LIMIT_OAUTH_PER_MIN: int = Field(default=10)
+
+    # --- Login social (OAuth 2.0) — opcional; desabilita se não configurado ---
+    # Secrets carregados do ambiente (Princípio V). Ambos os campos de um provedor
+    # devem ser definidos juntos; em produção, id-sem-secret (ou vice-versa) é
+    # bloqueado por _enforce_production_security.
+    GOOGLE_OAUTH_CLIENT_ID: str = Field(default="")
+    GOOGLE_OAUTH_CLIENT_SECRET: str = Field(default="")
+    GITHUB_OAUTH_CLIENT_ID: str = Field(default="")
+    GITHUB_OAUTH_CLIENT_SECRET: str = Field(default="")
+    # Base pública usada para montar o redirect_uri do callback OAuth.
+    OAUTH_REDIRECT_BASE_URL: str = Field(default="http://localhost:8000")
 
     # --- IA / Busca semântica (opcional; degrada graciosamente) ---
     OPENAI_API_KEY: str = Field(default="")
@@ -89,6 +108,14 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT.strip().lower() == "production"
+
+    @property
+    def google_oauth_enabled(self) -> bool:
+        return bool(self.GOOGLE_OAUTH_CLIENT_ID and self.GOOGLE_OAUTH_CLIENT_SECRET)
+
+    @property
+    def github_oauth_enabled(self) -> bool:
+        return bool(self.GITHUB_OAUTH_CLIENT_ID and self.GITHUB_OAUTH_CLIENT_SECRET)
 
     @property
     def TRUSTED_HOSTS(self) -> list[str]:
@@ -136,6 +163,15 @@ class Settings(BaseSettings):
             errors.append("SECRET_KEY ausente, placeholder ou fraca (mínimo 32 chars) em produção")
         if "*" in self.ALLOWED_HOSTS:
             errors.append('ALLOWED_HOSTS não pode conter "*" em produção')
+        for name, cid, secret in (
+            ("Google", self.GOOGLE_OAUTH_CLIENT_ID, self.GOOGLE_OAUTH_CLIENT_SECRET),
+            ("GitHub", self.GITHUB_OAUTH_CLIENT_ID, self.GITHUB_OAUTH_CLIENT_SECRET),
+        ):
+            if bool(cid) != bool(secret):
+                errors.append(
+                    f"OAuth {name}: client_id e client_secret devem ser ambos "
+                    "definidos ou ambos vazios"
+                )
 
         if errors:
             raise ValueError(

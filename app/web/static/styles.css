@@ -169,6 +169,21 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .auth-card { box-shadow: var(--shadow); background: var(--bg); padding: 1.5rem; }
 .auth-card label:first-child { margin-top: 0; }
 
+/* Login social (Google / GitHub) */
+.oauth-buttons { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+.btn-oauth {
+  background: var(--bg); color: var(--fg); border-color: var(--border); font-weight: 500;
+}
+.btn-oauth:hover { background: var(--brand-soft); border-color: var(--brand); }
+.btn-oauth svg { flex: 0 0 auto; }
+.oauth-divider {
+  display: flex; align-items: center; gap: 0.75rem;
+  color: var(--fg-muted); font-size: 0.85rem; margin: 1.25rem 0 0.25rem;
+}
+.oauth-divider::before, .oauth-divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--border);
+}
+
 /* ------------------------------ Badges e avisos -------------------------- */
 .badge {
   display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem;

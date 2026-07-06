@@ -48,7 +48,8 @@ class DeveloperAccount(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Nullable: contas criadas via login social (OAuth) não possuem senha.
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     updated_at: Mapped[datetime] = mapped_column(
@@ -63,6 +64,9 @@ class DeveloperAccount(Base):
     )
     onboarding: Mapped[OnboardingProfile | None] = relationship(
         back_populates="account", cascade="all, delete-orphan", uselist=False
+    )
+    oauth_identities: Mapped[list[OAuthIdentity]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
     )
 
 
@@ -109,6 +113,31 @@ class EmailVerificationToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     account: Mapped[DeveloperAccount] = relationship(back_populates="verification_tokens")
+
+
+class OAuthIdentity(Base):
+    """Identidade de login social (Google/GitHub) vinculada a uma conta.
+
+    Uma conta pode ter múltiplas identidades (um por provedor). A unicidade
+    (provider, provider_account_id) impede vincular o mesmo login social a duas
+    contas distintas.
+    """
+
+    __tablename__ = "oauth_identities"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_account_id", name="uq_oauth_provider_account"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    account_id: Mapped[str] = mapped_column(
+        ForeignKey("developer_accounts.id", ondelete="CASCADE"), index=True
+    )
+    provider: Mapped[str] = mapped_column(String(20), nullable=False)
+    provider_account_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    account: Mapped[DeveloperAccount] = relationship(back_populates="oauth_identities")
 
 
 class ApiKey(Base):

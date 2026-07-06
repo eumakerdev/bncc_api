@@ -11,23 +11,47 @@ na importação (ver app/web/router.py).
 
 from __future__ import annotations
 
+import logging
+import secrets
+from urllib.parse import quote
+
+import httpx
 from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
-from app.core.deps import rate_limit_login_ip, rate_limit_signup_ip
-from app.core.security import decode_access_token
+from app.core.deps import (
+    get_http_client,
+    rate_limit_login_ip,
+    rate_limit_oauth_ip,
+    rate_limit_signup_ip,
+)
+from app.core.security import create_access_token, decode_access_token
 from app.db.base import async_session_factory
 from app.db.tables import DeveloperAccount
-from app.services import account_service, apikey_service, onboarding_service, usage_service
+from app.services import (
+    account_service,
+    apikey_service,
+    oauth_service,
+    onboarding_service,
+    usage_service,
+)
 from app.web.router import templates
 
 router = APIRouter()
+logger = logging.getLogger("bncc.oauth")
 
 _SESSION_COOKIE = "session"
 # Cookie de "flash" de uso único para exibir a API key recém-criada sem
 # colocá-la na URL (histórico do navegador, logs de acesso, header Referer).
 _FLASH_NEW_KEY_COOKIE = "flash_new_key"
+# Cookie httponly de curta duração que guarda o token de state assinado do OAuth
+# (anti-CSRF, double-submit contra o parâmetro ?state= do callback).
+_OAUTH_STATE_COOKIE = "oauth_state"
+_OAUTH_STATE_TTL_MINUTES = 10
+
+_OAUTH_DISABLED_MSG = "Login social indisponível para este provedor."
+_OAUTH_FAILED_MSG = "Não foi possível concluir o login social. Tente novamente."
 
 
 def _set_session(response: RedirectResponse, token: str) -> None:
@@ -36,8 +60,26 @@ def _set_session(response: RedirectResponse, token: str) -> None:
         token,
         httponly=True,
         samesite="lax",
+        secure=settings.is_production,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
+
+
+def _oauth_context() -> dict:
+    """Flags para os templates renderizarem os botões sociais habilitados."""
+    return {
+        "google_oauth_enabled": settings.google_oauth_enabled,
+        "github_oauth_enabled": settings.github_oauth_enabled,
+    }
+
+
+def _login_redirect_with_error(message: str) -> RedirectResponse:
+    """Redireciona ao login exibindo uma mensagem neutra e limpa o state OAuth."""
+    response = RedirectResponse(
+        url=f"/portal/login?error={quote(message)}", status_code=status.HTTP_303_SEE_OTHER
+    )
+    response.delete_cookie(_OAUTH_STATE_COOKIE)
+    return response
 
 
 async def _account_from_request(request: Request) -> DeveloperAccount | None:
@@ -54,7 +96,9 @@ async def _account_from_request(request: Request) -> DeveloperAccount | None:
 # --------------------------------------------------------------------------- #
 @router.get("/login")
 async def login_page(request: Request, error: str | None = None):
-    return templates.TemplateResponse(request, "portal/login.html", {"error": error})
+    return templates.TemplateResponse(
+        request, "portal/login.html", {"error": error, **_oauth_context()}
+    )
 
 
 @router.post("/login")
@@ -71,7 +115,10 @@ async def login_submit(
             return templates.TemplateResponse(
                 request,
                 "portal/login.html",
-                {"error": "Credenciais inválidas ou e-mail não verificado."},
+                {
+                    "error": "Credenciais inválidas ou e-mail não verificado.",
+                    **_oauth_context(),
+                },
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
     response = RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
@@ -84,7 +131,9 @@ async def login_submit(
 # --------------------------------------------------------------------------- #
 @router.get("/signup")
 async def signup_page(request: Request, error: str | None = None):
-    return templates.TemplateResponse(request, "portal/signup.html", {"error": error})
+    return templates.TemplateResponse(
+        request, "portal/signup.html", {"error": error, **_oauth_context()}
+    )
 
 
 @router.post("/signup")
@@ -101,14 +150,103 @@ async def signup_submit(
             return templates.TemplateResponse(
                 request,
                 "portal/signup.html",
-                {"error": "Não foi possível concluir o cadastro."},
+                {"error": "Não foi possível concluir o cadastro.", **_oauth_context()},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
     return templates.TemplateResponse(
         request,
         "portal/login.html",
-        {"info": "Cadastro criado. Verifique seu e-mail para liberar as API keys."},
+        {
+            "info": "Cadastro criado. Verifique seu e-mail para liberar as API keys.",
+            **_oauth_context(),
+        },
     )
+
+
+# --------------------------------------------------------------------------- #
+# Login social (OAuth 2.0 — Google / GitHub)
+# --------------------------------------------------------------------------- #
+def _set_oauth_state(response: RedirectResponse, provider: str, nonce: str) -> None:
+    # O state é um JWT curto assinado com SECRET_KEY, guardado em cookie httponly.
+    # O ?state= do provedor carrega só o nonce; no callback exigimos que o nonce
+    # bata com o `sub` do token do cookie (double-submit anti-CSRF).
+    state_token = create_access_token(
+        subject=nonce,
+        expires_minutes=_OAUTH_STATE_TTL_MINUTES,
+        purpose="oauth_state",
+        provider=provider,
+    )
+    response.set_cookie(
+        _OAUTH_STATE_COOKIE,
+        state_token,
+        httponly=True,
+        samesite="lax",
+        secure=settings.is_production,
+        max_age=_OAUTH_STATE_TTL_MINUTES * 60,
+    )
+
+
+@router.get("/auth/{provider}")
+async def oauth_start(
+    request: Request,
+    provider: str,
+    _rate_limit: None = Depends(rate_limit_oauth_ip),
+):
+    """Inicia o fluxo OAuth: gera o state e redireciona ao provedor."""
+    if provider not in oauth_service.PROVIDERS or not oauth_service.provider_enabled(provider):
+        return _login_redirect_with_error(_OAUTH_DISABLED_MSG)
+
+    nonce = secrets.token_urlsafe(16)
+    authorize_url = oauth_service.build_authorize_url(provider, state=nonce)
+    response = RedirectResponse(url=authorize_url, status_code=status.HTTP_303_SEE_OTHER)
+    _set_oauth_state(response, provider, nonce)
+    return response
+
+
+@router.get("/auth/{provider}/callback")
+async def oauth_callback(
+    request: Request,
+    provider: str,
+    code: str | None = None,
+    state: str | None = None,
+    client: httpx.AsyncClient = Depends(get_http_client),
+):
+    """Recebe o retorno do provedor: valida o state, resolve a conta e loga."""
+    if provider not in oauth_service.PROVIDERS or not oauth_service.provider_enabled(provider):
+        return _login_redirect_with_error(_OAUTH_DISABLED_MSG)
+
+    # Anti-CSRF: o cookie de state (JWT assinado) precisa existir, ser deste
+    # provedor e ter `sub` == ?state= devolvido pelo provedor.
+    state_cookie = request.cookies.get(_OAUTH_STATE_COOKIE)
+    payload = decode_access_token(state_cookie) if state_cookie else None
+    if (
+        not code
+        or not state
+        or not payload
+        or payload.get("purpose") != "oauth_state"
+        or payload.get("provider") != provider
+        or payload.get("sub") != state
+    ):
+        return _login_redirect_with_error(_OAUTH_FAILED_MSG)
+
+    try:
+        access_token = await oauth_service.exchange_code(provider, code, client)
+        info = await oauth_service.fetch_identity(provider, access_token, client)
+        async with async_session_factory() as session:
+            account = await oauth_service.find_or_create_account(session, info)
+            token = create_access_token(subject=account.id, email=account.email)
+    except oauth_service.OAuthError:
+        logger.warning("Login social falhou (provider=%s)", provider)
+        return _login_redirect_with_error(_OAUTH_FAILED_MSG)
+    except Exception:
+        logger.exception("Erro inesperado no callback OAuth (provider=%s)", provider)
+        return _login_redirect_with_error(_OAUTH_FAILED_MSG)
+
+    logger.info("Login social concluído (provider=%s)", provider)
+    response = RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    _set_session(response, token)
+    response.delete_cookie(_OAUTH_STATE_COOKIE)
+    return response
 
 
 # --------------------------------------------------------------------------- #
@@ -120,7 +258,7 @@ async def verify_email_page(request: Request, token: str | None = None):
         return templates.TemplateResponse(
             request,
             "portal/login.html",
-            {"error": "Token de verificação ausente."},
+            {"error": "Token de verificação ausente.", **_oauth_context()},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     async with async_session_factory() as session:
@@ -130,13 +268,16 @@ async def verify_email_page(request: Request, token: str | None = None):
             return templates.TemplateResponse(
                 request,
                 "portal/login.html",
-                {"error": "Token de verificação inválido, expirado ou já usado."},
+                {
+                    "error": "Token de verificação inválido, expirado ou já usado.",
+                    **_oauth_context(),
+                },
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
     return templates.TemplateResponse(
         request,
         "portal/login.html",
-        {"info": "E-mail verificado. Faça login para continuar."},
+        {"info": "E-mail verificado. Faça login para continuar.", **_oauth_context()},
     )
 
 
@@ -268,6 +409,7 @@ async def dashboard_create_key(request: Request, name: str = Form(...)):
         full_key,
         httponly=True,
         samesite="lax",
+        secure=settings.is_production,
         max_age=30,
     )
     return response

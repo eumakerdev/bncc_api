@@ -27,6 +27,8 @@
     </div>
   </form>
 
+  {% with cta="cadastre-se" %}{% include "portal/_oauth_buttons.html" %}{% endwith %}
+
   <p class="form-footer">
     Já tem conta? <a href="/portal/login">Entrar no portal</a>
   </p>

@@ -24,6 +24,10 @@ argon2-cffi==25.1.0
 PyJWT==2.13.0
 email-validator==2.3.0
 
+# Cliente HTTP async — chamadas OAuth (login social) aos provedores em runtime.
+# Também usado pela suíte de testes (ASGITransport).
+httpx==0.28.1
+
 # E-mail (verificação de conta) — SMTP async; backend console em dev
 aiosmtplib==5.1.2
 
@@ -56,7 +60,7 @@ pikepdf==10.9.1
 pytest==9.1.1
 pytest-cov==6.0.0  # >=5 para API de plugin compatível com pytest 9
 pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: FixtureDef.unittest)
-httpx==0.28.1
+# httpx é dependência de runtime (login social) — declarado na seção de segurança acima.
 
 # Qualidade de código
 ruff==0.15.20

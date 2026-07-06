@@ -50,6 +50,9 @@ signup_ip_limiter = SlidingWindowLimiter(
 verify_ip_limiter = SlidingWindowLimiter(
     max_requests=settings.RATE_LIMIT_VERIFY_PER_MIN, window_seconds=60
 )
+oauth_ip_limiter = SlidingWindowLimiter(
+    max_requests=settings.RATE_LIMIT_OAUTH_PER_MIN, window_seconds=60
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -243,6 +246,27 @@ async def rate_limit_verify_ip(request: Request) -> None:
     _enforce_ip(verify_ip_limiter, "verify-ip", request)
 
 
+async def rate_limit_oauth_ip(request: Request) -> None:
+    """Cota por IP para o início do fluxo OAuth (evita spam de redirects/state)."""
+    _enforce_ip(oauth_ip_limiter, "oauth-ip", request)
+
+
 LoginRateLimited = Annotated[None, Depends(rate_limit_login_ip)]
 SignupRateLimited = Annotated[None, Depends(rate_limit_signup_ip)]
 VerifyRateLimited = Annotated[None, Depends(rate_limit_verify_ip)]
+OAuthRateLimited = Annotated[None, Depends(rate_limit_oauth_ip)]
+
+
+# --------------------------------------------------------------------------- #
+# Cliente HTTP de saída (login social) — injetável para ser mockável em teste
+# --------------------------------------------------------------------------- #
+async def get_http_client():
+    """Fornece um ``httpx.AsyncClient`` para chamadas OAuth aos provedores.
+
+    Provido via ``Depends`` para que os testes o sobreponham com um cliente falso
+    (``app.dependency_overrides``), sem tocar a rede.
+    """
+    import httpx
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        yield client

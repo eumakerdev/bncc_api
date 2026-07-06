@@ -134,7 +134,13 @@ async def login(session: AsyncSession, email: str, password: str) -> str:
     )
     account = result.scalar_one_or_none()
 
-    hash_to_check = account.password_hash if account is not None else _DUMMY_PASSWORD_HASH
+    # Conta só-social (password_hash=None) não pode logar por senha: usa o hash
+    # dummy para gastar o mesmo tempo e falhar com a mensagem neutra padrão.
+    hash_to_check = (
+        account.password_hash
+        if account is not None and account.password_hash
+        else _DUMMY_PASSWORD_HASH
+    )
     password_ok = verify_password(password, hash_to_check)
     if account is None or not password_ok or not account.email_verified:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=_LOGIN_FAILED)

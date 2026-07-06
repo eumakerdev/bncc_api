@@ -23,6 +23,8 @@
     </div>
   </form>
 
+  {% with cta="entre" %}{% include "portal/_oauth_buttons.html" %}{% endwith %}
+
   <p class="form-footer">
     Ainda não tem conta? <a href="/portal/signup">Crie a sua grátis</a> — a API key sai na hora.
   </p>
