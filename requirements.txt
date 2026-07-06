@@ -36,7 +36,7 @@ Jinja2==3.1.6
 # Vetores / IA (RAG) — camada aumentada e opcional
 chromadb==0.4.18
 langchain==0.1.0
-langchain-community==0.4.2
+langchain-community==0.0.10  # travado: langchain 0.1.0 exige <0.1 (grupo dependabot tentou 0.4.2 e quebrou a resolução)
 sentence-transformers==5.6.0  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_download removido)
 openai==1.3.8
 google-generativeai==0.8.6
