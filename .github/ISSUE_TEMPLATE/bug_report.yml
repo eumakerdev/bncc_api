@@ -1,0 +1,79 @@
+name: 🐛 Relatar um bug
+description: Reporte um comportamento incorreto da API, do portal ou dos scripts.
+title: "[bug]: "
+labels: ["bug", "triagem"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! 🙏 Preencha o máximo de campos possível — quanto mais completo, mais rápido conseguimos reproduzir e corrigir.
+
+        ⚠️ **Encontrou uma divergência entre a API e o documento oficial da BNCC?** Use o template *"Divergência de dado BNCC"* — não este.
+        ⚠️ **É uma falha de segurança?** Não abra issue pública: siga a [Política de Segurança](https://github.com/eumakerdev/bncc_api/blob/main/SECURITY.md).
+  - type: checkboxes
+    id: pre-requisitos
+    attributes:
+      label: Pré-requisitos
+      options:
+        - label: Procurei nas issues existentes e este bug ainda não foi reportado.
+          required: true
+        - label: Esta não é uma falha de segurança nem uma divergência de dado da BNCC.
+          required: true
+  - type: textarea
+    id: descricao
+    attributes:
+      label: Descrição do bug
+      description: Descreva de forma clara e objetiva o que está acontecendo.
+      placeholder: Ao consultar a habilidade EF05MA07, a resposta vem sem o campo "objeto_conhecimento"...
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para reproduzir
+      description: Liste os passos exatos. Inclua a requisição (comando curl, URL, método, payload) quando fizer sentido.
+      placeholder: |
+        1. Fazer `GET /api/v1/habilidades/EF05MA07`
+        2. Observar o corpo da resposta
+        3. ...
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint afetado
+      description: Rota da API impactada (se aplicável).
+      placeholder: "GET /api/v1/habilidades/{codigo}"
+    validations:
+      required: false
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Resposta esperada
+      description: O que você esperava que acontecesse.
+    validations:
+      required: true
+  - type: textarea
+    id: obtido
+    attributes:
+      label: Resposta obtida
+      description: O que aconteceu de fato. Cole o corpo da resposta e o status code, se houver.
+      render: json
+    validations:
+      required: true
+  - type: input
+    id: versao
+    attributes:
+      label: Versão / ambiente
+      description: Versão da aplicação, commit ou ambiente onde o bug ocorreu.
+      placeholder: "bncc.api.br (produção) ou commit local abc1234, Python 3.11, Windows"
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Logs (sem segredos!), prints ou qualquer informação que ajude a diagnosticar.
+    validations:
+      required: false

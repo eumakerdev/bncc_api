@@ -40,8 +40,26 @@ jobs:
       - name: Format check (black)
         run: black --check app/ scripts/ tests/
 
-      - name: Type check (mypy — código novo)
-        run: mypy app/ || true  # bloqueante quando o legado for migrado
+      - name: Type check (mypy — código novo, BLOQUEANTE)
+        # Gate bloqueante restrito ao "código novo" da plataforma que já passa limpo
+        # (Princípio: mypy DEVE passar em código novo). Os módulos abaixo têm strictness
+        # (disallow_untyped_defs/check_untyped_defs) configurada em pyproject [tool.mypy].
+        # Fora do gate por ora (reportado, não corrigido às cegas):
+        #   - app/core/errors.py: 2 erros próprios de [arg-type] em add_exception_handler
+        #     (assinatura Starlette exige Exception, não HTTPException/RequestValidationError);
+        #   - app/services/usage_service.py: limpo em si, mas arrasta a stack de IA legada
+        #     (vector_store → chromadb/transformers) via follow-imports, com erros/crash no
+        #     mypy 1.7.1.
+        run: >
+          mypy
+          app/core/security.py
+          app/db/
+          app/services/account_service.py
+          app/services/apikey_service.py
+          app/services/email_service.py
+
+      - name: Type check (mypy — legado, informativo)
+        run: mypy app/ || true  # não-bloqueante: dá visibilidade da dívida de tipos no legado
 
       - name: Tests + coverage gate (>= 80%)
         env:

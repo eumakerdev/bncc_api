@@ -1,0 +1,23 @@
+# CODEOWNERS — revisores automáticos por caminho.
+# Docs: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# @eumakerdev é o mantenedor e owner de todo o repositório.
+
+# Owner geral (fallback para qualquer arquivo)
+*                   @eumakerdev
+
+# Caminhos sensíveis — revisão obrigatória do mantenedor.
+# Núcleo (config, segurança, deps injetáveis, erros)
+/app/core/          @eumakerdev
+
+# Pipelines de dados: extração determinística e fidelidade à BNCC (Princípio IV)
+/scripts/           @eumakerdev
+
+# Snapshot oficial da BNCC (read-only em runtime)
+/data/              @eumakerdev
+
+# Governança do projeto: Constituição, specs e templates do Spec Kit
+/.specify/          @eumakerdev
+
+# Configuração do repositório: CI, templates de issue/PR, CODEOWNERS
+/.github/           @eumakerdev

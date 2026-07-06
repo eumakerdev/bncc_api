@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentação da API
+    url: https://bncc.api.br/docs
+    about: Consulte a documentação interativa (Swagger) antes de abrir uma issue. Muitas dúvidas de uso são respondidas por lá.
+  - name: 📖 Guia e landing page
+    url: https://bncc.api.br
+    about: Visão geral do projeto, exemplos e guia de uso.
+  - name: 🛡️ Reportar uma vulnerabilidade de segurança
+    url: https://github.com/eumakerdev/bncc_api/security/advisories/new
+    about: Falhas de segurança NÃO devem virar issue pública. Use o canal privado de segurança (ou o e-mail em SECURITY.md).
+  - name: 💚 Apoiar o projeto
+    url: https://github.com/sponsors/eumakerdev
+    about: Este projeto é gratuito e mantido nas horas livres. Se ele te ajudou, considere apoiar.

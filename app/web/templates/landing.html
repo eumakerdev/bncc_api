@@ -2,19 +2,23 @@
 
 {% block title %}BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita{% endblock %}
 
-{% block description %}1.703 habilidades da BNCC — Educação Infantil, Fundamental e Médio, incluindo o Complemento de Computação — em uma API REST gratuita: códigos e textos oficiais preservados, busca semântica com IA e API keys self-service.{% endblock %}
+{% block description %}1.703 habilidades da BNCC — Educação Infantil, Fundamental e Médio, incluindo o Complemento de
+Computação — em uma API REST gratuita: códigos e textos oficiais preservados, busca semântica com IA e API keys
+self-service.{% endblock %}
 
 {% block head_extra %}
 {% set site_url = (request.base_url|string).rstrip('/') %}
 <meta property="og:type" content="website">
 <meta property="og:title" content="BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita">
-<meta property="og:description" content="1.703 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.">
+<meta property="og:description"
+  content="1.703 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.">
 <meta property="og:url" content="{{ site_url }}/">
 <meta property="og:image" content="{{ site_url }}/static/og-image.svg">
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="BNCC API — toda a BNCC em uma API gratuita">
-<meta name="twitter:description" content="1.703 habilidades (EI/EF/EM + Computação), códigos oficiais preservados, busca semântica com IA, API keys self-service. Grátis e open-source.">
+<meta name="twitter:description"
+  content="1.703 habilidades (EI/EF/EM + Computação), códigos oficiais preservados, busca semântica com IA, API keys self-service. Grátis e open-source.">
 <meta name="twitter:image" content="{{ site_url }}/static/og-image.svg">
 <link rel="canonical" href="{{ site_url }}/">
 <script type="application/ld+json">
@@ -63,7 +67,7 @@
         <span class="dot"></span><span class="dot"></span><span class="dot"></span>
         <span class="code-window-title">GET /api/v1/habilidades/EF05MA07</span>
       </div>
-<pre><code>{
+      <pre><code>{
   <span class="tk">"codigo"</span>: <span class="tv">"EF05MA07"</span>,
   <span class="tk">"descricao"</span>: <span class="tv">"Resolver e elaborar problemas
     de adição e subtração com números
@@ -106,7 +110,12 @@
 
     <article class="card uc-card">
       <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path
+            d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
       </span>
       <h3>Planos de aula com IA, sem códigos inventados</h3>
       <p class="muted">
@@ -119,7 +128,12 @@
 
     <article class="card uc-card">
       <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <circle cx="6" cy="19" r="3" />
+          <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
+          <circle cx="18" cy="5" r="3" />
+        </svg>
       </span>
       <h3>Trilhas de recomposição de aprendizagens</h3>
       <p class="muted">
@@ -132,7 +146,12 @@
 
     <article class="card uc-card">
       <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <rect x="9" y="9" width="6" height="6" />
+          <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3" />
+        </svg>
       </span>
       <h3>A corrida da BNCC Computação 2026</h3>
       <p class="muted">
@@ -145,7 +164,13 @@
 
     <article class="card uc-card">
       <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><rect x="7" y="8" width="3" height="8"/><rect x="12" y="5" width="3" height="11"/><rect x="17" y="11" width="3" height="5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+          <rect x="7" y="8" width="3" height="8" />
+          <rect x="12" y="5" width="3" height="11" />
+          <rect x="17" y="11" width="3" height="5" />
+        </svg>
       </span>
       <h3>Cobertura curricular visível para o gestor</h3>
       <p class="muted">
@@ -158,7 +183,12 @@
 
     <article class="card uc-card">
       <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path
+            d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+          <circle cx="7.5" cy="7.5" r="1" />
+        </svg>
       </span>
       <h3>Conteúdo educacional etiquetado por habilidade</h3>
       <p class="muted">
@@ -253,7 +283,11 @@
     <div class="grid sponsor-grid">
       <article class="card sponsor-card">
         <span class="uc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path
+              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z" />
+          </svg>
         </span>
         <h3>GitHub Sponsors</h3>
         <p class="muted">Apoio avulso ou mensal com cartão internacional, sem taxa de plataforma.</p>
@@ -261,23 +295,39 @@
       </article>
       <article class="card sponsor-card">
         <span class="uc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <path d="M14 14h3v3h-3zM18 18h3v3h-3z" />
+          </svg>
         </span>
         <h3>Pix</h3>
-        <p class="muted">Aponte a câmera para o QR Code ou copie o código e cole em Pix › Copia e Cola. Você escolhe o valor.</p>
-        <img class="pix-qr" src="/static/pix-qrcode.png" alt="QR Code Pix para apoiar o projeto" width="140" height="140" loading="lazy">
+        <p class="muted">Aponte a câmera para o QR Code ou copie o código e cole em Pix › Copia e Cola. Você escolhe o
+          valor.</p>
+        <img class="pix-qr" src="/static/pix-qrcode.png" alt="QR Code Pix para apoiar o projeto" width="140"
+          height="140" loading="lazy">
         <div class="pix-copy">
-          <code id="pix-code">00020126580014br.gov.bcb.pix013636775e59-1e28-45af-88c2-579c24fbe43c5204000053039865802BR5913FABIO SANTANA6006BRASIL62070503***63045A4B</code>
-          <button type="button" class="btn btn-secondary btn-sm" id="pix-copy-btn" aria-label="Copiar código Pix">Copiar código Pix</button>
+          <code
+            id="pix-code">00020126580014br.gov.bcb.pix013636775e59-1e28-45af-88c2-579c24fbe43c5204000053039865802BR5913FABIO SANTANA6006BRASIL62070503***63045A4B</code>
+          <button type="button" class="btn btn-secondary btn-sm" id="pix-copy-btn" aria-label="Copiar código Pix">Copiar
+            código Pix</button>
         </div>
       </article>
       <article class="card sponsor-card">
         <span class="uc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.12 2.12 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.12 2.12 0 0 0 1.597-1.16z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path
+              d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.12 2.12 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.12 2.12 0 0 0 1.597-1.16z" />
+          </svg>
         </span>
         <h3>Uma estrela no GitHub</h3>
-        <p class="muted">Não custa nada e dá visibilidade para o projeto chegar a mais quem constrói educação no Brasil.</p>
-        <p><a class="btn btn-secondary" href="https://github.com/eumakerdev/bncc_api" rel="noopener">Ver o repositório</a></p>
+        <p class="muted">Não custa nada e dá visibilidade para o projeto chegar a mais quem constrói educação no Brasil.
+        </p>
+        <p><a class="btn btn-secondary" href="https://github.com/eumakerdev/bncc_api" rel="noopener">Ver o
+            repositório</a></p>
       </article>
     </div>
   </div>
@@ -289,7 +339,7 @@
   <p class="lead">
     A BNCC API é fundada e mantida pela <a href="https://expertia.dev.br" rel="noopener">Expertia</a>
     e pela <a href="https://eumaker.dev" rel="noopener">EuMaker</a>, de
-    <a href="https://github.com/eumakerdev" rel="noopener">Fábio Delgado</a> — feita no Brasil,
+    <a href="https://github.com/eumakerdev" rel="noopener">Fábio Santana</a> — feita no Brasil,
     para quem constrói educação no Brasil. O código é aberto (MIT) e contribuições são bem-vindas.
   </p>
   <p class="notice">

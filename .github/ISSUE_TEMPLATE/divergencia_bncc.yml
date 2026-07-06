@@ -1,0 +1,91 @@
+name: 📐 Divergência de dado BNCC
+description: Reporte uma diferença entre o que a API retorna e o documento oficial da BNCC.
+title: "[divergência]: "
+labels: ["divergência-bncc", "fidelidade-dados", "triagem"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A **fidelidade aos dados oficiais é prioridade máxima** neste projeto (Princípio IV da [Constituição](https://github.com/eumakerdev/bncc_api/blob/main/.specify/memory/constitution.md)): os dados servidos devem refletir fielmente o documento oficial da BNCC, e qualquer divergência é tratada como **defeito de correção**, não de estilo.
+
+        Para investigarmos e corrigirmos com segurança, precisamos comparar a resposta da API **com a fonte oficial**. Por favor, aponte a página/documento — sem a referência oficial, não conseguimos validar a correção.
+  - type: checkboxes
+    id: pre-requisitos
+    attributes:
+      label: Pré-requisitos
+      options:
+        - label: Confirmei que a divergência é com o documento OFICIAL da BNCC (MEC), não com outra fonte secundária.
+          required: true
+        - label: Procurei nas issues existentes e esta divergência ainda não foi reportada.
+          required: true
+  - type: input
+    id: codigo
+    attributes:
+      label: Código da habilidade / competência
+      description: Código oficial do item divergente.
+      placeholder: "EF05MA07, EM13MAT101, EI03EO01, CO... ou o número da competência geral"
+    validations:
+      required: true
+  - type: dropdown
+    id: etapa
+    attributes:
+      label: Etapa de ensino
+      options:
+        - Educação Infantil (EI)
+        - Ensino Fundamental (EF)
+        - Ensino Médio (EM)
+        - Não se aplica / não sei
+    validations:
+      required: true
+  - type: dropdown
+    id: componente
+    attributes:
+      label: Componente / área
+      description: Componente curricular ou área do item (inclui o Complemento de Computação).
+      options:
+        - Não sei / não se aplica
+        - Computação (Complemento CNE/CP 02/2022)
+        - Língua Portuguesa
+        - Matemática
+        - Ciências
+        - História
+        - Geografia
+        - Arte
+        - Educação Física
+        - Ensino Religioso
+        - Língua Inglesa
+        - Competência geral
+        - Outro (detalhar na descrição)
+    validations:
+      required: true
+  - type: textarea
+    id: api-retorna
+    attributes:
+      label: O que a API retorna hoje
+      description: Cole o valor/texto exato que a API devolve para este item.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: documento-diz
+    attributes:
+      label: O que o documento oficial diz
+      description: Transcreva o texto correto exatamente como aparece no documento oficial.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: fonte
+    attributes:
+      label: Referência da fonte oficial
+      description: Qual documento e em que página está o texto correto? Sem isso não conseguimos validar.
+      placeholder: "BNCC (dez/2018), p. 302 — ou: Complemento de Computação (Parecer CNE/CP 02/2022), p. 15"
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Prints do PDF oficial, endpoint consultado ou qualquer detalhe que ajude a confirmar.
+    validations:
+      required: false

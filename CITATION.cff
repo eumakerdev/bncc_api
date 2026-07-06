@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "Se você usar a BNCC API em seu trabalho, por favor cite-a conforme os metadados abaixo."
+title: "BNCC API"
+abstract: >-
+  API pública, gratuita e open-source que expõe toda a Base Nacional Comum
+  Curricular (BNCC) do Brasil — as três etapas (Educação Infantil, Ensino
+  Fundamental e Ensino Médio) e o Complemento de Computação — com dados
+  extraídos de forma determinística e fiel aos documentos oficiais, documentação
+  automática e busca semântica com IA.
+type: software
+authors:
+  - family-names: Santana
+    given-names: Fábio
+    alias: eumakerdev
+license: MIT
+repository-code: "https://github.com/eumakerdev/bncc_api"
+url: "https://bncc.api.br"
+keywords:
+  - BNCC
+  - educação
+  - API
+  - FastAPI
+  - currículo
+  - Brasil
+date-released: "2026-07-06"

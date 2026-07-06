@@ -1,0 +1,59 @@
+# -----------------------------------------------------------------------------
+# Dependabot — automação de atualização de dependências
+# -----------------------------------------------------------------------------
+# Racional (Princípio V da Constituição — Segurança por padrão):
+#   O CI executa `pip-audit` em modo informativo (continue-on-error) porque a
+#   stack de IA legada (chromadb, langchain e transitivos) carrega CVEs conhecidas
+#   cujo upgrade exige coordenação maior. O Dependabot ataca essa dívida na raiz:
+#   abre PRs de atualização de forma contínua e rastreável, em vez de deixar as
+#   versões pinadas apodrecerem em requirements.txt.
+#
+#   Para reduzir ruído, updates de "minor" e "patch" são AGRUPADOS num único PR por
+#   ecossistema; upgrades "major" (potencialmente quebradores) vêm em PRs separados
+#   para revisão dedicada. Commits usam o prefixo "chore(deps)" para casar com o
+#   histórico do repo e facilitar changelog/semver.
+# -----------------------------------------------------------------------------
+version: 2
+updates:
+  # Dependências Python (requirements.txt na raiz) — alvo principal das CVEs.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      # Agrupa patch/minor de todas as libs num só PR para reduzir ruído.
+      python-minor-e-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions usadas nos workflows (checkout, setup-python etc.).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Imagem base do Dockerfile na raiz (gate de build do CI depende dela).
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"

@@ -1,0 +1,59 @@
+name: ✨ Sugestão de melhoria
+description: Proponha uma nova funcionalidade ou melhoria para a API, o portal ou os dados.
+title: "[feature]: "
+labels: ["enhancement", "triagem"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por querer melhorar a BNCC API! 💡 Descreva sua ideia com o máximo de contexto possível.
+
+        Lembre-se de que este é um contrato público: mudanças que quebrem o contrato `/api/v1` exigem uma nova versão de caminho (Princípio I), e simplicidade é preferível a complexidade não justificada (Princípio VII).
+  - type: checkboxes
+    id: pre-requisitos
+    attributes:
+      label: Pré-requisitos
+      options:
+        - label: Procurei nas issues existentes e esta sugestão ainda não foi proposta.
+          required: true
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema isso resolve?
+      description: Descreva a dor ou a necessidade por trás da sugestão. Foque no "porquê" antes do "como".
+      placeholder: "Quando eu tento filtrar habilidades por múltiplos anos ao mesmo tempo, preciso fazer várias requisições..."
+    validations:
+      required: true
+  - type: textarea
+    id: solucao
+    attributes:
+      label: Solução proposta
+      description: Descreva o que você gostaria que acontecesse. Se for uma mudança de API, inclua rota, parâmetros e formato de resposta esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+      description: Outras abordagens que você pensou e por que a proposta acima é preferível.
+    validations:
+      required: false
+  - type: dropdown
+    id: contrato
+    attributes:
+      label: Impacto no contrato /api/v1
+      description: Esta mudança afeta a superfície pública já publicada?
+      options:
+        - Não sei
+        - Adição retrocompatível (novo endpoint ou campo opcional)
+        - Mudança incompatível (exigiria nova versão, ex.: /api/v2)
+        - Não afeta a API pública (docs, scripts, portal, interno)
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Casos de uso, exemplos, links ou qualquer detalhe que ajude a avaliar a proposta.
+    validations:
+      required: false
