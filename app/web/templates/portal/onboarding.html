@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Boas-vindas — BNCC API{% endblock %}
+{% block description %}Conte em menos de um minuto como você pretende usar a BNCC API — isso nos ajuda a evoluir o produto.{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
 <div class="container section onb-wrap">
   <p class="eyebrow">Boas-vindas ao portal</p>
@@ -20,7 +22,7 @@
       <p class="onb-subtitle muted">{{ question.subtitle }}</p>
 
       {% if error %}
-      <div class="notice onb-error" role="alert" style="border-left-color: var(--danger);">
+      <div class="notice notice-danger onb-error" role="alert">
         {{ error }}
       </div>
       {% endif %}

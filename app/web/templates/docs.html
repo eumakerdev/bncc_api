@@ -1,7 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Guia — BNCC API{% endblock %}
+{% block title %}Guia da BNCC API — início rápido, autenticação e limites{% endblock %}
 {% block description %}Guia da BNCC API: início rápido, autenticação por API key, paginação, erros, limites de uso e versionamento. Referência interativa gerada a partir do contrato OpenAPI.{% endblock %}
+
+{% block head_extra %}
+{% set site_url = (request.base_url|string).rstrip('/') %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Guia da BNCC API — início rápido, autenticação e limites",
+  "description": "Como consumir a BNCC API: autenticação por API key, exemplos com curl, paginação, erros, limites de uso e versionamento.",
+  "inLanguage": "pt-BR",
+  "url": "{{ site_url }}/guia",
+  "isPartOf": { "@type": "WebSite", "name": "BNCC API", "url": "{{ site_url }}/" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "BNCC API", "item": "{{ site_url }}/" },
+    { "@type": "ListItem", "position": 2, "name": "Guia", "item": "{{ site_url }}/guia" }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="container docs-layout">
@@ -85,6 +110,7 @@
         (itens por página). A resposta traz os itens junto com os metadados de paginação
         para você percorrer o conjunto completo.
       </p>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr><th>Parâmetro</th><th>Descrição</th><th>Padrão</th></tr>
@@ -95,6 +121,7 @@
           <tr><td><code>etapa</code></td><td>Filtro por etapa (<code>educacao_infantil</code>, <code>ensino_fundamental</code>, <code>ensino_medio</code>)</td><td>—</td></tr>
         </tbody>
       </table>
+      </div>
       <p class="muted">
         A lista completa de filtros por endpoint (componente, ano, eixo, unidade temática)
         está na <a href="/docs">referência interativa</a>, sempre em dia com o contrato.
@@ -107,6 +134,7 @@
         Erros usam os códigos de status HTTP padrão e um corpo JSON consistente. Respostas
         de erro <strong>nunca</strong> expõem stack traces ou detalhes de infraestrutura.
       </p>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr><th>Status</th><th>Significado</th></tr>
@@ -119,10 +147,12 @@
           <tr><td><code>429</code></td><td>Limite de uso excedido — veja o cabeçalho <code>Retry-After</code></td></tr>
         </tbody>
       </table>
+      </div>
     </section>
 
     <section id="limites" class="docs-section" aria-labelledby="limites-heading">
       <h2 id="limites-heading">Limites de uso (rate limiting)</h2>
+      <div class="table-wrap">
       <table>
         <thead>
           <tr><th>Cota</th><th>Limite</th><th>Aplica-se a</th></tr>
@@ -132,6 +162,7 @@
           <tr><td>IA (busca semântica)</td><td>20 requisições/min e teto de 500/dia</td><td><code>/api/v1/busca-semantica</code></td></tr>
         </tbody>
       </table>
+      </div>
       <p class="muted">
         Acima do limite, a API responde <code>429</code> com o cabeçalho
         <code>Retry-After</code> indicando quando tentar novamente. As duas cotas são

@@ -1,27 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Entrar — BNCC API{% endblock %}
+
+{% block title %}Entrar no portal — BNCC API{% endblock %}
+{% block description %}Acesse o portal da BNCC API para gerar e revogar API keys e acompanhar seu consumo diário — tudo self-service e gratuito.{% endblock %}
+
 {% block content %}
-<div class="container section" style="max-width: 30rem;">
-  <h1>Entrar</h1>
-  <p class="lead">Acesse o portal para gerenciar suas API keys e consumo.</p>
+<div class="container section auth-wrap">
+  <h1>Bem-vindo de volta</h1>
+  <p class="lead">Gerencie suas API keys e acompanhe o consumo no portal.</p>
 
-  {% if info %}<div class="notice">{{ info }}</div>{% endif %}
-  {% if error %}<div class="notice" style="border-left-color: var(--danger);">{{ error }}</div>{% endif %}
+  {% if info %}<div class="notice" role="status">{{ info }}</div>{% endif %}
+  {% if error %}<div class="notice notice-danger" role="alert">{{ error }}</div>{% endif %}
 
-  <form method="post" action="/portal/login" class="card">
+  <form method="post" action="/portal/login" class="card auth-card">
     <label for="email">E-mail</label>
     <input id="email" name="email" type="email" autocomplete="email" required>
 
     <label for="password">Senha</label>
     <input id="password" name="password" type="password" autocomplete="current-password" required>
 
-    <p style="margin-top: 1.25rem;">
-      <button class="btn" type="submit">Entrar</button>
-    </p>
+    <div class="form-actions">
+      <button class="btn btn-block" type="submit">Entrar no portal</button>
+    </div>
   </form>
 
-  <p class="muted" style="margin-top: 1rem;">
-    Não tem conta? <a href="/portal/signup">Criar conta</a>
+  <p class="form-footer">
+    Ainda não tem conta? <a href="/portal/signup">Crie a sua grátis</a> — a API key sai na hora.
   </p>
 </div>
 {% endblock %}

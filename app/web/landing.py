@@ -20,6 +20,7 @@ router = APIRouter()
 _PUBLIC_PATHS = [
     "/",
     "/guia",
+    "/docs",
     "/portal/signup",
     "/portal/login",
 ]

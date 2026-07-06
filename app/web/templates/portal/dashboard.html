@@ -1,12 +1,17 @@
 {% extends "base.html" %}
+
 {% block title %}Painel — BNCC API{% endblock %}
+{% block description %}Painel do portal da BNCC API: gerencie suas API keys e acompanhe o consumo diário.{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+
 {% block content %}
 <div class="container section">
-  <div class="nav" style="padding: 0 0 1rem;">
-    <h1 style="margin: 0;">Painel</h1>
+  <div class="page-header">
+    <h1>Painel</h1>
     <a href="/portal/logout" class="btn btn-secondary">Sair</a>
   </div>
-  <p class="lead">{{ account.email }}
+  <p class="lead account-line">
+    <span>{{ account.email }}</span>
     {% if account.email_verified %}
       <span class="badge">verificado</span>
     {% else %}
@@ -15,52 +20,60 @@
   </p>
 
   {% if new_key %}
-  <div class="notice">
+  <div class="notice" role="status">
     <strong>Sua nova API key (exibida apenas uma vez):</strong>
-    <pre style="margin: 0.5rem 0 0;"><code>{{ new_key }}</code></pre>
+    <div class="key-reveal"><pre><code>{{ new_key }}</code></pre></div>
     Guarde-a com segurança — não será possível vê-la novamente.
   </div>
   {% endif %}
 
   {% if not account.email_verified %}
-  <div class="notice" style="border-left-color: var(--danger);">
+  <div class="notice notice-danger" role="alert">
     Verifique seu e-mail para liberar a geração de API keys.
   </div>
   {% endif %}
 
   <h2>Consumo de hoje</h2>
-  <div class="grid">
-    <div class="card">
-      <p class="muted">Keys ativas/criadas</p>
-      <p style="font-size: 1.6rem; margin: 0;">{{ usage.total_keys }}</p>
+  <div class="grid metric-grid">
+    <div class="card metric">
+      <p class="metric-label">Keys ativas/criadas</p>
+      <p class="metric-value">{{ usage.total_keys }}</p>
     </div>
-    <div class="card">
-      <p class="muted">Requisições determinísticas (hoje)</p>
-      <p style="font-size: 1.6rem; margin: 0;">{{ usage.deterministic_used_today }}</p>
+    <div class="card metric">
+      <p class="metric-label">Requisições determinísticas (hoje)</p>
+      <p class="metric-value">{{ usage.deterministic_used_today }}</p>
     </div>
-    <div class="card">
-      <p class="muted">Requisições de IA (hoje)</p>
-      <p style="font-size: 1.6rem; margin: 0;">{{ usage.ai_used_today }}</p>
+    <div class="card metric">
+      <p class="metric-label">Requisições de IA (hoje)</p>
+      <p class="metric-value">{{ usage.ai_used_today }}</p>
     </div>
   </div>
 
   <h2>API keys</h2>
   {% if account.email_verified %}
-  <form method="post" action="/portal/keys" class="card" style="margin-bottom: 1.5rem;">
+  <form method="post" action="/portal/keys" class="card key-form">
     <label for="name">Nome da nova key</label>
     <input id="name" name="name" type="text" maxlength="120" required
-           placeholder="ex.: integração-escola">
-    <p style="margin-top: 1rem;">
-      <button class="btn" type="submit">Gerar key</button>
-    </p>
+           placeholder="ex.: integração-escola" aria-describedby="key-name-help">
+    <p class="form-help" id="key-name-help">Um nome descritivo ajuda a saber o que revogar depois.</p>
+    <div class="form-actions">
+      <button class="btn" type="submit">Gerar nova key</button>
+    </div>
   </form>
   {% endif %}
 
   {% if keys %}
-  <div style="overflow-x: auto;">
+  <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Nome</th><th>Prefixo</th><th>Status</th><th>Criada</th><th>Último uso</th><th></th></tr>
+      <tr>
+        <th scope="col">Nome</th>
+        <th scope="col">Prefixo</th>
+        <th scope="col">Status</th>
+        <th scope="col">Criada</th>
+        <th scope="col">Último uso</th>
+        <th scope="col"><span class="sr-only">Ações</span></th>
+      </tr>
     </thead>
     <tbody>
       {% for k in keys %}
@@ -78,8 +91,9 @@
         <td>{{ k.last_used_at.strftime('%d/%m/%Y %H:%M') if k.last_used_at else '—' }}</td>
         <td>
           {% if k.status.value == 'active' %}
-          <form method="post" action="/portal/keys/{{ k.id }}/revoke" style="margin: 0;">
-            <button class="btn btn-danger" type="submit">Revogar</button>
+          <form method="post" action="/portal/keys/{{ k.id }}/revoke" class="inline-form"
+                onsubmit="return confirm('Revogar a key “{{ k.name }}”? Aplicações que a usam perderão acesso imediatamente.');">
+            <button class="btn btn-danger btn-sm" type="submit">Revogar</button>
           </form>
           {% endif %}
         </td>
@@ -89,7 +103,14 @@
   </table>
   </div>
   {% else %}
-  <p class="muted">Nenhuma API key ainda.</p>
+  <div class="empty-state">
+    <p><strong>Nenhuma API key ainda.</strong></p>
+    {% if account.email_verified %}
+    <p class="muted">Gere a primeira no formulário acima e faça sua primeira chamada em minutos — o <a href="/guia">guia de início rápido</a> mostra como.</p>
+    {% else %}
+    <p class="muted">Verifique seu e-mail para liberar a geração de keys.</p>
+    {% endif %}
+  </div>
   {% endif %}
 </div>
 {% endblock %}

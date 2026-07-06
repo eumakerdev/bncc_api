@@ -6,21 +6,11 @@
 Computação — em uma API REST gratuita: códigos e textos oficiais preservados, busca semântica com IA e API keys
 self-service.{% endblock %}
 
+{% block og_title %}BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita{% endblock %}
+{% block og_description %}1.703 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.{% endblock %}
+
 {% block head_extra %}
 {% set site_url = (request.base_url|string).rstrip('/') %}
-<meta property="og:type" content="website">
-<meta property="og:title" content="BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita">
-<meta property="og:description"
-  content="1.703 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.">
-<meta property="og:url" content="{{ site_url }}/">
-<meta property="og:image" content="{{ site_url }}/static/og-image.svg">
-<meta property="og:locale" content="pt_BR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="BNCC API — toda a BNCC em uma API gratuita">
-<meta name="twitter:description"
-  content="1.703 habilidades (EI/EF/EM + Computação), códigos oficiais preservados, busca semântica com IA, API keys self-service. Grátis e open-source.">
-<meta name="twitter:image" content="{{ site_url }}/static/og-image.svg">
-<link rel="canonical" href="{{ site_url }}/">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -40,6 +30,54 @@ self-service.{% endblock %}
     ]
   },
   "inLanguage": "pt-BR"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "A BNCC API é oficial do MEC?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Não. É uma iniciativa independente e open-source, sem vínculo com o MEC. Os textos de habilidades e competências são reproduções fiéis dos documentos oficiais da BNCC, e qualquer conteúdo gerado por IA é explicitamente marcado como não-oficial."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quanto custa usar a BNCC API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nada. Conta, API key e todos os endpoints são gratuitos, com cota transparente de 60 requisições por minuto nos endpoints determinísticos. O projeto se sustenta por apoio voluntário via GitHub Sponsors e Pix."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso usar a BNCC API em um produto comercial?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim. O código é aberto sob licença MIT e os dados da BNCC são públicos. Só pedimos que deixe claro aos seus usuários que a iniciativa não tem vínculo com o MEC."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "A base de habilidades está completa?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim: 1.703 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo as 140 habilidades do Complemento de Computação. O snapshot é versionado e a extração é determinística, reproduzível e auditada."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "E se a camada de IA sair do ar?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Os endpoints determinísticos não dependem do LLM: consulta por código, filtros, relações e taxonomia continuam funcionando normalmente. A busca semântica é um recurso opcional com degradação graciosa."
+      }
+    }
+  ]
 }
 </script>
 {% endblock %}
@@ -347,6 +385,52 @@ self-service.{% endblock %}
     habilidades e competências são reproduções fiéis dos documentos oficiais da BNCC; qualquer
     conteúdo gerado por IA é explicitamente marcado como <strong>não-oficial</strong>.
   </p>
+</section>
+
+<!-- ============================== FAQ ============================== -->
+<section class="section container" id="perguntas-frequentes" aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Perguntas frequentes</h2>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>A BNCC API é oficial do MEC?</summary>
+      <p>
+        Não. É uma iniciativa independente e open-source, sem vínculo com o MEC. Os textos de
+        habilidades e competências são reproduções fiéis dos documentos oficiais da BNCC, e
+        qualquer conteúdo gerado por IA é explicitamente marcado como não-oficial.
+      </p>
+    </details>
+    <details class="faq-item">
+      <summary>Quanto custa usar a API?</summary>
+      <p>
+        Nada. Conta, API key e todos os endpoints são gratuitos, com cota transparente de
+        60 requisições por minuto nos endpoints determinísticos. O projeto se sustenta por
+        apoio voluntário via GitHub Sponsors e Pix.
+      </p>
+    </details>
+    <details class="faq-item">
+      <summary>Posso usar em um produto comercial?</summary>
+      <p>
+        Sim. O código é aberto sob licença MIT e os dados da BNCC são públicos. Só pedimos
+        que deixe claro aos seus usuários que a iniciativa não tem vínculo com o MEC.
+      </p>
+    </details>
+    <details class="faq-item">
+      <summary>A base de habilidades está completa?</summary>
+      <p>
+        Sim: 1.703 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino
+        Médio, incluindo as 140 habilidades do Complemento de Computação. O snapshot é
+        versionado e a extração é determinística, reproduzível e auditada.
+      </p>
+    </details>
+    <details class="faq-item">
+      <summary>E se a camada de IA sair do ar?</summary>
+      <p>
+        Os endpoints determinísticos não dependem do LLM: consulta por código, filtros,
+        relações e taxonomia continuam funcionando normalmente. A busca semântica é um
+        recurso opcional com degradação graciosa.
+      </p>
+    </details>
+  </div>
 </section>
 
 <!-- =========================== CTA FINAL =========================== -->

@@ -1,30 +1,34 @@
 {% extends "base.html" %}
-{% block title %}Criar conta — BNCC API{% endblock %}
+
+{% block title %}Criar conta grátis — BNCC API{% endblock %}
+{% block description %}Crie sua conta gratuita na BNCC API: verifique o e-mail, gere uma API key na hora e acesse as 1.703 habilidades da BNCC. Sem cartão, sem fila de aprovação.{% endblock %}
+
 {% block content %}
-<div class="container section" style="max-width: 30rem;">
-  <h1>Criar conta</h1>
-  <p class="lead">Cadastre-se para obter acesso à API pública da BNCC.</p>
+<div class="container section auth-wrap">
+  <h1>Crie sua conta gratuita</h1>
+  <p class="lead">
+    API key na hora, sem cartão e sem fila de aprovação. Toda a BNCC a uma
+    chamada de distância.
+  </p>
 
-  {% if error %}<div class="notice" style="border-left-color: var(--danger);">{{ error }}</div>{% endif %}
+  {% if error %}<div class="notice notice-danger" role="alert">{{ error }}</div>{% endif %}
 
-  <form method="post" action="/portal/signup" class="card">
+  <form method="post" action="/portal/signup" class="card auth-card">
     <label for="email">E-mail</label>
     <input id="email" name="email" type="email" autocomplete="email" required>
 
     <label for="password">Senha</label>
     <input id="password" name="password" type="password" autocomplete="new-password"
-           minlength="10" required>
-    <p class="muted" style="margin-top: 0.35rem; font-size: 0.85rem;">
-      Mínimo de 10 caracteres, com letras e números.
-    </p>
+           minlength="10" required aria-describedby="password-help">
+    <p class="form-help" id="password-help">Mínimo de 10 caracteres, com letras e números.</p>
 
-    <p style="margin-top: 1.25rem;">
-      <button class="btn" type="submit">Criar conta</button>
-    </p>
+    <div class="form-actions">
+      <button class="btn btn-block" type="submit">Criar conta grátis</button>
+    </div>
   </form>
 
-  <p class="muted" style="margin-top: 1rem;">
-    Já tem conta? <a href="/portal/login">Entrar</a>
+  <p class="form-footer">
+    Já tem conta? <a href="/portal/login">Entrar no portal</a>
   </p>
 </div>
 {% endblock %}
