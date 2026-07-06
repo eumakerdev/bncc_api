@@ -81,11 +81,15 @@ domínio é servido pelo **Firebase Hosting**, que faz proxy de `/**` para o ser
 `firebase.json` (rewrite `**` → serviço `bncc-api` em `southamerica-east1`) e `.firebaserc`
 (projeto `api-bncc`).
 
-> **Importante:** o Firebase Hosting **preserva o header `Host`** ao repassar para o Cloud Run.
-> Por isso o `cloudrun.ps1` (passo 8) já coloca `https://bncc.api.br`, `https://api-bncc.web.app` e
-> `https://api-bncc.firebaseapp.com` no `ALLOWED_HOSTS`, e aponta `EMAIL_VERIFICATION_BASE_URL`
-> para `https://bncc.api.br`. Rode o deploy do Cloud Run **antes** de mandar tráfego pelo domínio,
-> senão o `TrustedHostMiddleware` responde `400 Invalid host header`.
+> **Importante (verificado em produção):** atrás do Firebase Hosting o container recebe o `Host`
+> **interno do `.run.app`** — o Firebase **não** repassa o domínio público como `Host`. Duas
+> consequências, ambas já tratadas pelo `cloudrun.ps1`:
+> - **URL canônica:** não pode derivar do request (senão vaza a URL do Cloud Run). Por isso existe
+>   `SITE_URL=https://bncc.api.br`, injetada nos templates (canonical/OG/sitemap/robots) e no
+>   *server* do OpenAPI. É a peça que garante SEO correto.
+> - **`ALLOWED_HOSTS`:** lista o domínio custom + `.web.app`/`.firebaseapp.com` (origens de **CORS**
+>   dos navegadores) e a URL direta do `.run.app` (que é o `Host` real que o `TrustedHost` vê). O
+>   `EMAIL_VERIFICATION_BASE_URL` também aponta para `https://bncc.api.br`.
 
 **Passo a passo (uma vez):**
 
