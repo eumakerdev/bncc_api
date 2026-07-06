@@ -16,7 +16,13 @@ src = ["app", "scripts", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4"]
 # Erros comuns em código legado do protótipo (ajustados de forma incremental)
-ignore = ["B008"]  # FastAPI usa chamadas em defaults (Depends(...))
+ignore = [
+    "B008",  # FastAPI usa chamadas em defaults (Depends(...))
+    # Novas regras do pyupgrade surgidas no ruff 0.15 sobre código pré-existente;
+    # não adotadas para não alterar comportamento/contrato (adoção incremental):
+    "UP042",  # (str, Enum) -> StrEnum muda semântica de str()/serialização dos enums
+    "UP041",  # asyncio.TimeoutError -> TimeoutError (alias); manter forma explícita
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011"]
