@@ -73,10 +73,55 @@ free tier de 300 e-mails/dia, SMTP puro.
    detecta os secrets e mantém `smtp`). O remetente padrão é `no-reply@bncc.api.br`
    (ajuste com `-EmailFrom`); host/porta são `smtp-relay.brevo.com:587` (`-SmtpHost`/`-SmtpPort`).
 
+## Domínio custom — `bncc.api.br` (via Firebase Hosting)
+
+A região `southamerica-east1` **não** oferece o *domain mapping* nativo do Cloud Run, então o
+domínio é servido pelo **Firebase Hosting**, que faz proxy de `/**` para o serviço Cloud Run
+(SSL grátis e gerenciado, CDN, sem custo fixo de load balancer). A config já está versionada em
+`firebase.json` (rewrite `**` → serviço `bncc-api` em `southamerica-east1`) e `.firebaserc`
+(projeto `api-bncc`).
+
+> **Importante:** o Firebase Hosting **preserva o header `Host`** ao repassar para o Cloud Run.
+> Por isso o `cloudrun.ps1` (passo 8) já coloca `https://bncc.api.br`, `https://api-bncc.web.app` e
+> `https://api-bncc.firebaseapp.com` no `ALLOWED_HOSTS`, e aponta `EMAIL_VERIFICATION_BASE_URL`
+> para `https://bncc.api.br`. Rode o deploy do Cloud Run **antes** de mandar tráfego pelo domínio,
+> senão o `TrustedHostMiddleware` responde `400 Invalid host header`.
+
+**Passo a passo (uma vez):**
+
+1. **Ativar o Firebase no projeto GCP** `api-bncc` (o GCP e o Firebase compartilham o projeto):
+   ```powershell
+   npm install -g firebase-tools     # requer Node.js
+   firebase login
+   firebase projects:addfirebase api-bncc   # idempotente; ou pelo console do Firebase
+   ```
+   > Rewrites do Hosting para Cloud Run exigem o **plano Blaze** (pay-as-you-go). O projeto já
+   > tem faturamento ativo (Cloud SQL/Run), então é só confirmar o Blaze no Firebase — o Hosting
+   > em si tem free tier generoso (10 GB de storage, 360 MB/dia de transferência).
+2. **Publicar o Hosting** (na raiz do repo — usa `firebase.json` + `.firebaserc`):
+   ```powershell
+   firebase deploy --only hosting
+   ```
+   Isso já deixa o app no ar em `https://api-bncc.web.app` (proxy p/ Cloud Run) — teste antes de
+   mexer no DNS.
+3. **Conectar o domínio custom**: Console do Firebase → **Hosting → Add custom domain** →
+   `bncc.api.br`. O Firebase exibe:
+   - um registro **TXT** de verificação de propriedade;
+   - dois registros **A** (IPs do Firebase Hosting) a publicar depois da verificação.
+4. **DNS no Registro.br**: painel do domínio → **DNS → Editar Zona** → adicione o **TXT** de
+   verificação; após o Firebase validar, adicione os dois **A** records fornecidos (apex ou
+   subdomínio `bncc`, conforme o domínio). Propagação + emissão do SSL gerenciado pode levar até
+   ~24h.
+5. **Redeploy do Cloud Run** para fixar os hosts do domínio (o passo 8 já faz isso):
+   ```powershell
+   ./deploy/cloudrun.ps1 -SkipBuild   # -SkipBuild: só atualiza env, sem rebuild pesado
+   ```
+   Parâmetros `-CustomDomain` / `-FirebaseProject` permitem trocar o domínio/projeto.
+
+**E-mail (Brevo) no mesmo DNS**: os registros **SPF, DKIM e DMARC** do Brevo (seção acima) também
+são publicados na **mesma zona do Registro.br** — sem eles o e-mail de verificação cai em spam.
+
 ## Follow-ups conhecidos
-- **Domínio custom**: mapeie `bncc.api.br` no Cloud Run e ajuste
-  `ALLOWED_HOSTS`/`EMAIL_VERIFICATION_BASE_URL` para o domínio (hoje apontam para a URL do Cloud
-  Run gerada no fim do deploy).
 - **Nova versão de dados**: como os embeddings são assados na imagem, regenerar o snapshot exige
   novo build (novo `-Tag`) e redeploy.
 

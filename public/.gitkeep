@@ -1,0 +1,3 @@
+# Firebase Hosting exige um diretório público. Todo o tráfego (landing, portal,
+# /docs, /api/v1, /static) é servido pelo Cloud Run via o rewrite "**" em
+# firebase.json — este diretório fica vazio de propósito.

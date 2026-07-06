@@ -12,6 +12,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import HTMLResponse
 
+from app.core.config import settings
 from app.web.router import templates
 
 router = APIRouter()
@@ -35,7 +36,7 @@ async def landing(request: Request) -> Response:
 @router.get("/sitemap.xml", include_in_schema=False)
 async def sitemap(request: Request) -> Response:
     """Sitemap XML simples listando as rotas públicas indexáveis."""
-    base = str(request.base_url).rstrip("/")
+    base = (settings.SITE_URL or str(request.base_url)).rstrip("/")
     urls = "\n".join(f"  <url><loc>{base}{path}</loc></url>" for path in _PUBLIC_PATHS)
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -49,6 +50,6 @@ async def sitemap(request: Request) -> Response:
 @router.get("/robots.txt", include_in_schema=False)
 async def robots(request: Request) -> Response:
     """robots.txt permitindo indexação e apontando para o sitemap."""
-    base = str(request.base_url).rstrip("/")
+    base = (settings.SITE_URL or str(request.base_url)).rstrip("/")
     body = "User-agent: *\n" "Allow: /\n" f"Sitemap: {base}/sitemap.xml\n"
     return Response(content=body, media_type="text/plain")

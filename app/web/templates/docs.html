@@ -4,7 +4,6 @@
 {% block description %}Guia da BNCC API: início rápido, autenticação por API key, paginação, erros, limites de uso e versionamento. Referência interativa gerada a partir do contrato OpenAPI.{% endblock %}
 
 {% block head_extra %}
-{% set site_url = (request.base_url|string).rstrip('/') %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -76,7 +75,7 @@
         <a href="/portal/signup">portal self-service</a> após verificar seu e-mail.
       </p>
       <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
-  https://sua-instancia/api/v1/habilidades/EF05MA07</code></pre>
+  https://bncc.api.br/api/v1/habilidades/EF05MA07</code></pre>
       <p class="muted">Requisições sem uma API key válida recebem <code>401</code>.</p>
     </section>
 
@@ -85,14 +84,14 @@
 
       <h3>Consultar uma habilidade por código</h3>
       <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
-  https://sua-instancia/api/v1/habilidades/EM13MAT101</code></pre>
+  https://bncc.api.br/api/v1/habilidades/EM13MAT101</code></pre>
 
       <h3>Listar com filtros e paginação</h3>
       <pre><code>curl -H "Authorization: Bearer SEU_TOKEN_AQUI" \
-  "https://sua-instancia/api/v1/habilidades?etapa=ensino_medio&size=20"</code></pre>
+  "https://bncc.api.br/api/v1/habilidades?etapa=ensino_medio&size=20"</code></pre>
 
       <h3>Busca semântica com IA (não-oficial)</h3>
-      <pre><code>curl -X POST https://sua-instancia/api/v1/busca-semantica \
+      <pre><code>curl -X POST https://bncc.api.br/api/v1/busca-semantica \
   -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   -H "Content-Type: application/json" \
   -d '{"query": "quais habilidades de matemática do 5º ano tratam de frações?"}'</code></pre>

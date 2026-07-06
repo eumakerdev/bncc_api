@@ -9,11 +9,26 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
+from app.core.config import settings
+
 TEMPLATES_DIR = Path(__file__).parent / "templates"
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+def _seo_context(request: Request) -> dict[str, str]:
+    """Injeta `site_url`/`current_path` em todos os templates SSR.
+
+    `site_url` prefere `settings.SITE_URL` (determinístico, domínio primário) e só
+    cai para `request.base_url` quando não configurado (dev). Assim canonical/OG/
+    sitemap nunca vazam a URL interna do Cloud Run quando servido atrás do Firebase
+    Hosting (que entrega o `Host` do `.run.app` ao container)."""
+    base = (settings.SITE_URL or str(request.base_url)).rstrip("/")
+    return {"site_url": base, "current_path": request.url.path}
+
+
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR), context_processors=[_seo_context])
 
 web_router = APIRouter()
 

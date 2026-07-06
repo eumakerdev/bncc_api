@@ -87,6 +87,25 @@ def test_landing_page_keeps_ai_marked_non_official(client):
     assert "não-oficial" in body
 
 
+def test_site_url_overrides_canonical_and_sitemap(client, monkeypatch):
+    """Com SITE_URL configurado, canonical/OG/sitemap usam o domínio primário e não
+    a URL derivada do request (evita vazar a URL interna do Cloud Run atrás do proxy)."""
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "SITE_URL", "https://bncc.api.br")
+
+    body = client.get("/").text
+    assert 'rel="canonical" href="https://bncc.api.br/"' in body
+    assert 'property="og:url" content="https://bncc.api.br/"' in body
+
+    sitemap = client.get("/sitemap.xml").text
+    assert "<loc>https://bncc.api.br/</loc>" in sitemap
+    assert "run.app" not in sitemap
+
+    robots = client.get("/robots.txt").text
+    assert "Sitemap: https://bncc.api.br/sitemap.xml" in robots
+
+
 def test_sitemap_xml(client):
     response = client.get("/sitemap.xml")
     assert response.status_code == 200

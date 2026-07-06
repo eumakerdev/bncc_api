@@ -7,11 +7,11 @@
     1. Habilita APIs necessarias
     2. Artifact Registry (repositorio de imagens)
     3. Cloud SQL Postgres (instancia + banco + usuario)
-    4. Secrets (SECRET_KEY, DB_PASSWORD e, opcional, GOOGLE_API_KEY)
+    4. Secrets (SECRET_KEY, DB_PASSWORD; opcionais: GOOGLE_API_KEY, SMTP, OAuth)
     5. Build da imagem (gera embeddings dentro da imagem)
     6. Migracoes Alembic via Cloud Run Job
     7. Deploy do servico Cloud Run
-    8. Atualiza ALLOWED_HOSTS/e-mail com a URL final (fail-fast de producao)
+    8. Atualiza ALLOWED_HOSTS/e-mail com o dominio custom + URLs de servico
 
   NOTAS de PowerShell 5.1:
    - Texto ASCII-only: scripts UTF-8 sem BOM quebram o parser.
@@ -45,6 +45,12 @@ param(
   [string]$EmailFrom     = "no-reply@bncc.api.br", # remetente (dominio precisa de SPF/DKIM no Brevo)
   [string]$SmtpHost      = "smtp-relay.brevo.com",
   [int]$SmtpPort         = 587,
+  [string]$CustomDomain    = "bncc.api.br",  # dominio custom servido via Firebase Hosting -> Cloud Run
+  [string]$FirebaseProject = "api-bncc",     # projeto Firebase do Hosting (dominios .web.app/.firebaseapp.com)
+  [string]$GoogleOAuthClientId     = "",  # login social Google (opcional; id+secret juntos habilitam)
+  [string]$GoogleOAuthClientSecret = "",
+  [string]$GithubOAuthClientId     = "",  # login social GitHub (opcional; id+secret juntos habilitam)
+  [string]$GithubOAuthClientSecret = "",
   [switch]$SkipBuild             # reaproveita a imagem ja publicada (nao rebuilda)
 )
 
@@ -109,6 +115,21 @@ function Set-SecretValue([string]$Name, [string]$Value, [switch]$AddVersion) {
 }
 function Get-Secret([string]$Name) {
   return (gcloud secrets versions access latest --secret=$Name)
+}
+
+# Sincroniza um provedor OAuth: se id+secret foram passados, grava/atualiza ambos no
+# Secret Manager (id tambem via secret para o deploy ser idempotente em re-execucoes,
+# igual ao SMTP). Retorna $true se o provedor esta configurado (por param ou secret ja
+# existente). client_secret nunca vai em env plano (Principio V).
+function Sync-OAuthProvider([string]$Prefix, [string]$Id, [string]$Secret) {
+  $idName  = "${Prefix}_OAUTH_CLIENT_ID"
+  $secName = "${Prefix}_OAUTH_CLIENT_SECRET"
+  if ($Id -and $Secret) {
+    if (Exists { gcloud secrets describe $idName })  { Set-SecretValue $idName $Id -AddVersion }      else { Set-SecretValue $idName $Id }
+    if (Exists { gcloud secrets describe $secName }) { Set-SecretValue $secName $Secret -AddVersion } else { Set-SecretValue $secName $Secret }
+    return $true
+  }
+  return ((Exists { gcloud secrets describe $idName }) -and (Exists { gcloud secrets describe $secName }))
 }
 
 # Escreve um arquivo YAML de env vars para --env-vars-file. Evita o inferno de
@@ -186,12 +207,22 @@ if (-not $useSmtp) {
   Write-Host "AVISO: sem SMTP (Brevo) - EMAIL_BACKEND=console; link de verificacao so nos logs." -ForegroundColor Yellow
 }
 
+# OAuth social (Google/GitHub) - opcional; sem credenciais o login social fica
+# desabilitado (a app degrada). O redirect_uri usa OAUTH_REDIRECT_BASE_URL (dominio custom).
+$useGoogleOAuth = Sync-OAuthProvider "GOOGLE" $GoogleOAuthClientId $GoogleOAuthClientSecret
+$useGithubOAuth = Sync-OAuthProvider "GITHUB" $GithubOAuthClientId $GithubOAuthClientSecret
+if (-not ($useGoogleOAuth -or $useGithubOAuth)) {
+  Write-Host "AVISO: sem OAuth (Google/GitHub) - login social desabilitado (degrada)." -ForegroundColor Yellow
+}
+
 # Permite ao Cloud Run/Job ler os secrets
 $projNum = gcloud projects describe $Project --format='value(projectNumber)'
 $sa = "$projNum-compute@developer.gserviceaccount.com"
 $secretNames = @("SECRET_KEY", "DB_PASSWORD")
 if ($useGemini) { $secretNames += "GOOGLE_API_KEY" }
 if ($useSmtp) { $secretNames += @("SMTP_USERNAME", "SMTP_PASSWORD") }
+if ($useGoogleOAuth) { $secretNames += @("GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET") }
+if ($useGithubOAuth) { $secretNames += @("GITHUB_OAUTH_CLIENT_ID", "GITHUB_OAUTH_CLIENT_SECRET") }
 foreach ($s in $secretNames) {
   Exec { gcloud secrets add-iam-policy-binding $s `
     --member="serviceAccount:$sa" --role="roles/secretmanager.secretAccessor" }
@@ -217,6 +248,8 @@ $envBase = [ordered]@{
   CHROMADB_PATH  = "/app/data/chromadb"
   EMAIL_BACKEND  = "console"
   ALLOWED_HOSTS  = '["https://placeholder.invalid"]'
+  SITE_URL       = "https://$CustomDomain"   # URL canonica p/ SEO/e-mail (dominio primario)
+  OAUTH_REDIRECT_BASE_URL = "https://$CustomDomain"  # base do redirect_uri do callback OAuth
 }
 if ($useGemini) {
   $envBase["LLM_MODEL"] = $LlmModel
@@ -254,6 +287,9 @@ if ($useSmtp) {
   $envBase["SMTP_USE_TLS"]  = "true"
   $svcSecrets += ",SMTP_USERNAME=SMTP_USERNAME:latest,SMTP_PASSWORD=SMTP_PASSWORD:latest"  # pragma: allowlist secret
 }
+# OAuth: id+secret chegam por referencia de secret (so no servico; o job nao faz login).
+if ($useGoogleOAuth) { $svcSecrets += ",GOOGLE_OAUTH_CLIENT_ID=GOOGLE_OAUTH_CLIENT_ID:latest,GOOGLE_OAUTH_CLIENT_SECRET=GOOGLE_OAUTH_CLIENT_SECRET:latest" }  # pragma: allowlist secret
+if ($useGithubOAuth) { $svcSecrets += ",GITHUB_OAUTH_CLIENT_ID=GITHUB_OAUTH_CLIENT_ID:latest,GITHUB_OAUTH_CLIENT_SECRET=GITHUB_OAUTH_CLIENT_SECRET:latest" }  # pragma: allowlist secret
 Info "Deploy do servico Cloud Run ($Service)"
 $envFileSvc = Write-EnvFile $envBase
 Exec { gcloud run deploy $Service `
@@ -264,15 +300,27 @@ Exec { gcloud run deploy $Service `
   --set-secrets="$svcSecrets" }
 Remove-Item $envFileSvc -Force
 
-# 8) Fixa ALLOWED_HOSTS e e-mail com a URL real ---------------------------------
+# 8) Fixa ALLOWED_HOSTS/e-mail com o dominio custom + URLs de servico ------------
+# Atras do Firebase Hosting o container recebe o Host INTERNO do .run.app (o Firebase
+# nao repassa o dominio publico como Host) - por isso `SITE_URL` (passo acima) fixa a
+# URL canonica de forma deterministica, sem depender de header. Aqui ALLOWED_HOSTS
+# lista as origens publicas (CORS: dominio custom + .web.app/.firebaseapp.com) e a
+# URL direta do Cloud Run (TrustedHost do acesso direto/health).
 $Url = gcloud run services describe $Service --region=$Region --format="value(status.url)"
 Info "URL do servico: $Url"
-# Reutiliza $envBase (ja nao e mais necessario) com a URL real. Evitamos .Clone()
-# porque OrderedDictionary nao implementa ICloneable.
-$envBase["ALLOWED_HOSTS"] = '["' + $Url + '"]'
-$envBase["EMAIL_VERIFICATION_BASE_URL"] = "$Url/portal/verify-email"
+# Reutiliza $envBase (ja nao e mais necessario). Evitamos .Clone() porque
+# OrderedDictionary nao implementa ICloneable.
+$origins = @(
+  "https://$CustomDomain",
+  "https://$FirebaseProject.web.app",
+  "https://$FirebaseProject.firebaseapp.com",
+  $Url
+)
+$envBase["ALLOWED_HOSTS"] = '["' + ($origins -join '","') + '"]'
+$envBase["EMAIL_VERIFICATION_BASE_URL"] = "https://$CustomDomain/portal/verify-email"
 $envFileProd = Write-EnvFile $envBase
 Exec { gcloud run services update $Service --region=$Region --env-vars-file=$envFileProd }
 Remove-Item $envFileProd -Force
 
-Info "Concluido. Docs: $Url/docs  |  Landing: $Url  |  Portal: $Url/portal"
+Info "Concluido. Dominio: https://$CustomDomain (via Firebase Hosting)  |  URL Run: $Url"
+Info "Docs: https://$CustomDomain/docs  |  Landing: https://$CustomDomain/  |  Portal: https://$CustomDomain/portal"
