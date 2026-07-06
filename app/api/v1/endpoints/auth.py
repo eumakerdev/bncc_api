@@ -12,7 +12,13 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Response, status
 
 from app.core.config import settings
-from app.core.deps import CurrentAccount, SessionDep
+from app.core.deps import (
+    CurrentAccount,
+    LoginRateLimited,
+    SessionDep,
+    SignupRateLimited,
+    VerifyRateLimited,
+)
 from app.models.bncc import ErrorResponse
 from app.models.platform import (
     AccountMe,
@@ -53,6 +59,7 @@ _EXAMPLE_PW = "SenhaForte123"  # pragma: allowlist secret
             "model": ErrorResponse,
             "description": "Não foi possível concluir o cadastro (e-mail já em uso).",
         },
+        429: {"model": ErrorResponse, "description": "Muitas tentativas de cadastro deste IP."},
     },
 )
 async def signup(
@@ -68,6 +75,7 @@ async def signup(
         ),
     ],
     session: SessionDep,
+    _rate_limit: SignupRateLimited,
 ) -> SignupResponse:
     account, _token = await account_service.signup(session, payload.email, payload.password)
     return SignupResponse(
@@ -93,6 +101,7 @@ async def signup(
             "model": ErrorResponse,
             "description": "Token de verificação expirado ou já utilizado.",
         },
+        429: {"model": ErrorResponse, "description": "Muitas tentativas deste IP."},
     },
 )
 async def verify_email(
@@ -108,6 +117,7 @@ async def verify_email(
         ),
     ],
     session: SessionDep,
+    _rate_limit: VerifyRateLimited,
 ) -> VerifyEmailResponse:
     account = await account_service.verify_email(session, payload.token)
     return VerifyEmailResponse(email_verified=account.email_verified)
@@ -129,6 +139,7 @@ async def verify_email(
             "model": ErrorResponse,
             "description": "Credenciais inválidas ou e-mail não verificado.",
         },
+        429: {"model": ErrorResponse, "description": "Muitas tentativas de login deste IP."},
     },
 )
 async def login(
@@ -145,6 +156,7 @@ async def login(
     ],
     session: SessionDep,
     response: Response,
+    _rate_limit: LoginRateLimited,
 ) -> LoginResponse:
     token = await account_service.login(session, payload.email, payload.password)
     response.set_cookie(

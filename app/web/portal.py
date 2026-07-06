@@ -11,10 +11,11 @@ na importação (ver app/web/router.py).
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Form, Request, status
+from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
+from app.core.deps import rate_limit_login_ip, rate_limit_signup_ip
 from app.core.security import decode_access_token
 from app.db.base import async_session_factory
 from app.db.tables import DeveloperAccount
@@ -24,6 +25,9 @@ from app.web.router import templates
 router = APIRouter()
 
 _SESSION_COOKIE = "session"
+# Cookie de "flash" de uso único para exibir a API key recém-criada sem
+# colocá-la na URL (histórico do navegador, logs de acesso, header Referer).
+_FLASH_NEW_KEY_COOKIE = "flash_new_key"
 
 
 def _set_session(response: RedirectResponse, token: str) -> None:
@@ -50,21 +54,24 @@ async def _account_from_request(request: Request) -> DeveloperAccount | None:
 # --------------------------------------------------------------------------- #
 @router.get("/login")
 async def login_page(request: Request, error: str | None = None):
-    return templates.TemplateResponse("portal/login.html", {"request": request, "error": error})
+    return templates.TemplateResponse(request, "portal/login.html", {"error": error})
 
 
 @router.post("/login")
-async def login_submit(request: Request, email: str = Form(...), password: str = Form(...)):
+async def login_submit(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    _rate_limit: None = Depends(rate_limit_login_ip),
+):
     async with async_session_factory() as session:
         try:
             token = await account_service.login(session, email, password)
         except Exception:
             return templates.TemplateResponse(
+                request,
                 "portal/login.html",
-                {
-                    "request": request,
-                    "error": "Credenciais inválidas ou e-mail não verificado.",
-                },
+                {"error": "Credenciais inválidas ou e-mail não verificado."},
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
     response = RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
@@ -77,29 +84,30 @@ async def login_submit(request: Request, email: str = Form(...), password: str =
 # --------------------------------------------------------------------------- #
 @router.get("/signup")
 async def signup_page(request: Request, error: str | None = None):
-    return templates.TemplateResponse("portal/signup.html", {"request": request, "error": error})
+    return templates.TemplateResponse(request, "portal/signup.html", {"error": error})
 
 
 @router.post("/signup")
-async def signup_submit(request: Request, email: str = Form(...), password: str = Form(...)):
+async def signup_submit(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    _rate_limit: None = Depends(rate_limit_signup_ip),
+):
     async with async_session_factory() as session:
         try:
             await account_service.signup(session, email, password)
         except Exception:
             return templates.TemplateResponse(
+                request,
                 "portal/signup.html",
-                {
-                    "request": request,
-                    "error": "Não foi possível concluir o cadastro.",
-                },
+                {"error": "Não foi possível concluir o cadastro."},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
     return templates.TemplateResponse(
+        request,
         "portal/login.html",
-        {
-            "request": request,
-            "info": "Cadastro criado. Verifique seu e-mail para liberar as API keys.",
-        },
+        {"info": "Cadastro criado. Verifique seu e-mail para liberar as API keys."},
     )
 
 
@@ -110,8 +118,9 @@ async def signup_submit(request: Request, email: str = Form(...), password: str 
 async def verify_email_page(request: Request, token: str | None = None):
     if not token:
         return templates.TemplateResponse(
+            request,
             "portal/login.html",
-            {"request": request, "error": "Token de verificação ausente."},
+            {"error": "Token de verificação ausente."},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     async with async_session_factory() as session:
@@ -119,16 +128,15 @@ async def verify_email_page(request: Request, token: str | None = None):
             await account_service.verify_email(session, token)
         except Exception:
             return templates.TemplateResponse(
+                request,
                 "portal/login.html",
-                {
-                    "request": request,
-                    "error": "Token de verificação inválido, expirado ou já usado.",
-                },
+                {"error": "Token de verificação inválido, expirado ou já usado."},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
     return templates.TemplateResponse(
+        request,
         "portal/login.html",
-        {"request": request, "info": "E-mail verificado. Faça login para continuar."},
+        {"info": "E-mail verificado. Faça login para continuar."},
     )
 
 
@@ -145,16 +153,20 @@ async def dashboard(request: Request):
         keys = await apikey_service.list_keys(session, account.id)
         usage = await usage_service.account_usage(session, account.id)
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
+        request,
         "portal/dashboard.html",
         {
-            "request": request,
             "account": account,
             "keys": keys,
             "usage": usage,
-            "new_key": request.query_params.get("new_key"),
+            "new_key": request.cookies.get(_FLASH_NEW_KEY_COOKIE),
         },
     )
+    # Uso único: some da tela ao próximo carregamento, mesmo com F5/voltar.
+    if _FLASH_NEW_KEY_COOKIE in request.cookies:
+        response.delete_cookie(_FLASH_NEW_KEY_COOKIE)
+    return response
 
 
 @router.post("/keys")
@@ -166,10 +178,17 @@ async def dashboard_create_key(request: Request, name: str = Form(...)):
         return RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     async with async_session_factory() as session:
         _key, full_key = await apikey_service.create(session, account, name)
-    return RedirectResponse(
-        url=f"/portal/dashboard?new_key={full_key}",
-        status_code=status.HTTP_303_SEE_OTHER,
+    # A key completa NUNCA vai na URL (histórico do navegador, logs de acesso,
+    # header Referer) — trafega só via cookie httponly de uso único.
+    response = RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(
+        _FLASH_NEW_KEY_COOKIE,
+        full_key,
+        httponly=True,
+        samesite="lax",
+        max_age=30,
     )
+    return response
 
 
 @router.post("/keys/{key_id}/revoke")

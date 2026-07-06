@@ -15,6 +15,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.datastructures import MutableHeaders
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -31,6 +34,14 @@ logger = logging.getLogger("bncc")
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Iniciando BNCC API (env=%s)...", settings.ENVIRONMENT)
+
+    if settings.is_production and settings.EMAIL_BACKEND.strip().lower() == "console":
+        logger.warning(
+            "EMAIL_BACKEND=console em produção: tokens de verificação de e-mail vão "
+            "apenas para os logs, não para a caixa de entrada do usuário — a "
+            "verificação de e-mail não prova posse real do e-mail enquanto isso não "
+            "for corrigido (SMTP/Brevo pendente)."
+        )
 
     # Banco da plataforma: em dev criamos as tabelas; em prod, Alembic é a verdade.
     try:
@@ -103,6 +114,10 @@ async def redoc_html():  # pragma: no cover - HTML estático do FastAPI
 
 register_error_handlers(app)
 
+# Ordem importa: o Starlette aplica o middleware registrado por último como o mais
+# externo. Registramos CORS e TrustedHost primeiro (mais internos) e os headers de
+# segurança por último, para que eles cheguem em toda resposta — inclusive as
+# rejeitadas por Host inválido ou CORS.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_HOSTS,
@@ -110,6 +125,39 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
+
+
+class SecurityHeadersMiddleware:
+    """Middleware ASGI puro (`@app.middleware("http")`/`BaseHTTPMiddleware` foram
+    removidos no Starlette 1.0) que injeta headers de segurança em toda resposta HTTP."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_wrapper(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                headers["X-Content-Type-Options"] = "nosniff"
+                headers["X-Frame-Options"] = "DENY"
+                headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+                # HSTS só faz sentido quando a conexão real é HTTPS (produção atrás do LB do
+                # Cloud Run).
+                if settings.is_production:
+                    headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(web_router)

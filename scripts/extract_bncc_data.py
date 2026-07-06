@@ -117,10 +117,24 @@ EI_CAMPO = {
 }
 
 # Sentinelas de cabeçalho/rodapé que podem contaminar a última habilidade da
-# página (a descrição oficial nunca contém estas expressões em maiúsculas).
+# página (a descrição oficial nunca contém estas expressões em CAIXA ALTA). Além
+# dos rótulos de coluna, inclui os cabeçalhos correntes de componente/etapa
+# ("CIÊNCIAS HUMANAS – GEOGRAFIA ENSINO FUNDAMENTAL", "LINGUAGENS E SUAS
+# TECNOLOGIAS – LÍNGUA PORTUGUESA ENSINO MÉDIO") e marcadores do prefácio/EI que
+# vazavam no fim/meio da descrição. Case-sensitive de propósito: menções em texto
+# corrente ("Ensino Fundamental") são caixa Título e não devem cortar.
 NOISE_SENTINELS = re.compile(
-    r"BASE NACIONAL|COMUM CURRICULAR|UNIDADES TEM|CAMPOS DE ATUA|"
-    r"OBJETOS DE CONHE|\bHABILIDADES\b|COMPET[ÊE]NCIAS ESPEC|PR[ÁA]TICAS DE LINGUAGEM"
+    r"BASE NACIONAL|COMUM CURRICULAR|UNIDADES TEM|CAMPOS? DE ATUA|"
+    r"OBJETOS DE CONHE|\bHABILIDADES\b|COMPET[ÊE]NCIAS ESPEC|PR[ÁA]TICAS DE LINGUAGEM|"
+    r"ENSINO FUNDAMENTAL|ENSINO M[ÉE]DIO|CI[ÊE]NCIAS HUMANAS|CI[ÊE]NCIAS DA NATUREZA|"
+    r"LINGUAGENS E SUAS|OBJETIVOS DE APRENDIZAGEM|EDUCA[ÇC][ÃA]O INFANTIL|"
+    r"DE EXPERI[ÊE]NCIAS|Compet[êe]ncias Habilidades|[1-9]\s*[ºo°]\s+ANO\b|"
+    # Cabeçalho corrente "ÁREA – COMPONENTE" do Ensino Fundamental e o nome do
+    # componente em CAIXA ALTA sozinho no fim (ex.: "...variadas. MATEMÁTICA").
+    r"LINGUAGENS\s*[–-]|CI[ÊE]NCIAS\s*[–-]|ENSINO RELIGIOSO|"
+    r"\bMATEM[ÁA]TICA\b|\bGEOGRAFIA\b|\bHIST[ÓO]RIA\b|"
+    # Bleed do bloco de prática/cabeçalho da Língua Portuguesa do Ensino Médio.
+    r"lingu[íi]stica/sem[íi][óo]tica Habilidades|Habilidades\s+espec[íi]ficas"
 )
 
 
@@ -145,11 +159,20 @@ def anos_from_ef(digits: str) -> list[str]:
     return [str(a), str(b)]
 
 
+_EMBEDDED_CODE = re.compile(r"\((?:EF|EM|EI)\d{2}[A-Z]{2,3}\d{2,3}\)")
+
+
 def clean_description(raw: str) -> str:
     """Corta ruído de cabeçalho, remove nº de rodapé residual e normaliza espaços."""
     m = NOISE_SENTINELS.search(raw)
     if m and m.start() > 30:
         raw = raw[: m.start()]
+    # Um código de habilidade embutido marca o início da PRÓXIMA habilidade (fusão);
+    # corta ali (o código da própria já foi removido pelo split). Ex.: Computação
+    # EF05CO10 absorvia "(EF05CO011) Identificar...".
+    cm = _EMBEDDED_CODE.search(raw)
+    if cm and cm.start() > 30:
+        raw = raw[: cm.start()]
     raw = re.sub(r"\s+\d{1,4}\s*$", "", raw)  # nº de página ao final
     raw = re.sub(r"\s+", " ", raw).strip()
     return raw
@@ -158,8 +181,127 @@ def clean_description(raw: str) -> str:
 # --------------------------------------------------------------------------- #
 # Isolamento da coluna HABILIDADES (evita contaminação — fidelidade)
 # --------------------------------------------------------------------------- #
+def _code_clusters(values: list[float], gap: float = 120.0) -> list[tuple[float, int]]:
+    """Agrupa x0 de códigos em colunas → [(borda_esquerda, nº de códigos), ...]."""
+    vals = sorted(values)
+    groups: list[list[float]] = [[vals[0]]]
+    for v in vals[1:]:
+        if v - groups[-1][-1] > gap:
+            groups.append([v])
+        else:
+            groups[-1].append(v)
+    return [(min(g), len(g)) for g in groups]
+
+
+def _ends_sentence(t: str) -> bool:
+    return t.rstrip().endswith((".", ")", "!", "?", ".”", "”", '."'))
+
+
+_SENT_END = re.compile(r"[.!?][)”\"]?(?=\s)")
+
+
+def _trim_to_sentence(t: str) -> str:
+    """Corta a frase incompleta ao final (bleed da célula seguinte)."""
+    if _ends_sentence(t):
+        return t
+    ms = list(_SENT_END.finditer(t))
+    return t[: ms[-1].end()].rstrip() if ms else t
+
+
+def recover_descriptions(pdf_path: Path, habilidades: list[dict[str, Any]]) -> int:
+    """Recupera, por isolamento de CÉLULA, descrições sinalizadas como ruins.
+
+    Casos-limite (fronteira de seção, mis-split) que o fluxo por coluna não resolve:
+    reextrai a habilidade a partir da sua célula exata (coluna pelo cluster de
+    código mais próximo; linhas entre este código e o próximo da mesma coluna).
+    Entre páginas espelhadas escolhe o candidato mais CURTO que termina em
+    pontuação de frase (o mais longo costuma invadir a célula seguinte). Só
+    substitui quando o recuperado é claramente melhor — nunca degrada os bons.
+    """
+
+    def _is_bad(d: str) -> bool:
+        return (
+            len(d) < 40
+            or len(d) > 1000
+            or bool(NOISE_SENTINELS.search(d[40:]))
+            or bool(re.search(r"\((?:EF|EM|EI)\d{2}[A-Z]{2,3}\d{2,3}\)", d))  # fusão de códigos
+            or not _ends_sentence(d)  # sem pontuação final → provável truncamento
+        )
+
+    bad = {h["codigo"]: h for h in habilidades if _is_bad(h["descricao"])}
+    if not bad:
+        return 0
+
+    cands: dict[str, list[str]] = {c: [] for c in bad}
+    with pdfplumber.open(str(pdf_path)) as pdf:
+        for page in pdf.pages:
+            try:
+                words = page.extract_words(use_text_flow=False, keep_blank_chars=False)
+            except Exception:  # pragma: no cover
+                continue
+            code_ws = [
+                (m.group(1), w) for w in words if (m := RE_CODE_TOKEN.match(w["text"])) is not None
+            ]
+            present = [c for c, _ in code_ws if c in bad]
+            if not present:
+                continue
+            lefts = _code_clusters([w["x0"] for _, w in code_ws], gap=100.0)
+            col_lefts = [left for left, _ in lefts]
+            for codigo in present:
+                cw = next(w for c, w in code_ws if c == codigo)
+                my = max(cl for cl in col_lefts if cl <= cw["x0"] + 6)
+                mi = col_lefts.index(my)
+                col_right = col_lefts[mi + 1] if mi + 1 < len(col_lefts) else my + 10000.0
+                mt = cw["top"]
+                col_tops = [w["top"] for _, w in code_ws if my - 6 <= w["x0"] < col_right]
+                next_top = min((t for t in col_tops if t > mt + 2), default=1e9)
+                cell = [
+                    w
+                    for w in words
+                    if my - 6 <= w["x0"] < col_right
+                    and mt - 2 <= w["top"] < next_top
+                    and not RE_CODE_TOKEN.match(w["text"])
+                    and (w["top"] > mt + 3 or w["x0"] > cw["x0"])
+                ]
+                cell.sort(key=lambda w: (round(w["top"]), w["x0"]))
+                cands[codigo].append(clean_description(" ".join(w["text"] for w in cell)))
+
+    fixed = 0
+    for codigo, h in bad.items():
+        best = ""
+        for t in cands[codigo]:
+            # Habilidade oficial SEMPRE começa por verbo capitalizado; um candidato
+            # que começa minúsculo é fragmento de apêndice/exemplo — descartar.
+            if not t[:1].isupper():
+                continue
+            tt = _trim_to_sentence(t)  # remove o bleed da célula seguinte
+            if (
+                _ends_sentence(tt)
+                and 40 <= len(tt) <= 1000
+                and not NOISE_SENTINELS.search(tt[40:])
+                and len(tt) > len(best)
+            ):
+                best = tt
+        # Só substitui se recuperou algo válido E diferente da descrição atual ruim.
+        if best and best != h["descricao"]:
+            h["descricao"] = best
+            fixed += 1
+    return fixed
+
+
 def right_column_text(pdf_path: Path) -> str:
-    """Concatena, em ordem de leitura, apenas a coluna direita (HABILIDADES)."""
+    """Concatena, em ordem de leitura, a(s) coluna(s) de HABILIDADES.
+
+    Em alguns spreads a coluna HABILIDADES aparece em DUAS sub-colunas lado a lado
+    (duas habilidades em paralelo, p.ex. Língua Portuguesa dos anos iniciais). Um
+    sort global por (top, x0) intercalaria as sub-colunas e truncaria a descrição
+    no código vizinho. Por isso: só tratamos como sub-colunas quando há DUAS
+    "colunas" de códigos, cada uma com ≥2 códigos (um código solto e distante é
+    ruído, não uma sub-coluna). Fora esse caso, lemos uma única coluna sem limite
+    de largura à direita — a contaminação de cabeçalho é removida por
+    `clean_description` (NOISE_SENTINELS), evitando o truncamento de descrições
+    largas de coluna única.
+    """
     parts: list[str] = []
     with pdfplumber.open(str(pdf_path)) as pdf:
         for page in pdf.pages:
@@ -173,10 +315,18 @@ def right_column_text(pdf_path: Path) -> str:
             code_x0 = [w["x0"] for w in words if RE_CODE_TOKEN.match(w["text"])]
             if not code_x0:
                 continue
-            col_x = min(code_x0) - 3.0
-            right = [w for w in words if w["x0"] >= col_x]
-            right.sort(key=lambda w: (round(w["top"]), w["x0"]))
-            parts.append(" ".join(w["text"] for w in right))
+            clusters = _code_clusters(code_x0)
+            sub_cols = [left for left, count in clusters if count >= 2]
+            if len(sub_cols) < 2:
+                # Coluna única: da borda esquerda do código mais à esquerda em diante.
+                sub_cols = [min(left for left, _ in clusters)]
+            for i, left in enumerate(sub_cols):
+                col_left = left - 3.0
+                # Direita = próxima sub-coluna; a última/única é ilimitada.
+                col_right = (sub_cols[i + 1] - 3.0) if i + 1 < len(sub_cols) else float("inf")
+                col = [w for w in words if col_left <= w["x0"] < col_right]
+                col.sort(key=lambda w: (round(w["top"]), w["x0"]))
+                parts.append(" ".join(w["text"] for w in col))
     return " ".join(parts)
 
 
@@ -296,6 +446,37 @@ _REL_NOISE = re.compile(
     r"COMPET[ÊE]NCIAS|PR[ÁA]TICAS DE LINGUAGEM|CAMPOS? DE ATUA|^EIXOS?$|"
     r"ENSINO\s+FUNDAMENTAL|ANO$|^\d+.?$"
 )
+# Faixas/banners que atravessam a coluna esquerda mas NÃO são unidade temática:
+# campos de atuação (Língua Portuguesa), eixos (Língua Inglesa), o rótulo "UNIDADE
+# TEMÁTICA" repetido e títulos de seção. O nome real da unidade temática é sempre
+# em caixa Título (ex.: "Números", "Interação discursiva"); banners e cabeçalhos de
+# componente vêm em CAIXA ALTA — usamos isso como sinal robusto.
+_REL_BANNER = re.compile(
+    r"^\s*(CAMPO\b|TODOS OS CAMPOS|EIXO\b|UNIDADE[S]?\s+TEM[ÁA]TICA|"
+    r"PR[ÁA]TICAS\s+DE\s+LINGUAGEM|OBJETOS?\s+DE\s+CONHE)",
+    re.IGNORECASE,
+)
+_REL_SECTION = re.compile(r"\d\.\d")
+# Nome do EIXO (Língua Inglesa): "EIXO ORALIDADE – ..." → "ORALIDADE". O eixo é o
+# organizador que o usuário pede como unidade temática da Língua Inglesa; os 5 são
+# ORALIDADE, LEITURA, ESCRITA, CONHECIMENTOS LINGUÍSTICOS, DIMENSÃO INTERCULTURAL.
+_EIXO_RE = re.compile(r"^EIXO\s+([A-ZÀ-Ú][A-ZÀ-Ú\s]+?)(?=\s+[–-]|\s+[a-zà-ú]|$)")
+
+
+def _is_rel_noise(s: str) -> bool:
+    """True se `s` for banner/cabeçalho/rótulo — não um nome de unidade/objeto."""
+    if not s:
+        return True
+    if _REL_NOISE.search(s) or _REL_BANNER.match(s) or _REL_SECTION.search(s):
+        return True
+    if "DE ATUA" in s.upper():
+        return True
+    letters = [c for c in s if c.isalpha()]
+    # Cabeçalho de componente / banner em CAIXA ALTA (ex.: "LÍNGUA PORTUGUESA – 3º",
+    # "EIXO ORALIDADE", "CAMPO DA VIDA COTIDIANA"). Unidades reais são caixa Título.
+    if len(letters) >= 6 and sum(c.isupper() for c in letters) / len(letters) > 0.7:
+        return True
+    return False
 
 
 def _clean_rel(s: str) -> str:
@@ -341,6 +522,12 @@ def ef_relations(pdf_path: Path) -> dict[str, tuple[str, str]]:
     """
     assoc: dict[str, tuple[str, str]] = {}
     carry: tuple[float, float, float] | None = None
+    # cur_ut/cur_eixo são "carregados" ENTRE páginas (a coluna da esquerda pode ter o
+    # rótulo em uma página e as habilidades na seguinte). Só zeramos quando o
+    # componente muda, para não vazar a unidade temática de um componente no outro.
+    cur_ut = ""
+    cur_eixo = ""
+    prev_comp: str | None = None
     with pdfplumber.open(str(pdf_path)) as pdf:
         for page in pdf.pages:
             try:
@@ -348,7 +535,8 @@ def ef_relations(pdf_path: Path) -> dict[str, tuple[str, str]]:
             except Exception as e:  # pragma: no cover - página problemática
                 logger.warning("Falha ao ler página de relações EF: %s", e)
                 continue
-            if not any(RE_CODE_EF.match(w["text"]) for w in words):
+            page_codes = [w for w in words if RE_CODE_EF.match(w["text"])]
+            if not page_codes:
                 continue
             bounds = _ef_header_bounds(words)
             if bounds:
@@ -356,7 +544,11 @@ def ef_relations(pdf_path: Path) -> dict[str, tuple[str, str]]:
             if carry is None:
                 continue
             ut_x, obj_x, hab_x = carry
-            cur_ut = ""
+            page_comp = RE_CODE_EF.match(page_codes[0]["text"]).group(1)[4:6]  # type: ignore[union-attr]
+            if page_comp != prev_comp:
+                cur_ut = ""
+                cur_eixo = ""
+            prev_comp = page_comp
             ut_parts: list[str] = []
             obj_parts: list[str] = []
             ut_emitted = False
@@ -371,13 +563,25 @@ def ef_relations(pdf_path: Path) -> dict[str, tuple[str, str]]:
                     for w in ws
                     if RE_CODE_EF.match(w["text"]) and w["x0"] >= hab_x - 6
                 ]
-                if ut and not _REL_NOISE.search(ut):
+                eixo_m = _EIXO_RE.match(ut)
+                if eixo_m:
+                    # Banner de EIXO (Língua Inglesa): guarda o nome, não é unidade.
+                    cur_eixo = eixo_m.group(1).strip().title()
+                elif ut.startswith("(") and cur_ut and not _is_rel_noise(ut):
+                    # Qualificador entre parênteses (ex.: prática "Análise
+                    # linguística/semiótica (Alfabetização)"/"(Ortografização)",
+                    # "Leitura/escuta (compartilhada e autônoma)"): anexa ao nome
+                    # base, substituindo um qualificador anterior se houver.
+                    base = re.sub(r"\s*\([^)]*\)\s*$", "", cur_ut).strip()
+                    cur_ut = _clean_rel(f"{base} {ut}")
+                    ut_parts = [cur_ut]
+                elif ut and not _is_rel_noise(ut):
                     if ut_emitted:
                         ut_parts = []
                         ut_emitted = False
                     ut_parts.append(ut)
                     cur_ut = _clean_rel(" ".join(ut_parts))
-                if obj and not _REL_NOISE.search(obj):
+                if obj and not _is_rel_noise(obj):
                     if obj_emitted:
                         obj_parts = []
                         obj_emitted = False
@@ -385,7 +589,11 @@ def ef_relations(pdf_path: Path) -> dict[str, tuple[str, str]]:
                 if codes:
                     cur_obj = _clean_rel(" ".join(obj_parts))
                     for c in codes:
-                        assoc.setdefault(c, (cur_ut, cur_obj))
+                        # Língua Inglesa: o organizador pedido é o EIXO; demais
+                        # componentes usam a coluna da esquerda (unidade temática ou,
+                        # em Língua Portuguesa, a prática de linguagem).
+                        ut_val = cur_eixo if c[4:6] == "LI" else cur_ut
+                        assoc.setdefault(c, (ut_val, cur_obj))
                     ut_emitted = True
                     obj_emitted = True
     return assoc
@@ -690,6 +898,9 @@ def build_snapshot() -> dict[str, Any]:
                 n_ut += 1
             if obj:
                 h["objetos_conhecimento"] = [obj]
+        n_rec = recover_descriptions(PDF_EF, ef)
+        if n_rec:
+            logger.info("  -> %d descrições EF recuperadas por célula", n_rec)
         habilidades.extend(ef)
         # Catálogo de competências específicas do EF (sem vínculo por habilidade).
         ce_ef = extract_competencias_especificas(PDF_EF, "ensino_fundamental")
@@ -715,6 +926,9 @@ def build_snapshot() -> dict[str, Any]:
             c = h["codigo"]
             if len(c) == 10:
                 h["competencias_especificas"] = [f"EM{c[4:7]}{int(c[7]):02d}"]
+        n_rec = recover_descriptions(PDF_EM, em)
+        if n_rec:
+            logger.info("  -> %d descrições EM recuperadas por célula", n_rec)
         habilidades.extend(em)
         ce_em = extract_competencias_especificas(PDF_EM, "ensino_medio")
         competencias_especificas.extend(ce_em)
@@ -733,6 +947,9 @@ def build_snapshot() -> dict[str, Any]:
 
         logger.info("Extraindo Complemento de Computação de %s ...", PDF_COMPUTACAO.name)
         comp = extract_computacao(PDF_COMPUTACAO)
+        n_rec = recover_descriptions(PDF_COMPUTACAO, comp)
+        if n_rec:
+            logger.info("  -> %d descrições de Computação recuperadas por célula", n_rec)
         habilidades.extend(comp)
         checksums["computacao"] = sha256_of(PDF_COMPUTACAO)
         logger.info("  -> %d habilidades de Computação", len(comp))
@@ -765,6 +982,14 @@ def build_snapshot() -> dict[str, Any]:
 
     # Deduplicação global final por código.
     habilidades = _dedup_longest(habilidades)
+
+    # Rede de segurança (qualquer fonte): um código de habilidade embutido marca o
+    # início da próxima (fusão) — corta ali. Cobre também a Computação, cuja
+    # extração é feita em módulo próprio.
+    for h in habilidades:
+        cm = _EMBEDDED_CODE.search(h["descricao"])
+        if cm and cm.start() > 30:
+            h["descricao"] = h["descricao"][: cm.start()].rstrip()
 
     # ------------------------------------------------------------------ #
     # Coleções navegáveis de topo, derivadas das relações das habilidades.

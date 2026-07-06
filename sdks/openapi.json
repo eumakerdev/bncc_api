@@ -1,0 +1,2732 @@
+{
+  "components": {
+    "schemas": {
+      "AccountMe": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "email_verified": {
+            "title": "Email Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "account_id",
+          "email",
+          "email_verified"
+        ],
+        "title": "AccountMe",
+        "type": "object"
+      },
+      "AccountUsageResponse": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "ai_used_today": {
+            "title": "Ai Used Today",
+            "type": "integer"
+          },
+          "deterministic_used_today": {
+            "title": "Deterministic Used Today",
+            "type": "integer"
+          },
+          "total_keys": {
+            "title": "Total Keys",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "account_id",
+          "total_keys",
+          "deterministic_used_today",
+          "ai_used_today"
+        ],
+        "title": "AccountUsageResponse",
+        "type": "object"
+      },
+      "ApiKeyCreatedResponse": {
+        "description": "Segredo `key` exibido UMA única vez, na criação.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "description": "Segredo completo — exibido apenas nesta resposta",
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "key"
+        ],
+        "title": "ApiKeyCreatedResponse",
+        "type": "object"
+      },
+      "ApiKeyResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "status",
+          "created_at"
+        ],
+        "title": "ApiKeyResponse",
+        "type": "object"
+      },
+      "AreaConhecimento": {
+        "description": "Áreas de conhecimento da BNCC.",
+        "enum": [
+          "linguagens",
+          "matematica",
+          "ciencias_natureza",
+          "ciencias_humanas",
+          "ensino_religioso",
+          "computacao"
+        ],
+        "title": "AreaConhecimento",
+        "type": "string"
+      },
+      "Body_dashboard_create_key_portal_keys_post": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "Body_dashboard_create_key_portal_keys_post",
+        "type": "object"
+      },
+      "Body_login_submit_portal_login_post": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Body_login_submit_portal_login_post",
+        "type": "object"
+      },
+      "Body_signup_submit_portal_signup_post": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Body_signup_submit_portal_signup_post",
+        "type": "object"
+      },
+      "BucketUsage": {
+        "properties": {
+          "limit_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Per Day"
+          },
+          "limit_per_minute": {
+            "title": "Limit Per Minute",
+            "type": "integer"
+          },
+          "used_this_minute": {
+            "default": 0,
+            "title": "Used This Minute",
+            "type": "integer"
+          },
+          "used_today": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Today"
+          }
+        },
+        "required": [
+          "limit_per_minute"
+        ],
+        "title": "BucketUsage",
+        "type": "object"
+      },
+      "BuscaSemanticaRequest": {
+        "description": "Corpo da requisicao de busca semantica.",
+        "example": {
+          "incluir_contexto": true,
+          "max_resultados": 5,
+          "query": "Qual habilidade de matematica do 5o ano aborda fracoes?"
+        },
+        "properties": {
+          "incluir_contexto": {
+            "default": true,
+            "description": "Se verdadeiro, enriquece a resposta com o contexto das fontes.",
+            "title": "Incluir Contexto",
+            "type": "boolean"
+          },
+          "max_resultados": {
+            "default": 5,
+            "description": "Numero maximo de fontes a considerar (1-20).",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Max Resultados",
+            "type": "integer"
+          },
+          "query": {
+            "description": "Pergunta ou busca em linguagem natural (3-500 caracteres).",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "BuscaSemanticaRequest",
+        "type": "object"
+      },
+      "BuscaSemanticaResponse": {
+        "description": "Resposta da busca semantica - conteudo gerado, marcado como nao-oficial.",
+        "example": {
+          "aviso": "Conteudo gerado por IA a partir de fontes oficiais da BNCC. A redacao da resposta NAO e um documento oficial - consulte os codigos citados em `fontes` para o texto oficial.",
+          "documentos_consultados": 5,
+          "fontes": [
+            {
+              "codigo": "EF05MA03",
+              "relevancia": 0.91,
+              "tipo": "habilidade",
+              "titulo": "Habilidade EF05MA03 - Matematica"
+            }
+          ],
+          "oficial": false,
+          "resposta": "As habilidades relacionadas a fracoes no 5o ano incluem a EF05MA03... (conteudo nao-oficial gerado por IA)",
+          "tempo_processamento": 1.23
+        },
+        "properties": {
+          "aviso": {
+            "default": "Conteudo gerado por IA a partir de fontes oficiais da BNCC. A redacao da resposta NAO e um documento oficial - consulte os codigos citados em `fontes` para o texto oficial.",
+            "description": "Aviso de nao-oficialidade do conteudo gerado.",
+            "title": "Aviso",
+            "type": "string"
+          },
+          "documentos_consultados": {
+            "default": 0,
+            "description": "Total de documentos considerados na recuperacao.",
+            "title": "Documentos Consultados",
+            "type": "integer"
+          },
+          "fontes": {
+            "description": "Documentos oficiais rastreaveis usados/citados.",
+            "items": {
+              "$ref": "#/components/schemas/DocumentoFonte"
+            },
+            "title": "Fontes",
+            "type": "array"
+          },
+          "oficial": {
+            "default": false,
+            "description": "Sempre False: o texto gerado NAO e dado oficial (FR-016).",
+            "title": "Oficial",
+            "type": "boolean"
+          },
+          "resposta": {
+            "description": "Texto gerado (nao-oficial) pela IA.",
+            "title": "Resposta",
+            "type": "string"
+          },
+          "tempo_processamento": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tempo de processamento em segundos.",
+            "title": "Tempo Processamento"
+          }
+        },
+        "required": [
+          "resposta"
+        ],
+        "title": "BuscaSemanticaResponse",
+        "type": "object"
+      },
+      "CompetenciaEspecifica": {
+        "description": "Competência específica de área/componente (EI/EF/EM).",
+        "example": {
+          "area_conhecimento": "matematica",
+          "codigo": "EFMAT01",
+          "componente": "matematica",
+          "descricao": "Reconhecer que a Matemática é uma ciência humana...",
+          "etapa": "ensino_fundamental",
+          "numero": 1
+        },
+        "properties": {
+          "area_conhecimento": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AreaConhecimento"
+              }
+            ],
+            "description": "Área de conhecimento"
+          },
+          "codigo": {
+            "description": "Código único da competência específica",
+            "title": "Codigo",
+            "type": "string"
+          },
+          "componente": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComponenteCurricular"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Componente curricular (se aplicável)"
+          },
+          "descricao": {
+            "description": "Descrição da competência específica",
+            "title": "Descricao",
+            "type": "string"
+          },
+          "etapa": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EtapaEnsino"
+              }
+            ],
+            "description": "Etapa de ensino"
+          },
+          "numero": {
+            "description": "Número dentro da área/componente",
+            "title": "Numero",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "codigo",
+          "numero",
+          "area_conhecimento",
+          "descricao",
+          "etapa"
+        ],
+        "title": "CompetenciaEspecifica",
+        "type": "object"
+      },
+      "CompetenciaGeral": {
+        "description": "Competência geral da BNCC (1..10, transversal às etapas).",
+        "example": {
+          "descricao": "Valorizar e utilizar os conhecimentos historicamente construídos sobre o mundo físico, social, cultural e digital...",
+          "numero": 1,
+          "titulo": "Conhecimento"
+        },
+        "properties": {
+          "descricao": {
+            "description": "Descrição completa da competência",
+            "title": "Descricao",
+            "type": "string"
+          },
+          "numero": {
+            "description": "Número da competência (1-10)",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Numero",
+            "type": "integer"
+          },
+          "titulo": {
+            "description": "Título da competência",
+            "title": "Titulo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "numero",
+          "titulo",
+          "descricao"
+        ],
+        "title": "CompetenciaGeral",
+        "type": "object"
+      },
+      "ComponenteCurricular": {
+        "description": "Componentes curriculares da BNCC.",
+        "enum": [
+          "lingua_portuguesa",
+          "arte",
+          "educacao_fisica",
+          "lingua_inglesa",
+          "matematica",
+          "ciencias",
+          "geografia",
+          "historia",
+          "ensino_religioso",
+          "computacao"
+        ],
+        "title": "ComponenteCurricular",
+        "type": "string"
+      },
+      "CreateApiKeyRequest": {
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateApiKeyRequest",
+        "type": "object"
+      },
+      "DocumentoFonte": {
+        "description": "Fonte oficial rastreavel citada na resposta.\n\nDefinicao propria de US4 (nao importar de `app/models/bncc.py`).",
+        "properties": {
+          "codigo": {
+            "description": "Codigo oficial da habilidade/competencia.",
+            "title": "Codigo",
+            "type": "string"
+          },
+          "relevancia": {
+            "description": "Similaridade coseno (0-1).",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Relevancia",
+            "type": "number"
+          },
+          "tipo": {
+            "description": "Tipo do documento (habilidade | competencia).",
+            "title": "Tipo",
+            "type": "string"
+          },
+          "titulo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Titulo legivel do documento (quando disponivel).",
+            "title": "Titulo"
+          }
+        },
+        "required": [
+          "codigo",
+          "tipo",
+          "relevancia"
+        ],
+        "title": "DocumentoFonte",
+        "type": "object"
+      },
+      "EixoComputacao": {
+        "description": "Eixos do Complemento de Computação à BNCC (Educação Infantil e Ensino\nFundamental). O Ensino Médio não é organizado por eixos, mas por competências\nespecíficas de Computação (ver `Habilidade.competencia_especifica`).",
+        "enum": [
+          "pensamento_computacional",
+          "mundo_digital",
+          "cultura_digital"
+        ],
+        "title": "EixoComputacao",
+        "type": "string"
+      },
+      "ErrorResponse": {
+        "description": "Modelo padrão para respostas de erro.",
+        "properties": {
+          "detail": {
+            "description": "Descrição do erro",
+            "title": "Detail",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Código interno do erro",
+            "title": "Error Code"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Timestamp do erro",
+            "title": "Timestamp"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "EtapaEnsino": {
+        "description": "Etapas de ensino da BNCC.",
+        "enum": [
+          "educacao_infantil",
+          "ensino_fundamental",
+          "ensino_medio"
+        ],
+        "title": "EtapaEnsino",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Habilidade": {
+        "description": "Habilidade da BNCC — suporta EI, EF e EM.",
+        "example": {
+          "anos": [
+            "5"
+          ],
+          "area_conhecimento": "matematica",
+          "codigo": "EF05MA07",
+          "competencias_especificas": [],
+          "competencias_gerais": [
+            1,
+            2,
+            4
+          ],
+          "componente": "matematica",
+          "descricao": "Resolver e elaborar problemas de adição e subtração...",
+          "etapa": "ensino_fundamental",
+          "objetos_conhecimento": []
+        },
+        "properties": {
+          "anos": {
+            "description": "Anos escolares",
+            "items": {
+              "type": "string"
+            },
+            "title": "Anos",
+            "type": "array"
+          },
+          "area_conhecimento": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AreaConhecimento"
+              }
+            ],
+            "description": "Área de conhecimento"
+          },
+          "campo_experiencia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Campo de experiência (Educação Infantil)",
+            "title": "Campo Experiencia"
+          },
+          "codigo": {
+            "description": "Código oficial (EI/EF/EM)",
+            "title": "Codigo",
+            "type": "string"
+          },
+          "competencias_especificas": {
+            "description": "Códigos de competências específicas",
+            "items": {
+              "type": "string"
+            },
+            "title": "Competencias Especificas",
+            "type": "array"
+          },
+          "competencias_gerais": {
+            "description": "Competências gerais relacionadas (1-10)",
+            "items": {
+              "type": "integer"
+            },
+            "title": "Competencias Gerais",
+            "type": "array"
+          },
+          "componente": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComponenteCurricular"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Componente curricular (ausente no EM, organizado por área)"
+          },
+          "descricao": {
+            "description": "Descrição completa da habilidade",
+            "title": "Descricao",
+            "type": "string"
+          },
+          "eixo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EixoComputacao"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Eixo do Complemento de Computação (EI/EF): pensamento_computacional, mundo_digital ou cultura_digital. Ausente no Ensino Médio, que é organizado por competências específicas de Computação."
+          },
+          "etapa": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EtapaEnsino"
+              }
+            ],
+            "description": "Etapa de ensino"
+          },
+          "itinerario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Itinerário formativo (Ensino Médio)",
+            "title": "Itinerario"
+          },
+          "objetos_conhecimento": {
+            "description": "Objetos de conhecimento relacionados",
+            "items": {
+              "type": "string"
+            },
+            "title": "Objetos Conhecimento",
+            "type": "array"
+          },
+          "unidade_tematica": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Unidade temática (Ensino Fundamental)",
+            "title": "Unidade Tematica"
+          }
+        },
+        "required": [
+          "codigo",
+          "descricao",
+          "etapa",
+          "area_conhecimento"
+        ],
+        "title": "Habilidade",
+        "type": "object"
+      },
+      "KeyUsageResponse": {
+        "properties": {
+          "ai": {
+            "$ref": "#/components/schemas/BucketUsage"
+          },
+          "api_key_id": {
+            "title": "Api Key Id",
+            "type": "string"
+          },
+          "deterministic": {
+            "$ref": "#/components/schemas/BucketUsage"
+          }
+        },
+        "required": [
+          "api_key_id",
+          "deterministic",
+          "ai"
+        ],
+        "title": "KeyUsageResponse",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "LoginResponse": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in_minutes": {
+            "title": "Expires In Minutes",
+            "type": "integer"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in_minutes"
+        ],
+        "title": "LoginResponse",
+        "type": "object"
+      },
+      "PaginatedResponse": {
+        "description": "Resposta paginada genérica.",
+        "example": {
+          "items": [],
+          "page": 1,
+          "pages": 5,
+          "size": 20,
+          "total": 100
+        },
+        "properties": {
+          "items": {
+            "description": "Items da página atual",
+            "items": {},
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "description": "Página atual",
+            "title": "Page",
+            "type": "integer"
+          },
+          "pages": {
+            "description": "Total de páginas",
+            "title": "Pages",
+            "type": "integer"
+          },
+          "size": {
+            "description": "Tamanho da página",
+            "title": "Size",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total de items",
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "size",
+          "pages"
+        ],
+        "title": "PaginatedResponse",
+        "type": "object"
+      },
+      "SignupRequest": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "description": "Mínimo 10 caracteres, com letras e números",
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "SignupRequest",
+        "type": "object"
+      },
+      "SignupResponse": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "email_verified": {
+            "default": false,
+            "title": "Email Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "account_id",
+          "email"
+        ],
+        "title": "SignupResponse",
+        "type": "object"
+      },
+      "SnapshotMetadata": {
+        "description": "Metadados de rastreabilidade do snapshot versionado (FR-025).",
+        "properties": {
+          "checksum_fontes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "SHA-256 de cada fonte oficial",
+            "title": "Checksum Fontes",
+            "type": "object"
+          },
+          "contagens": {
+            "description": "Contagens por etapa/componente",
+            "title": "Contagens",
+            "type": "object"
+          },
+          "data_publicacao": {
+            "description": "Data de publicação (ISO)",
+            "title": "Data Publicacao",
+            "type": "string"
+          },
+          "missing_sources": {
+            "description": "Fontes oficiais ausentes (ex.: educacao_infantil)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Sources",
+            "type": "array"
+          },
+          "versao": {
+            "description": "Versão do snapshot (ex.: v1)",
+            "title": "Versao",
+            "type": "string"
+          }
+        },
+        "required": [
+          "versao",
+          "data_publicacao"
+        ],
+        "title": "SnapshotMetadata",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VerifyEmailRequest": {
+        "properties": {
+          "token": {
+            "minLength": 8,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "VerifyEmailRequest",
+        "type": "object"
+      },
+      "VerifyEmailResponse": {
+        "properties": {
+          "email_verified": {
+            "default": true,
+            "title": "Email Verified",
+            "type": "boolean"
+          }
+        },
+        "title": "VerifyEmailResponse",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "description": "API key gerada no portal self-service, enviada como 'Authorization: Bearer <key>'. Requerida pelos endpoints de dados e busca semântica.",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "SessionAuth": {
+        "description": "JWT de sessão do portal (login self-service). Não usar para chamadas de API de dados/IA — use ApiKeyAuth.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "API pública que expõe toda a Base Nacional Comum Curricular (BNCC) do Brasil: dados determinísticos das três etapas, acesso self-service por API keys, documentação automática e busca semântica com IA (não-oficial).",
+    "title": "BNCC API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Autentica com e-mail/senha e retorna um JWT de sessão do portal (também definido como cookie httponly `session`). Falha de credencial ou e-mail não verificado retornam a mesma mensagem (anti-enumeração — Princípio V / FR-023).",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "padrao": {
+                  "summary": "Login padrão",
+                  "value": {
+                    "email": "dev@example.com",
+                    "password": "SenhaForte123"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            },
+            "description": "Token de sessão (JWT); também é definido como cookie httponly."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Credenciais inválidas ou e-mail não verificado."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Muitas tentativas de login deste IP."
+          }
+        },
+        "summary": "Autenticar e iniciar sessão do portal",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "description": "Remove o cookie de sessão httponly. Idempotente — sempre retorna 200.",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Logout Api V1 Auth Logout Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Confirmação de logout; o cookie de sessão é removido."
+          }
+        },
+        "summary": "Encerrar a sessão do portal",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "description": "Retorna os dados da conta associada à sessão do portal atual (header `Authorization: Bearer <jwt>` ou cookie `session`).",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMe"
+                }
+              }
+            },
+            "description": "Dados básicos da conta do desenvolvedor autenticado."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Dados da conta autenticada",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/auth/signup": {
+      "post": {
+        "description": "Cria uma conta de desenvolvedor do portal e dispara um e-mail de verificação de uso único. A conta permanece `email_verified=false` até a confirmação (necessária para gerar API keys — FR-007). Não usa API key, apenas e-mail/senha.",
+        "operationId": "signup_api_v1_auth_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "padrao": {
+                  "summary": "Cadastro padrão",
+                  "value": {
+                    "email": "dev@example.com",
+                    "password": "SenhaForte123"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupResponse"
+                }
+              }
+            },
+            "description": "Conta criada (ainda não verificada); e-mail de verificação disparado."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Payload inválido (e-mail malformado ou senha fora da política)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Não foi possível concluir o cadastro (e-mail já em uso)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Muitas tentativas de cadastro deste IP."
+          }
+        },
+        "summary": "Criar conta de desenvolvedor",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "description": "Consome o token de verificação de uso único enviado por e-mail no cadastro e marca a conta como verificada. Necessário antes de gerar API keys (FR-007).",
+        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "padrao": {
+                  "summary": "Token recebido por e-mail",
+                  "value": {
+                    "token": "a1b2c3d4e5f6"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailResponse"
+                }
+              }
+            },
+            "description": "Confirmação de que o e-mail da conta foi verificado."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Token de verificação inválido."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Token de verificação expirado ou já utilizado."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Muitas tentativas deste IP."
+          }
+        },
+        "summary": "Confirmar e-mail via token de verificação",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/busca-semantica": {
+      "post": {
+        "description": "Responde uma pergunta em linguagem natural com texto **gerado por IA** (claramente marcado como **nao-oficial**, `oficial=false`) acompanhado das **fontes oficiais rastreaveis** da BNCC (codigo + relevancia). Correspondencias abaixo do limiar de similaridade nao sao apresentadas como oficiais; na ausencia de correspondencia confiavel a resposta sinaliza isso em vez de inventar.",
+        "operationId": "busca_semantica_api_v1_busca_semantica_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuscaSemanticaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuscaSemanticaResponse"
+                }
+              }
+            },
+            "description": "Resposta gerada por IA (nao-oficial) com fontes oficiais rastreaveis, ou aviso de ausencia de correspondencia confiavel."
+          },
+          "400": {
+            "description": "Query invalida (vazia/curta/longa) ou payload invalido."
+          },
+          "401": {
+            "description": "API key ausente, invalida ou revogada."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "description": "Cota de IA excedida (bucket ai: 20/min ou 500/dia)."
+          },
+          "503": {
+            "description": "Camada de IA indisponivel (acionavel)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Busca semantica com IA (conteudo nao-oficial)",
+        "tags": [
+          "Busca Semântica"
+        ]
+      }
+    },
+    "/api/v1/competencias/especificas": {
+      "get": {
+        "description": "Lista competências específicas de área/componente curricular, com filtros opcionais por área de conhecimento, componente e etapa de ensino. Requer API key e consome a cota determinística.",
+        "operationId": "get_competencias_especificas_api_v1_competencias_especificas_get",
+        "parameters": [
+          {
+            "description": "Área de conhecimento",
+            "in": "query",
+            "name": "area",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AreaConhecimento"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Área de conhecimento",
+              "title": "Area"
+            }
+          },
+          {
+            "description": "Componente curricular",
+            "in": "query",
+            "name": "componente",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ComponenteCurricular"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Componente curricular",
+              "title": "Componente"
+            }
+          },
+          {
+            "description": "Etapa de ensino",
+            "in": "query",
+            "name": "etapa",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/EtapaEnsino"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Etapa de ensino",
+              "title": "Etapa"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompetenciaEspecifica"
+                  },
+                  "title": "Response Get Competencias Especificas Api V1 Competencias Especificas Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Competências específicas que casam com os filtros informados."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Listar competências específicas (filtros: area/componente/etapa)",
+        "tags": [
+          "Competências"
+        ]
+      }
+    },
+    "/api/v1/competencias/gerais": {
+      "get": {
+        "description": "Lista as 10 competências gerais oficiais da BNCC, aplicáveis a todas as etapas de ensino. Requer API key e consome a cota determinística.",
+        "operationId": "get_competencias_gerais_api_v1_competencias_gerais_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CompetenciaGeral"
+                  },
+                  "title": "Response Get Competencias Gerais Api V1 Competencias Gerais Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "As 10 competências gerais da BNCC, transversais às três etapas."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Listar as 10 competências gerais",
+        "tags": [
+          "Competências"
+        ]
+      }
+    },
+    "/api/v1/competencias/gerais/{numero}": {
+      "get": {
+        "description": "Busca uma das 10 competências gerais oficiais pelo número (1-10). Requer API key e consome a cota determinística.",
+        "operationId": "get_competencia_geral_api_v1_competencias_gerais__numero__get",
+        "parameters": [
+          {
+            "description": "Número da competência geral (1-10)",
+            "examples": {
+              "exemplo": {
+                "summary": "Competência 1 — Conhecimento",
+                "value": 1
+              }
+            },
+            "in": "path",
+            "name": "numero",
+            "required": true,
+            "schema": {
+              "description": "Número da competência geral (1-10)",
+              "title": "Numero",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompetenciaGeral"
+                }
+              }
+            },
+            "description": "Dados completos da competência geral."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Número fora de 1-10 ou competência inexistente."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Buscar competência geral por número (1-10)",
+        "tags": [
+          "Competências"
+        ]
+      }
+    },
+    "/api/v1/habilidades": {
+      "get": {
+        "description": "Lista as habilidades oficiais da BNCC (EI/EF/EM), com filtros opcionais por etapa, ano, área, componente, competência geral e eixo de Computação. Requer API key (`Authorization: Bearer <key>`) e consome a cota determinística (60 req/min, burst 10).",
+        "operationId": "list_habilidades_api_v1_habilidades_get",
+        "parameters": [
+          {
+            "description": "Etapa de ensino",
+            "in": "query",
+            "name": "etapa",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/EtapaEnsino"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Etapa de ensino",
+              "title": "Etapa"
+            }
+          },
+          {
+            "description": "Ano escolar (ex.: '5')",
+            "in": "query",
+            "name": "ano",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Ano escolar (ex.: '5')",
+              "title": "Ano"
+            }
+          },
+          {
+            "description": "Área de conhecimento",
+            "in": "query",
+            "name": "area_conhecimento",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AreaConhecimento"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Área de conhecimento",
+              "title": "Area Conhecimento"
+            }
+          },
+          {
+            "description": "Componente curricular",
+            "in": "query",
+            "name": "componente",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ComponenteCurricular"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Componente curricular",
+              "title": "Componente"
+            }
+          },
+          {
+            "description": "Competência geral (1-10)",
+            "in": "query",
+            "name": "competencia_geral",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 10,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Competência geral (1-10)",
+              "title": "Competencia Geral"
+            }
+          },
+          {
+            "description": "Eixo do Complemento de Computação (EI/EF)",
+            "in": "query",
+            "name": "eixo",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/EixoComputacao"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Eixo do Complemento de Computação (EI/EF)",
+              "title": "Eixo"
+            }
+          },
+          {
+            "description": "Página (>=1)",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "Página (>=1)",
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Itens por página (1-100)",
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Itens por página (1-100)",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            },
+            "description": "Página de habilidades que casam com os filtros informados."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Listar habilidades com filtros e paginação",
+        "tags": [
+          "Habilidades"
+        ]
+      }
+    },
+    "/api/v1/habilidades/{codigo}": {
+      "get": {
+        "description": "Busca uma habilidade pelo código oficial (formatos EI##XX##, EF##XX## ou EM13XXX###/EM13XX##). Requer API key e consome a cota determinística (60 req/min, burst 10).",
+        "operationId": "get_habilidade_api_v1_habilidades__codigo__get",
+        "parameters": [
+          {
+            "description": "Código oficial da habilidade (EI/EF/EM).",
+            "examples": {
+              "ensino_fundamental": {
+                "summary": "Matemática — 5º ano",
+                "value": "EF05MA07"
+              }
+            },
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "description": "Código oficial da habilidade (EI/EF/EM).",
+              "title": "Codigo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Habilidade"
+                }
+              }
+            },
+            "description": "Dados completos da habilidade."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Código malformado (não casa com nenhum formato oficial EI/EF/EM)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Habilidade inexistente no snapshot."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Buscar habilidade por código oficial (EI/EF/EM)",
+        "tags": [
+          "Habilidades"
+        ]
+      }
+    },
+    "/api/v1/habilidades/{codigo}/relacoes": {
+      "get": {
+        "description": "Retorna as relações navegáveis de uma habilidade — competências gerais e específicas associadas, objetos de conhecimento e demais vínculos curriculares (FR-005). Requer API key e consome a cota determinística.",
+        "operationId": "get_habilidade_relacoes_api_v1_habilidades__codigo__relacoes_get",
+        "parameters": [
+          {
+            "description": "Código oficial da habilidade (EI/EF/EM).",
+            "examples": {
+              "ensino_fundamental": {
+                "summary": "Matemática — 5º ano",
+                "value": "EF05MA07"
+              }
+            },
+            "in": "path",
+            "name": "codigo",
+            "required": true,
+            "schema": {
+              "description": "Código oficial da habilidade (EI/EF/EM).",
+              "title": "Codigo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Habilidade Relacoes Api V1 Habilidades  Codigo  Relacoes Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Grafo de relações (competências gerais/específicas, objetos de conhecimento e habilidades correlatas) da habilidade."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Código malformado."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Habilidade inexistente no snapshot."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Relações navegáveis de uma habilidade (FR-005)",
+        "tags": [
+          "Habilidades"
+        ]
+      }
+    },
+    "/api/v1/keys": {
+      "get": {
+        "description": "Lista as API keys da conta autenticada (ativas e revogadas), sem expor segredo ou hash. Exige sessão do portal.",
+        "operationId": "list_keys_api_v1_keys_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponse"
+                  },
+                  "title": "Response List Keys Api V1 Keys Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Keys da conta autenticada (sem segredo/hash)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Listar as API keys da conta",
+        "tags": [
+          "API Keys"
+        ]
+      },
+      "post": {
+        "description": "Gera uma nova API key para a conta autenticada. Exige sessão do portal **com e-mail verificado** (FR-007). O segredo completo é exibido **uma única vez**, nesta resposta — apenas o prefixo é recuperável depois.",
+        "operationId": "create_key_api_v1_keys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "padrao": {
+                  "summary": "Key de produção",
+                  "value": {
+                    "name": "Minha key de produção"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreatedResponse"
+                }
+              }
+            },
+            "description": "Key criada; o segredo completo (`key`) só aparece nesta resposta."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "E-mail não verificado — verifique o e-mail antes de criar keys."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Criar uma nova API key",
+        "tags": [
+          "API Keys"
+        ]
+      }
+    },
+    "/api/v1/keys/{key_id}": {
+      "delete": {
+        "description": "Revoga (soft-delete) uma API key da conta autenticada. Apenas o proprietário da key pode revogá-la; keys de outras contas ou inexistentes retornam 404 (não confirma existência alheia).",
+        "operationId": "revoke_key_api_v1_keys__key_id__delete",
+        "parameters": [
+          {
+            "description": "Identificador da API key a revogar.",
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "description": "Identificador da API key a revogar.",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Key revogada com sucesso (sem corpo)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key inexistente ou pertencente a outra conta."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Revogar uma API key",
+        "tags": [
+          "API Keys"
+        ]
+      }
+    },
+    "/api/v1/keys/{key_id}/usage": {
+      "get": {
+        "description": "Retorna as métricas de uso da API key informada, por bucket (`deterministic` e `ai`): consumo na janela atual e no dia, e os limites vigentes. A key consultada deve pertencer à conta autenticada. Exige sessão do portal.",
+        "operationId": "key_usage_api_v1_keys__key_id__usage_get",
+        "parameters": [
+          {
+            "description": "Identificador da API key.",
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "description": "Identificador da API key.",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeyUsageResponse"
+                }
+              }
+            },
+            "description": "Contadores de uso e limites por bucket (determinístico e IA) da key."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key inexistente ou pertencente a outra conta."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Uso por API key (buckets determinístico/IA)",
+        "tags": [
+          "Uso",
+          "Uso"
+        ]
+      }
+    },
+    "/api/v1/sistema/health": {
+      "get": {
+        "description": "Verificação de vivacidade (liveness) simples e pública — não requer API key nem autenticação. Não verifica dependências externas; use `/readiness` para isso.",
+        "operationId": "health_api_v1_sistema_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Health Api V1 Sistema Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Indicador simples de que o processo está no ar."
+          }
+        },
+        "summary": "Liveness check (público)",
+        "tags": [
+          "Sistema"
+        ]
+      }
+    },
+    "/api/v1/sistema/readiness": {
+      "get": {
+        "description": "Verificação de prontidão pública — checa o banco da plataforma e o snapshot da BNCC de forma best-effort. A camada de IA (ChromaDB/embeddings) é reportada separadamente e sua indisponibilidade **não** torna o serviço `not_ready`, pois os endpoints determinísticos permanecem 100% funcionais (Princípio VII / SC-009).",
+        "operationId": "readiness_api_v1_sistema_readiness_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Readiness Api V1 Sistema Readiness Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Status agregado de prontidão e status por componente."
+          }
+        },
+        "summary": "Readiness check (DB best-effort)",
+        "tags": [
+          "Sistema"
+        ]
+      }
+    },
+    "/api/v1/sistema/versao-dados": {
+      "get": {
+        "description": "Expõe metadados de rastreabilidade do snapshot estático da BNCC (FR-025): versão, data de publicação, checksum SHA-256 de cada fonte oficial e contagens por etapa/componente. Requer API key e consome a cota determinística.",
+        "operationId": "get_versao_dados_api_v1_sistema_versao_dados_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotMetadata"
+                }
+              }
+            },
+            "description": "Versão do snapshot, checksums das fontes oficiais e contagens (FR-025)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Metadados do snapshot da BNCC (versão, checksum, contagens)",
+        "tags": [
+          "Sistema"
+        ]
+      }
+    },
+    "/api/v1/taxonomia": {
+      "get": {
+        "description": "Retorna a árvore de taxonomia oficial da BNCC, usada para navegação e documentação (FR-005): etapas de ensino, áreas de conhecimento, componentes curriculares, unidades temáticas e objetos de conhecimento, além dos campos de experiência da Educação Infantil. Requer API key e consome a cota determinística (60 req/min, burst 10).",
+        "operationId": "get_taxonomia_api_v1_taxonomia_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Taxonomia Api V1 Taxonomia Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Estrutura navegável completa: etapas → áreas → componentes → unidades temáticas/objetos de conhecimento (e campos de experiência na EI)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "API key ausente, inválida ou revogada."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Cota determinística excedida (60/min, burst 10)."
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Árvore da taxonomia oficial da BNCC",
+        "tags": [
+          "Taxonomia"
+        ]
+      }
+    },
+    "/api/v1/usage": {
+      "get": {
+        "description": "Retorna o uso agregado do dia corrente para todas as API keys da conta autenticada (consumo determinístico e de IA). Exige sessão do portal.",
+        "operationId": "account_usage_api_v1_usage_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUsageResponse"
+                }
+              }
+            },
+            "description": "Total de keys e consumo agregado (determinístico e IA) do dia."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Uso agregado da conta",
+        "tags": [
+          "Uso",
+          "Uso"
+        ]
+      }
+    },
+    "/portal/dashboard": {
+      "get": {
+        "operationId": "dashboard_portal_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Dashboard"
+      }
+    },
+    "/portal/keys": {
+      "post": {
+        "operationId": "dashboard_create_key_portal_keys_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_dashboard_create_key_portal_keys_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dashboard Create Key"
+      }
+    },
+    "/portal/keys/{key_id}/revoke": {
+      "post": {
+        "operationId": "dashboard_revoke_key_portal_keys__key_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dashboard Revoke Key"
+      }
+    },
+    "/portal/login": {
+      "get": {
+        "operationId": "login_page_portal_login_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login Page"
+      },
+      "post": {
+        "operationId": "login_submit_portal_login_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_submit_portal_login_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login Submit"
+      }
+    },
+    "/portal/logout": {
+      "get": {
+        "operationId": "logout_portal_logout_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logout"
+      }
+    },
+    "/portal/signup": {
+      "get": {
+        "operationId": "signup_page_portal_signup_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Signup Page"
+      },
+      "post": {
+        "operationId": "signup_submit_portal_signup_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_signup_submit_portal_signup_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Signup Submit"
+      }
+    },
+    "/portal/verify-email": {
+      "get": {
+        "operationId": "verify_email_page_portal_verify_email_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Email Page"
+      }
+    }
+  }
+}

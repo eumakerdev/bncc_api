@@ -69,3 +69,44 @@ def test_contagem_competencias_especificas_em_por_area(area_tag: str, esperado: 
     data = svc.data
     n = sum(1 for c in data["competencias_especificas"] if c["codigo"].startswith(area_tag))
     assert n == esperado
+
+
+@pytest.mark.parametrize("componente", ["lingua_portuguesa", "lingua_inglesa"])
+def test_lp_li_tem_organizador_na_unidade_tematica(componente: str):
+    """Língua Portuguesa (práticas) e Língua Inglesa (eixos) preenchem unidade_tematica."""
+    ef = [
+        h
+        for h in svc.data["habilidades"]
+        if h["etapa"] == "ensino_fundamental" and h.get("componente") == componente
+    ]
+    assert ef, f"sem habilidades de {componente}"
+    com_ut = [h for h in ef if h.get("unidade_tematica")]
+    assert len(com_ut) == len(ef), f"{componente}: {len(ef) - len(com_ut)} sem unidade temática"
+
+
+def test_lingua_inglesa_usa_os_cinco_eixos():
+    ef = [
+        h
+        for h in svc.data["habilidades"]
+        if h["etapa"] == "ensino_fundamental" and h.get("componente") == "lingua_inglesa"
+    ]
+    eixos = {h["unidade_tematica"] for h in ef}
+    esperados = {
+        "Oralidade",
+        "Leitura",
+        "Escrita",
+        "Conhecimentos Linguísticos",
+        "Dimensão Intercultural",
+    }
+    assert eixos == esperados, f"eixos inesperados: {eixos ^ esperados}"
+
+
+def test_unidade_tematica_sem_ruido_de_cabecalho():
+    """Nenhuma unidade temática pode ser banner/cabeçalho (CAMPO/EIXO/CAIXA ALTA)."""
+    for u in svc.data["unidades_tematicas"]:
+        nome = u["nome"]
+        assert not nome.upper().startswith(("CAMPO", "EIXO", "UNIDADE TEM")), nome
+        letras = [c for c in nome if c.isalpha()]
+        # nome real é caixa Título, nunca majoritariamente CAIXA ALTA
+        if len(letras) >= 6:
+            assert sum(c.isupper() for c in letras) / len(letras) <= 0.7, nome

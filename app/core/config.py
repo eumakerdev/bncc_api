@@ -65,6 +65,13 @@ class Settings(BaseSettings):
     RATE_LIMIT_AI_PER_MIN: int = Field(default=20)
     RATE_LIMIT_AI_PER_DAY: int = Field(default=500)
 
+    # --- Rate limiting por IP dos endpoints de sessão (sem API key) ---
+    # Protege login/signup/verify-email contra força bruta e spam de contas,
+    # já que estes endpoints não passam pela cota por API key (deps.py).
+    RATE_LIMIT_LOGIN_PER_MIN: int = Field(default=10)
+    RATE_LIMIT_SIGNUP_PER_MIN: int = Field(default=5)
+    RATE_LIMIT_VERIFY_PER_MIN: int = Field(default=30)
+
     # --- IA / Busca semântica (opcional; degrada graciosamente) ---
     OPENAI_API_KEY: str = Field(default="")
     GOOGLE_API_KEY: str = Field(default="")

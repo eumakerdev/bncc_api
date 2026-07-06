@@ -53,9 +53,11 @@ def test_deterministico_nao_afetado_por_ia_fora(client, override_api_key_auth, m
         assert health.status_code == 200, health.text
 
 
-def test_app_importavel_sem_libs_ia():
+def test_app_importavel_sem_libs_ia(client):
     # Prova de degradacao: importar a app nao exige chromadb/sentence-transformers.
-    from app.main import app
-
-    paths = {getattr(r, "path", "") for r in app.routes}
-    assert URL in paths
+    # Verificado via requisicao real (nao introspeccao de app.routes): o FastAPI
+    # moderno guarda sub-routers incluidos como wrapper interno, entao "existe uma
+    # rota montada" so e observavel de fora, batendo na rota (404 = nao montada;
+    # qualquer outro status prova que o roteamento resolveu o path).
+    resp = client.post(URL, json={"query": "qualquer pergunta"})
+    assert resp.status_code != 404
