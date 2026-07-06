@@ -43,7 +43,7 @@ google-generativeai==0.8.6
 
 # Processamento de dados / extração determinística de PDF
 pandas==2.1.4
-numpy==1.24.3
+numpy==2.4.6
 requests==2.34.2
 beautifulsoup4==4.15.0
 lxml==4.9.3
