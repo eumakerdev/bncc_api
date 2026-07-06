@@ -20,7 +20,7 @@ greenlet==3.5.3
 
 # Segurança: hash de senha (Argon2), JWT de sessão do portal
 passlib[argon2]==1.7.4
-argon2-cffi==23.1.0
+argon2-cffi==25.1.0
 PyJWT==2.13.0
 email-validator==2.3.0
 
