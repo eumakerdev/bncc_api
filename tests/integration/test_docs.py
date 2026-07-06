@@ -2,10 +2,11 @@
 Teste de integração de sincronia da documentação (US3 — T052).
 
 Verifica que o OpenAPI segue sendo a fonte da verdade (Princípio I/FR-013),
-que o Swagger UI embutido do FastAPI (/docs) responde e que o guia estilizado
-(/guia) renderiza mencionando autenticação por API key. Não assumimos a
-contagem exata de endpoints (outras histórias podem estar em desenvolvimento
-em paralelo) — apenas que o contrato OpenAPI existe e não está vazio.
+que a referência interativa (/docs, renderizada pelo Scalar) responde a partir
+do bundle self-hosted (Princípio V — sem CDN) e que o guia estilizado (/guia)
+renderiza mencionando autenticação por API key. Não assumimos a contagem exata
+de endpoints (outras histórias podem estar em desenvolvimento em paralelo) —
+apenas que o contrato OpenAPI existe e não está vazio.
 """
 
 from __future__ import annotations
@@ -21,10 +22,17 @@ def test_openapi_json_exposes_paths(client):
     assert len(payload["paths"]) > 0
 
 
-def test_swagger_ui_available(client):
+def test_api_reference_rendered_by_scalar(client):
     response = client.get("/docs")
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
+
+    body = response.text
+    # Referência viva apontando para o contrato OpenAPI...
+    assert "/api/v1/openapi.json" in body
+    # ...renderizada pelo Scalar a partir do bundle self-hosted (sem CDN — Princípio V).
+    assert "/static/vendor/scalar.standalone.js" in body
+    assert "cdn." not in body and "http://" not in body.replace("http://www.w3.org", "")
 
 
 def test_docs_guide_page_renders_and_mentions_api_key_auth(client):

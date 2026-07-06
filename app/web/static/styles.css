@@ -314,3 +314,59 @@ a:focus-visible, button:focus-visible, .btn:focus-visible {
   display: inline-flex; align-items: center; gap: 0.35rem;
 }
 .onb-note { font-size: 0.9rem; margin-top: 1.25rem; }
+
+/* =========================================================================
+   Hub de documentação (/guia) — layout de duas colunas com sumário fixo.
+   Mesmas restrições: estático, light+dark, contraste AA, foco visível.
+   ========================================================================= */
+.docs-layout {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 2.5rem;
+  padding-top: 2.5rem;
+  padding-bottom: 3.5rem;
+  align-items: start;
+}
+.docs-sidebar {
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+}
+.docs-nav { display: flex; flex-direction: column; gap: 0.15rem; }
+.docs-nav-title {
+  margin: 1.25rem 0 0.4rem; font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted);
+}
+.docs-nav-title:first-child { margin-top: 0; }
+.docs-nav a {
+  display: block; padding: 0.4rem 0.7rem; border-radius: 8px;
+  color: var(--fg-muted); font-size: 0.95rem; border-left: 2px solid transparent;
+}
+.docs-nav a:hover { color: var(--brand); background: var(--bg-soft); text-decoration: none; }
+.docs-nav a:target,
+.docs-nav a.is-active {
+  color: var(--brand); background: var(--brand-soft); border-left-color: var(--brand);
+}
+.docs-nav-ext { color: var(--brand) !important; font-weight: 500; }
+
+.docs-content { min-width: 0; max-width: 48rem; }
+.docs-content h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin: 0.5rem 0 1rem; }
+.docs-content .eyebrow { margin-bottom: 0.75rem; }
+.docs-section { scroll-margin-top: 1.5rem; }
+.docs-section + .docs-section { margin-top: 3rem; padding-top: 2.5rem; border-top: 1px solid var(--border); }
+.docs-content h2 { margin-top: 0; }
+.docs-content h3 { font-size: 1.1rem; margin: 1.75rem 0 0.5rem; }
+.docs-content pre { font-size: 0.9rem; }
+.docs-content table { margin: 1.25rem 0; font-size: 0.95rem; }
+
+@media (max-width: 860px) {
+  .docs-layout { grid-template-columns: 1fr; gap: 1rem; }
+  .docs-sidebar {
+    position: static; border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem; margin-bottom: 1rem;
+  }
+  .docs-nav { flex-flow: row wrap; gap: 0.35rem; }
+  .docs-nav-title { width: 100%; margin: 0.5rem 0 0.1rem; }
+  .docs-nav a { border-left: 0; padding: 0.35rem 0.6rem; border: 1px solid var(--border); }
+  .docs-nav a:target, .docs-nav a.is-active { border-color: var(--brand); }
+}

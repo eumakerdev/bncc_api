@@ -11,9 +11,11 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
 from starlette.datastructures import MutableHeaders
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -85,22 +87,135 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-# Docs interativas com favicon/marca da BNCC API (Swagger UI + ReDoc).
 _FAVICON = "/static/logo-icon.svg"
 
+# --------------------------------------------------------------------------- #
+# OpenAPI enriquecido (Princípio I — o contrato é a fonte da verdade da doc).  #
+# `info.description` (markdown), `tags` ordenadas com descrição e `servers`    #
+# transformam o mesmo contrato numa referência de nível profissional, sem      #
+# manutenção manual de endpoints. Ver `app/web/docs.py` (Scalar) e `/guia`.    #
+# --------------------------------------------------------------------------- #
+_OPENAPI_DESCRIPTION = """
+API pública e gratuita que expõe **toda a Base Nacional Comum Curricular (BNCC)**
+do Brasil — Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo o
+Complemento de Computação — de forma estruturada e navegável.
 
-@app.get("/docs", include_in_schema=False)
-async def swagger_ui_html():  # pragma: no cover - HTML estático do FastAPI
-    from fastapi.openapi.docs import get_swagger_ui_html
+## Autenticação
+Os endpoints de dados exigem uma **API key** enviada no cabeçalho
+`Authorization: Bearer SUA_CHAVE`. Crie uma chave gratuita no
+[portal self-service](/portal/signup) após verificar seu e-mail. Requisições sem
+chave válida recebem `401`.
 
-    return get_swagger_ui_html(
-        openapi_url=str(app.openapi_url),
-        title=f"{app.title} — Documentação",
-        swagger_favicon_url=_FAVICON,
+## Limites de uso
+- **Determinística** (habilidades, competências, taxonomia, sistema): `60 req/min`.
+- **Busca semântica com IA**: `20 req/min` e teto de `500/dia`.
+
+Acima do limite a API responde `429` com o cabeçalho `Retry-After`. As duas cotas
+são independentes.
+
+## Dados oficiais × derivados
+Os dados determinísticos preservam fielmente a nomenclatura e a estrutura oficiais
+da BNCC. Conteúdos gerados por IA (busca semântica, resumos) são **sempre marcados
+como não-oficiais** e nunca substituem a fonte da verdade.
+
+## Versionamento
+Todos os endpoints ficam sob `/api/v1`. Mudanças incompatíveis são publicadas em
+uma nova versão de caminho (`/api/v2`), nunca dentro da versão atual.
+
+> Guia de início rápido, exemplos e receitas: **[/guia](/guia)**.
+""".strip()
+
+_OPENAPI_TAGS = [
+    {
+        "name": "Habilidades",
+        "description": (
+            "Habilidades da BNCC por código oficial (EI/EF/EM), com filtros, "
+            "paginação e relações navegáveis."
+        ),
+    },
+    {
+        "name": "Competências",
+        "description": "Competências gerais e específicas por componente e etapa.",
+    },
+    {
+        "name": "Taxonomia",
+        "description": "Vocabulário estruturante: etapas, componentes, unidades temáticas e eixos.",
+    },
+    {
+        "name": "Busca Semântica",
+        "description": (
+            "Busca por significado com IA. **Conteúdo não-oficial** e rastreável "
+            "por `fontes`; degrada graciosamente se a camada de IA estiver indisponível."
+        ),
+    },
+    {
+        "name": "Autenticação",
+        "description": "Cadastro, login e verificação de e-mail para acesso ao portal.",
+    },
+    {
+        "name": "API Keys",
+        "description": "Emissão e revogação de chaves de API (mostradas apenas na criação).",
+    },
+    {"name": "Uso", "description": "Consumo e limites de uso por chave."},
+    {"name": "Sistema", "description": "Saúde, versão e metadados operacionais da API."},
+]
+
+
+def _public_servers() -> list[dict[str, str]]:
+    """Servidores para o 'Try it' e exemplos, derivados do ambiente configurado."""
+    parts = urlsplit(settings.EMAIL_VERIFICATION_BASE_URL)
+    servers: list[dict[str, str]] = []
+    if parts.scheme and parts.netloc:
+        origin = f"{parts.scheme}://{parts.netloc}"
+        label = "Produção" if settings.is_production else "Ambiente atual"
+        servers.append({"url": origin, "description": label})
+    if not any(s["url"].startswith("http://localhost") for s in servers):
+        servers.append({"url": "http://localhost:8000", "description": "Desenvolvimento local"})
+    return servers
+
+
+def custom_openapi() -> dict:
+    """OpenAPI enriquecido e restrito ao contrato público (`/api/v1`).
+
+    Remove as rotas SSR do portal (`/portal/*`) do schema: elas são páginas HTML,
+    não parte do contrato de API consumido por terceiros. O teste de contrato
+    (`tests/contract/test_openapi_contract.py`) já ignora `/portal`.
+    """
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=_OPENAPI_DESCRIPTION,
+        routes=app.routes,
+        tags=_OPENAPI_TAGS,
+        servers=_public_servers(),
     )
+    schema["info"]["contact"] = {
+        "name": "BNCC API",
+        "url": "https://github.com/eumakerdev/bncc_api",
+    }
+    schema["info"]["license"] = {
+        "name": "MIT",
+        "url": "https://github.com/eumakerdev/bncc_api/blob/main/LICENSE",
+    }
+    schema["info"]["x-logo"] = {"url": "/static/logo.svg", "altText": "BNCC API"}
+
+    # Mantém no contrato apenas a superfície pública da API.
+    schema["paths"] = {p: v for p, v in schema.get("paths", {}).items() if p.startswith("/api/v1")}
+
+    app.openapi_schema = schema
+    return schema
 
 
+app.openapi = custom_openapi  # type: ignore[method-assign]
+
+
+# --------------------------------------------------------------------------- #
+# Referência interativa (Scalar) — servida por `app/web/docs.py` em `/docs`.   #
+# ReDoc é mantido como fallback leve gerado pelo próprio FastAPI.              #
+# --------------------------------------------------------------------------- #
 @app.get("/redoc", include_in_schema=False)
 async def redoc_html():  # pragma: no cover - HTML estático do FastAPI
     from fastapi.openapi.docs import get_redoc_html
