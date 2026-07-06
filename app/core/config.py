@@ -6,7 +6,7 @@ em produção. Em ENVIRONMENT=production a aplicação FALHA RÁPIDO na iniciali
 se SECRET_KEY for placeholder/ausente ou se ALLOWED_HOSTS contiver "*".
 """
 
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -89,6 +89,24 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT.strip().lower() == "production"
+
+    @property
+    def TRUSTED_HOSTS(self) -> list[str]:
+        """Hostnames puros para o `TrustedHostMiddleware`, derivados de
+        `ALLOWED_HOSTS`. Este último guarda *origins* com scheme (`https://host`),
+        o formato exigido pelo CORS; já o TrustedHost compara com o header `Host`,
+        que chega sem scheme e sem porta. Extraímos o hostname de cada entrada para
+        que uma única env var sirva aos dois middlewares."""
+        hosts: list[str] = []
+        for entry in self.ALLOWED_HOSTS:
+            if entry == "*":
+                hosts.append("*")
+                continue
+            # urlsplit só popula netloc quando há "//"; caso contrário é host puro.
+            host = urlsplit(entry).hostname if "://" in entry else entry.split(":")[0].strip()
+            if host:
+                hosts.append(host)
+        return hosts
 
     @field_validator("ALLOWED_HOSTS", mode="before")
     @classmethod

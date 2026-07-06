@@ -56,6 +56,24 @@ def test_development_tolerates_permissive_defaults():
     assert not settings.is_production
 
 
+def test_trusted_hosts_strips_scheme_from_origins():
+    """`ALLOWED_HOSTS` guarda origins com scheme (formato do CORS); o
+    `TrustedHostMiddleware` compara com o header `Host` (sem scheme/porta).
+    `TRUSTED_HOSTS` deve derivar o hostname puro para os dois conviverem —
+    regressão do 400 "Invalid host header" em produção."""
+    settings = _make(ALLOWED_HOSTS=["https://bncc.example.com"])
+    assert settings.TRUSTED_HOSTS == ["bncc.example.com"]
+
+
+def test_trusted_hosts_handles_wildcard_and_port():
+    settings = Settings(
+        _env_file=None,
+        ENVIRONMENT="development",
+        ALLOWED_HOSTS=["*", "http://localhost:8000"],
+    )
+    assert settings.TRUSTED_HOSTS == ["*", "localhost"]
+
+
 def test_db_password_injected_into_url_placeholder():
     """A senha (secret) substitui o placeholder — nunca em texto plano no env."""
     settings = Settings(
