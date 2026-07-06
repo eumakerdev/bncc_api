@@ -67,6 +67,10 @@ filterwarnings = ["ignore::DeprecationWarning"]
 [tool.coverage.run]
 source = ["app"]
 omit = ["app/main.py", "tests/*"]
+# SQLAlchemy async troca de greenlet no meio dos handlers; sem isto o coverage
+# perde o rastreio e marca como não-executadas linhas que os testes exercitam
+# (ex.: blocos except do portal SSR).
+concurrency = ["thread", "greenlet"]
 
 [tool.coverage.report]
 show_missing = true
