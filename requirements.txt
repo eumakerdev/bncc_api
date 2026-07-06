@@ -54,8 +54,8 @@ pikepdf==10.9.1
 
 # Testes + cobertura (gate de CI ≥ 80%)
 pytest==9.1.1
-pytest-cov==4.1.0
-pytest-asyncio==0.21.1
+pytest-cov==6.0.0  # >=5 para API de plugin compatível com pytest 9
+pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: FixtureDef.unittest)
 httpx==0.28.1
 
 # Qualidade de código
