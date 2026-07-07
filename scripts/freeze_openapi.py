@@ -107,14 +107,18 @@ def freeze(*, check: bool = False) -> int:
                     f"(rode `python scripts/freeze_openapi.py` e commite)."
                 )
                 continue
-            summary.append(f"[{slug}] OK {snapshot_path.relative_to(ROOT)} ({len(payload)} bytes)")
+            summary.append(
+                f"[{slug}] OK {snapshot_path.relative_to(ROOT)} "
+                f"({len(payload.encode('utf-8'))} bytes)"
+            )
         else:
             version_dir.mkdir(parents=True, exist_ok=True)
             snapshot_path.write_text(payload, encoding="utf-8")
             manifest = _build_manifest(slug, version_dir, release)
             (version_dir / "index.json").write_text(_dump(manifest), encoding="utf-8")
             summary.append(
-                f"[{slug}] escrito {snapshot_path.relative_to(ROOT)} ({len(payload)} bytes); "
+                f"[{slug}] escrito {snapshot_path.relative_to(ROOT)} "
+                f"({len(payload.encode('utf-8'))} bytes); "
                 f"manifesto latest={manifest['latest']} releases={manifest['releases']}"
             )
 
