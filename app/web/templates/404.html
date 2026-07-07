@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Página não encontrada — BNCC API{% endblock %}
+{% block description %}A página que você procura não existe ou mudou de endereço.{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <h1>Página não encontrada</h1>
+  <p class="lead">A página que você procura não existe ou mudou de endereço.</p>
+  <p>
+    <a class="btn btn-primary" href="/">Ir para a página inicial</a>
+    <a class="btn btn-secondary" href="/guia">Ver o guia da API</a>
+  </p>
+</div>
+{% endblock %}

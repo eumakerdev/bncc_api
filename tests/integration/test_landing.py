@@ -126,3 +126,90 @@ def test_robots_txt(client):
     assert "User-agent:" in body
     assert "Sitemap:" in body
     assert "sitemap.xml" in body
+
+
+def test_favicon_ico_served(client):
+    """Crawlers e navegadores pedem /favicon.ico na raiz — não pode ser 404."""
+    response = client.get("/favicon.ico")
+    assert response.status_code == 200
+    assert "image/" in response.headers["content-type"]
+    assert "max-age" in response.headers.get("cache-control", "")
+
+
+def test_og_image_is_png(client):
+    """og:image precisa ser PNG (redes sociais rejeitam SVG), com dimensões declaradas."""
+    response = client.get("/static/og-image.png")
+    assert response.status_code == 200
+    assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
+
+    body = client.get("/").text
+    assert "/static/og-image.png" in body
+    assert 'property="og:image:width" content="1200"' in body
+    assert 'property="og:image:height" content="630"' in body
+    assert 'property="og:image:type" content="image/png"' in body
+    assert "og-image.svg" not in body
+
+
+def test_docs_reference_absolute_canonical(client, monkeypatch):
+    """A referência /docs (Scalar) usa canonical/OG absolutos no domínio primário."""
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "SITE_URL", "https://bncc.api.br")
+
+    body = client.get("/docs").text
+    assert 'rel="canonical" href="https://bncc.api.br/docs"' in body
+    assert 'property="og:url" content="https://bncc.api.br/docs"' in body
+    assert "/static/og-image.png" in body
+    assert 'name="twitter:card"' in body
+
+
+def test_login_noindex_signup_indexable(client):
+    """Login (e fluxos que renderizam login.html) fora do índice; signup é página de conversão."""
+    login = client.get("/portal/login").text
+    assert '<meta name="robots" content="noindex">' in login
+
+    signup = client.get("/portal/signup").text
+    assert 'content="noindex"' not in signup
+
+
+def test_sitemap_excludes_login_includes_signup(client):
+    body = client.get("/sitemap.xml").text
+    assert "/portal/signup</loc>" in body
+    assert "/portal/login" not in body
+    assert "<priority>" in body
+
+
+def test_robots_disallows_api_but_not_login(client):
+    """/api/ é JSON autenticado (crawl budget); login precisa ser crawleável
+    para o Google ver o meta noindex."""
+    body = client.get("/robots.txt").text
+    assert "Disallow: /api/" in body
+    assert "Disallow: /portal/auth/" in body
+    assert "Disallow: /portal/login" not in body
+
+
+def test_seo_endpoints_have_cache_control(client):
+    for path in ("/sitemap.xml", "/robots.txt", "/static/styles.css"):
+        response = client.get(path)
+        cache = response.headers.get("cache-control", "")
+        assert "public" in cache and "max-age" in cache, f"{path}: {cache!r}"
+
+
+def test_seo_endpoints_support_head(client):
+    """Validadores de sitemap e link-checkers usam HEAD — não pode ser 405."""
+    for path in ("/favicon.ico", "/sitemap.xml", "/robots.txt"):
+        response = client.head(path)
+        assert response.status_code == 200, path
+
+
+def test_web_404_returns_html_api_404_stays_json(client):
+    """Rota web inexistente responde HTML amigável (noindex); o contrato JSON
+    de /api/v1 permanece intacto (Princípio I)."""
+    response = client.get("/pagina-que-nao-existe", headers={"Accept": "text/html"})
+    assert response.status_code == 404
+    assert "text/html" in response.headers["content-type"]
+    assert 'content="noindex"' in response.text
+
+    api = client.get("/api/v1/rota-que-nao-existe", headers={"Accept": "text/html"})
+    assert api.status_code == 404
+    assert "application/json" in api.headers["content-type"]

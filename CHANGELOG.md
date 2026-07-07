@@ -8,6 +8,76 @@ versão referida abaixo é a da aplicação (campo `version` do app FastAPI); o
 contrato público da API permanece em `/api/v1` e **não** sofre quebra dentro da
 versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)).
 
+## [1.3.0] - 2026-07-07
+
+### Adicionado
+
+- **Documentação versionada** em dois eixos, mantendo o app FastAPI único (sem
+  sub-apps montados — `app.dependency_overrides`, usado pela suíte de testes,
+  não se propaga para sub-apps montados):
+  - **Eixo 1 — coexistência de versões de contrato:** um registro de versões
+    em `app/api/versions.py` passa a dirigir docs e OpenAPI por versão de forma
+    genérica. Cada versão maior do contrato vive sob um prefixo de caminho
+    estável (`/api/v1`, futuro `/api/v2`). OpenAPI ao vivo por versão em
+    `GET /api/{slug}/openapi.json` (v1 pela rota nativa do FastAPI). Referência
+    interativa (Scalar) por versão em `/docs/{slug}` (e `/docs` = a mais
+    recente). Manifesto legível por máquina em `GET /api/versions`.
+  - **Eixo 2 — histórico de releases:** `scripts/freeze_openapi.py` congela o
+    OpenAPI enriquecido ao vivo, por release, em
+    `docs/openapi/{slug}/{release}.json`, com manifesto
+    `docs/openapi/{slug}/index.json`. Servido em
+    `GET /api/{slug}/releases/{release}/openapi.json`. A referência Scalar ganha
+    um seletor de versão para navegar releases históricos via
+    `/docs/{slug}?release=X`.
+- Novos endpoints e páginas: `GET /api/versions`,
+  `GET /api/{slug}/openapi.json`,
+  `GET /api/{slug}/releases/{release}/openapi.json` e as páginas `/docs/{slug}`.
+- Referência de manutenção em `docs/versioning.md` (esquema de URLs, como o
+  consumidor fixa uma versão, como o mantenedor corta um release e introduz uma
+  nova versão maior).
+
+### Alterado
+
+- Construção do OpenAPI enriquecido movida de `app/main.py` para
+  `app/api/openapi.py` (sem mudança no schema resultante).
+- Teste de contrato passa a garantir que o release congelado mais recente casa
+  com o schema ao vivo e não tem quebras (análogo a
+  `tests/contract/test_openapi_contract.py`, Princípio III).
+- `version` do app FastAPI: `1.2.0` → `1.3.0`.
+
+> **Compatível com versões anteriores.** O contrato `/api/v1` permanece
+> inalterado: `/api/v1/openapi.json` e `/docs` se comportam como antes. Nenhuma
+> quebra de contrato — o Princípio I da Constituição é preservado; toda a
+> mudança é aditiva (novas superfícies de documentação).
+
+## [1.2.0] - 2026-07-07
+
+### Adicionado
+
+- **Otimização técnica de SEO** (somente superfícies web — nenhuma mudança no
+  contrato `/api/v1`):
+  - `og:image`/`twitter:image` agora em **PNG 1200×630** (redes sociais rejeitam
+    SVG), com `og:image:width/height/type` declarados. O asset é gerado de forma
+    reproduzível por `scripts/generate_og_image.py` (Pillow, ferramenta one-off
+    fora do `requirements.txt`) a partir da identidade "leitor em camadas".
+  - `GET /favicon.ico` no caminho padrão pedido por navegadores/crawlers
+    (antes 404), multi-size 16/32/48.
+  - `/docs` (Scalar): canonical **absoluto** via `SITE_URL` (antes relativo
+    hardcoded), `og:url`, `og:image` e Twitter Card.
+  - `noindex` em `/portal/login` (cobre também verify-email e erros de OAuth,
+    que renderizam o mesmo template); login removido do sitemap. Signup
+    permanece indexável (página de conversão).
+  - `sitemap.xml` com `<priority>` por URL (lista curada `_SITEMAP_ENTRIES`);
+    `robots.txt` com `Disallow: /api/`, `/portal/auth/` e `/redoc`.
+  - `Cache-Control` na origem: `/static/*` e sitemap/robots (1h, via
+    `app/web/staticfiles.py::CachedStaticFiles`), favicon (1 dia). HTML dinâmico
+    segue sem cache público (histórico de envenenamento na CDN do Hosting).
+  - Página **404 HTML** amigável (noindex) para rotas web quando o cliente
+    aceita `text/html`; o handler global agora cobre também o `HTTPException`
+    do Starlette, então 404 de rota inexistente em `/api/*` passa a responder
+    no schema estável `{ detail, error_code }`.
+  - JSON-LD da landing: `publisher.logo` corrigido para `logo-icon.svg`.
+
 ## [1.1.0] - 2026-07-06
 
 ### Adicionado

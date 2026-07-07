@@ -186,10 +186,22 @@
     <section id="versionamento" class="docs-section" aria-labelledby="versionamento-heading">
       <h2 id="versionamento-heading">Versionamento</h2>
       <p>
-        Todos os endpoints ficam sob <code>/api/v1</code>. Mudanças incompatíveis (breaking
-        changes) são publicadas em uma nova versão (<code>/api/v2</code>), nunca dentro da
-        versão atual. Adições retrocompatíveis (novos endpoints, novos campos opcionais)
-        acontecem dentro da versão corrente.
+        Cada versão do contrato vive sob um prefixo de caminho estável
+        (<code>/api/vN</code>). Todos os endpoints atuais ficam sob <code>/api/v1</code>.
+        Mudanças incompatíveis (breaking changes) são publicadas em uma nova versão
+        (<code>/api/v2</code>), nunca dentro da versão atual. Adições retrocompatíveis
+        (novos endpoints, novos campos opcionais) acontecem dentro da versão corrente.
+      </p>
+      <p>
+        A referência interativa de cada versão fica em <a href="/docs/v1"><code>/docs/v1</code></a>.
+        O <strong>seletor de versão</strong> no topo da referência permite alternar entre
+        versões vivas e navegar as <strong>releases históricas congeladas</strong> de cada
+        versão (o snapshot do contrato daquela release, somente leitura).
+      </p>
+      <p class="muted">
+        Prefere consumir por máquina? O manifesto das versões está em
+        <a href="/api/versions"><code>/api/versions</code></a> (JSON) e o contrato vivo da
+        v1 em <a href="/api/v1/openapi.json"><code>/api/v1/openapi.json</code></a>.
       </p>
     </section>
   </div>

@@ -7,6 +7,7 @@
   <meta name="description" content="{% block description %}API pública e gratuita com toda a Base Nacional Comum Curricular (BNCC) do Brasil: 1.703 habilidades das três etapas, busca semântica com IA e API keys self-service.{% endblock %}">
   {% block robots %}{% endblock %}
   <link rel="canonical" href="{{ site_url }}{{ current_path }}">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/static/logo-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/logo-icon.svg">
   <meta name="theme-color" content="#1b4dff" media="(prefers-color-scheme: light)">
@@ -16,13 +17,16 @@
   <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{{ self.description() }}{% endblock %}">
   <meta property="og:url" content="{{ site_url }}{{ current_path }}">
-  <meta property="og:image" content="{{ site_url }}/static/og-image.svg">
+  <meta property="og:image" content="{{ site_url }}/static/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita">
   <meta property="og:locale" content="pt_BR">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ self.og_title() }}">
   <meta name="twitter:description" content="{{ self.og_description() }}">
-  <meta name="twitter:image" content="{{ site_url }}/static/og-image.svg">
+  <meta name="twitter:image" content="{{ site_url }}/static/og-image.png">
   {% block head_extra %}{% endblock %}
   <link rel="stylesheet" href="/static/styles.css">
 </head>

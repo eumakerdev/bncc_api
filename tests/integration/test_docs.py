@@ -32,7 +32,65 @@ def test_api_reference_rendered_by_scalar(client):
     assert "/api/v1/openapi.json" in body
     # ...renderizada pelo Scalar a partir do bundle self-hosted (sem CDN — Princípio V).
     assert "/static/vendor/scalar.standalone.js" in body
-    assert "cdn." not in body and "http://" not in body.replace("http://www.w3.org", "")
+    # Sem CDN externo: nada de unpkg/jsdelivr/cdn.* (o canonical pode usar http:// em
+    # dev, então checamos a ausência de hosts de CDN, não a de "http://" em geral).
+    lowered = body.lower()
+    assert "cdn." not in lowered
+    assert "unpkg" not in lowered
+    assert "jsdelivr" not in lowered
+    assert "https://cdn" not in lowered
+
+
+def test_api_reference_version_switcher_lists_v1(client):
+    """A referência mais recente traz o seletor de versão listando v1."""
+    response = client.get("/docs")
+    assert response.status_code == 200
+
+    body = response.text
+    assert 'id="version-switcher"' in body
+    assert "<select" in body
+    # A opção da versão atual (v1) aparece marcada como atual.
+    assert "v1" in body
+    assert "(atual)" in body
+
+
+def test_docs_versioned_slug_renders(client):
+    """/docs/v1 renderiza a referência da versão v1."""
+    response = client.get("/docs/v1")
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+
+    body = response.text
+    assert "/api/v1/openapi.json" in body
+    assert "/static/vendor/scalar.standalone.js" in body
+
+
+def test_docs_unknown_version_returns_404(client):
+    """Uma versão de docs desconhecida responde 404."""
+    response = client.get("/docs/v999")
+    assert response.status_code == 404
+
+
+def test_docs_invalid_release_falls_back_to_live(client):
+    """?release= não arquivada cai para o OpenAPI vivo, sem quebrar."""
+    response = client.get("/docs/v1?release=0.0.0-inexistente")
+    assert response.status_code == 200
+
+    body = response.text
+    # data-url do Scalar aponta para o contrato vivo, não para um snapshot congelado.
+    assert 'data-url="/api/v1/openapi.json"' in body
+    assert "/releases/0.0.0-inexistente/" not in body
+
+
+def test_api_versions_manifest(client):
+    """O manifesto /api/versions expõe a versão mais recente."""
+    response = client.get("/api/versions")
+    assert response.status_code == 200
+
+    payload = response.json()
+    assert payload["latest"] == "v1"
+    slugs = [v["slug"] for v in payload["versions"]]
+    assert "v1" in slugs
 
 
 def test_docs_guide_page_renders_and_mentions_api_key_auth(client):

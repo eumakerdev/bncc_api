@@ -5,12 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Referência da API — BNCC API</title>
   <meta name="description" content="Referência interativa da BNCC API: endpoints, schemas e exemplos gerados a partir do contrato OpenAPI. Teste autenticado direto no navegador.">
-  <link rel="canonical" href="/docs">
+  <link rel="canonical" href="{{ site_url }}{{ current_path }}">
   <meta property="og:site_name" content="BNCC API">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Referência da API — BNCC API">
   <meta property="og:description" content="Endpoints, schemas e exemplos gerados a partir do contrato OpenAPI — sempre em dia com o código.">
+  <meta property="og:url" content="{{ site_url }}{{ current_path }}">
+  <meta property="og:image" content="{{ site_url }}/static/og-image.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:locale" content="pt_BR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Referência da API — BNCC API">
+  <meta name="twitter:description" content="Endpoints, schemas e exemplos gerados a partir do contrato OpenAPI — sempre em dia com o código.">
+  <meta name="twitter:image" content="{{ site_url }}/static/og-image.png">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/static/logo-icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#1b4dff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
@@ -36,6 +46,27 @@
     .docs-topbar a:hover { opacity: 1; }
     .docs-topbar .sep { opacity: .35; }
     .docs-topbar .grow { flex: 1; }
+    /* Seletor de versão / release histórica. */
+    .docs-version {
+      display: flex; align-items: center; gap: .45rem;
+      font: 500 .85rem/1 var(--scalar-font, system-ui); color: #fff;
+    }
+    .docs-version label { opacity: .6; }
+    .docs-version select {
+      font: inherit; color: #fff;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 7px; padding: .35rem .6rem; cursor: pointer;
+    }
+    .docs-version select:hover { border-color: rgba(255,255,255,.32); }
+    .docs-version optgroup, .docs-version option { color: #0d0f14; }
+    .docs-histnote {
+      padding: .5rem 1.1rem;
+      font: 500 .82rem/1.3 var(--scalar-font, system-ui);
+      background: #3a2a00; color: #ffd873;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .docs-histnote a { color: #ffe9a8; }
   </style>
 </head>
 <body>
@@ -46,12 +77,42 @@
     <span class="sep">/</span>
     <strong>Referência</strong>
     <span class="grow"></span>
+    <span class="docs-version">
+      <label for="version-switcher">Versão</label>
+      <select id="version-switcher" aria-label="Selecionar versão ou release histórica"
+              onchange="if(this.value){window.location.href=this.value;}">
+        {% for v in versions %}
+          {% set is_current = (v.slug == current.slug) %}
+          <optgroup label="{{ v.title }}">
+            <option value="{{ v.docs_url }}"
+              {% if is_current and not active_release %}selected{% endif %}>
+              {{ v.slug }} · {{ v.release }}{% if v.slug == current.slug %} (atual){% endif %}
+            </option>
+            {% for r in v.releases %}
+            <option value="{{ v.docs_url }}?release={{ r }}"
+              {% if is_current and active_release == r %}selected{% endif %}>
+              {{ v.slug }} · {{ r }} (histórico)
+            </option>
+            {% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+    </span>
+    <span class="sep">/</span>
     <a href="/portal/signup">Criar chave</a>
   </nav>
 
+  {% if active_release %}
+  <div class="docs-histnote" role="status">
+    Visualizando a release histórica <strong>{{ active_release }}</strong> de
+    {{ current.slug }} (congelada, somente leitura). ·
+    <a href="{{ current.docs_url }}">Voltar à versão atual ({{ current.release }})</a>
+  </div>
+  {% endif %}
+
   <script
     id="api-reference"
-    data-url="/api/v1/openapi.json"
+    data-url="{{ data_url }}"
     data-proxy-url=""></script>
   <script>
     document.getElementById('api-reference').dataset.configuration = JSON.stringify({

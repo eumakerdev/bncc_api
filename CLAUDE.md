@@ -41,8 +41,23 @@ alembic upgrade head                   # migrações do banco da plataforma (con
 python scripts/extract_bncc_data.py --validate   # (re)gerar snapshot data/bncc_v1.json
 python scripts/validate_bncc_coverage.py         # validar cobertura/integridade do snapshot
 python scripts/generate_embeddings.py            # (re)gerar vetores (opcional; requer libs de IA)
+python scripts/freeze_openapi.py                 # congela OpenAPI ao vivo (release lida do registro) em docs/openapi/{slug}/{release}.json
+python scripts/freeze_openapi.py --check          # valida que o release congelado casa com o schema ao vivo
 pre-commit run --all-files             # portões locais (segredos, lint, format)
 ```
+
+## Documentação versionada (ver `docs/versioning.md`)
+Dois eixos, app FastAPI único (sem sub-apps: `dependency_overrides` não se propaga a sub-apps montados).
+**Eixo 1 (contratos que coexistem):** registro em `app/api/versions.py` dirige docs/OpenAPI por versão;
+cada versão maior sob prefixo estável (`/api/v1`, futuro `/api/v2`). Superfícies: `/docs/{slug}` (Scalar;
+`/docs` = a mais recente), `GET /api/{slug}/openapi.json`, manifesto em `GET /api/versions`. **Eixo 2
+(histórico de releases):** `scripts/freeze_openapi.py` congela o OpenAPI enriquecido em
+`docs/openapi/{slug}/{release}.json` (manifesto `index.json`), servido em
+`GET /api/{slug}/releases/{release}/openapi.json`; Scalar navega releases via `/docs/{slug}?release=X`.
+OpenAPI enriquecido montado em `app/api/openapi.py`. Adicionar v2 = incluir o roteador com
+`prefix="/api/v2"` em `app/main.py` + registrar `APIVersion("v2", ...)` em `app/api/versions.py` (docs,
+OpenAPI e snapshots passam a cobri-la automaticamente). **Nunca quebrar contrato dentro de uma versão
+publicada — mudança incompatível exige nova versão de caminho** (Princípio I).
 
 > **Fontes da BNCC (as 3 etapas cobertas):** EF e EM vêm de `data/bncc_ensino_fundamental.pdf` e
 > `data/bncc_ensino_medio.pdf` (pdfplumber, isolamento de coluna). A **Educação Infantil** vem do
