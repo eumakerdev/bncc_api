@@ -61,4 +61,7 @@ async def _send_smtp(email: str, link: str) -> None:
         username=settings.SMTP_USERNAME or None,
         password=settings.SMTP_PASSWORD or None,
         start_tls=settings.SMTP_USE_TLS,
+        # EHLO exige ASCII; o hostname da máquina pode ter acento (ex.: Windows
+        # local) e quebraria com UnicodeEncodeError. Fixamos um valor ASCII.
+        local_hostname="localhost",
     )
