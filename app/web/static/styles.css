@@ -167,10 +167,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 /* Página de autenticação (login/signup) */
 .auth-wrap { max-width: 28rem; }
 .auth-card { box-shadow: var(--shadow); background: var(--bg); padding: 1.5rem; }
-.auth-card label:first-child { margin-top: 0; }
+/* Primeiro rótulo do formulário (quando não há OAuth acima) sem margem extra. */
+.auth-form label:first-child { margin-top: 0; }
 
-/* Login social (Google / GitHub) */
-.oauth-buttons { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+/* Login social (Google / GitHub) — prioridade, no topo do card */
+.oauth-buttons { display: flex; flex-direction: column; gap: 0.6rem; }
 .btn-oauth {
   background: var(--bg); color: var(--fg); border-color: var(--border); font-weight: 500;
 }
@@ -178,11 +179,21 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .btn-oauth svg { flex: 0 0 auto; }
 .oauth-divider {
   display: flex; align-items: center; gap: 0.75rem;
-  color: var(--fg-muted); font-size: 0.85rem; margin: 1.25rem 0 0.25rem;
+  color: var(--fg-muted); font-size: 0.85rem; margin: 1.25rem 0 0.5rem;
 }
 .oauth-divider::before, .oauth-divider::after {
   content: ""; flex: 1; height: 1px; background: var(--border);
 }
+
+/* Campo com botão embutido (ex.: mostrar/ocultar senha) */
+.input-affix { position: relative; }
+.input-affix > input { padding-right: 3rem; }
+.input-affix-btn {
+  position: absolute; top: 0; right: 0; width: 2.75rem; height: 100%;
+  min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; background: transparent; border: 0; color: var(--fg-muted); cursor: pointer;
+}
+.input-affix-btn:hover { color: var(--fg); }
 
 /* ------------------------------ Badges e avisos -------------------------- */
 .badge {

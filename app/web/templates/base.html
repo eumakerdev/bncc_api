@@ -35,16 +35,16 @@
           <defs>
             <linearGradient id="brand-tile" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stop-color="#1b4dff"/>
-              <stop offset="1" stop-color="#4c6bff"/>
+              <stop offset="1" stop-color="#0aa8dc"/>
             </linearGradient>
           </defs>
           <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#brand-tile)"/>
-          <g fill="#ffffff">
-            <rect x="13" y="14.6" width="12" height="4.6" rx="2.3"/>
-            <rect x="13" y="21.7" width="18" height="4.6" rx="2.3"/>
-            <rect x="13" y="28.8" width="22" height="4.6" rx="2.3"/>
+          <g fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 22l11 4.5L35 22"/>
+            <path d="M13 28.6l11 4.5 11-4.5"/>
+            <path d="M13 35.2l11 4.5 11-4.5"/>
           </g>
-          <circle cx="30" cy="16.9" r="2.6" fill="#2dd4bf"/>
+          <circle cx="24" cy="13.8" r="3.3" fill="#ffc53d"/>
         </svg>
         <span class="brand-text">BNCC&nbsp;API</span>
       </a>
@@ -104,5 +104,22 @@
       <p class="muted">Feito com dedicação pela Expertia e EuMaker, para quem constrói educação no Brasil. Licença MIT.</p>
     </div>
   </footer>
+  <script>
+    // Progressive enhancement: mostrar/ocultar senha. Sem JS, o campo segue funcionando.
+    document.querySelectorAll("[data-toggle-password]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var input = document.getElementById(btn.getAttribute("data-toggle-password"));
+        if (!input) return;
+        var reveal = input.type === "password";
+        input.type = reveal ? "text" : "password";
+        btn.setAttribute("aria-pressed", String(reveal));
+        btn.setAttribute("aria-label", reveal ? "Ocultar senha" : "Mostrar senha");
+        var eye = btn.querySelector(".icon-eye");
+        var eyeOff = btn.querySelector(".icon-eye-off");
+        if (eye) eye.hidden = reveal;
+        if (eyeOff) eyeOff.hidden = !reveal;
+      });
+    });
+  </script>
 </body>
 </html>
