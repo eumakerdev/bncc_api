@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # --- Segurança ---
     SECRET_KEY: str = Field(default="change-me-dev-only-not-for-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
+    # Sessão do portal (login persistente): duração do JWT de sessão E do cookie
+    # `__session`. Longa por padrão (30 dias) para que o login sobreviva a fechar/
+    # reabrir janelas e abas — sem exigir novo login a cada hora.
+    SESSION_EXPIRE_MINUTES: int = Field(default=60 * 24 * 30)
     ALLOWED_HOSTS: list[str] = Field(default=["*"])
 
     # --- Superfície pública / SEO ---

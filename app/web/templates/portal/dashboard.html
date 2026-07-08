@@ -7,25 +7,19 @@
 {% block content %}
 <div class="container section">
   <div class="page-header">
-    <h1>Painel</h1>
+    <div>
+      <h1>Painel</h1>
+      <p class="lead account-line">
+        <span>{{ account.email }}</span>
+        {% if account.email_verified %}
+          <span class="badge">verificado</span>
+        {% else %}
+          <span class="badge badge-muted">não verificado</span>
+        {% endif %}
+      </p>
+    </div>
     <a href="/portal/logout" class="btn btn-secondary">Sair</a>
   </div>
-  <p class="lead account-line">
-    <span>{{ account.email }}</span>
-    {% if account.email_verified %}
-      <span class="badge">verificado</span>
-    {% else %}
-      <span class="badge badge-muted">não verificado</span>
-    {% endif %}
-  </p>
-
-  {% if new_key %}
-  <div class="notice" role="status">
-    <strong>Sua nova API key (exibida apenas uma vez):</strong>
-    <div class="key-reveal"><pre><code>{{ new_key }}</code></pre></div>
-    Guarde-a com segurança — não será possível vê-la novamente.
-  </div>
-  {% endif %}
 
   {% if not account.email_verified %}
   <div class="notice notice-danger" role="alert">
@@ -53,12 +47,12 @@
   {% if account.email_verified %}
   <form method="post" action="/portal/keys" class="card key-form">
     <label for="name">Nome da nova key</label>
-    <input id="name" name="name" type="text" maxlength="120" required
-           placeholder="ex.: integração-escola" aria-describedby="key-name-help">
-    <p class="form-help" id="key-name-help">Um nome descritivo ajuda a saber o que revogar depois.</p>
-    <div class="form-actions">
+    <div class="key-form-row">
+      <input id="name" name="name" type="text" maxlength="120" required
+             placeholder="ex.: integração-escola" aria-describedby="key-name-help">
       <button class="btn" type="submit">Gerar nova key</button>
     </div>
+    <p class="form-help" id="key-name-help">Um nome descritivo ajuda a saber o que revogar depois.</p>
   </form>
   {% endif %}
 
@@ -78,18 +72,18 @@
     <tbody>
       {% for k in keys %}
       <tr>
-        <td>{{ k.name }}</td>
-        <td><code>{{ k.prefix }}</code></td>
-        <td>
+        <td data-label="Nome">{{ k.name }}</td>
+        <td data-label="Prefixo"><code>{{ k.prefix }}</code></td>
+        <td data-label="Status">
           {% if k.status.value == 'active' %}
             <span class="badge">ativa</span>
           {% else %}
             <span class="badge badge-muted">revogada</span>
           {% endif %}
         </td>
-        <td>{{ k.created_at.strftime('%d/%m/%Y') }}</td>
-        <td>{{ k.last_used_at.strftime('%d/%m/%Y %H:%M') if k.last_used_at else '—' }}</td>
-        <td>
+        <td data-label="Criada">{{ k.created_at.strftime('%d/%m/%Y') }}</td>
+        <td data-label="Último uso">{{ k.last_used_at.strftime('%d/%m/%Y %H:%M') if k.last_used_at else '—' }}</td>
+        <td class="cell-actions">
           {% if k.status.value == 'active' %}
           <form method="post" action="/portal/keys/{{ k.id }}/revoke" class="inline-form"
                 onsubmit="return confirm('Revogar a key “{{ k.name }}”? Aplicações que a usam perderão acesso imediatamente.');">
@@ -113,4 +107,103 @@
   </div>
   {% endif %}
 </div>
+
+{% if new_key %}
+{# Modal de revelação única da key. O segredo NÃO é persistido nem re-renderizado:
+   aparece só nesta resposta do POST. Ao fechar, é removido do DOM e não há como
+   reabri-lo — só o prefixo fica visível na tabela. #}
+<dialog id="key-modal" class="key-modal" aria-labelledby="key-modal-title">
+  <div class="key-modal-head">
+    <span class="key-modal-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/><path d="m16 6 3 3"/>
+      </svg>
+    </span>
+    <h2 id="key-modal-title">Sua nova API key</h2>
+  </div>
+
+  <p class="key-modal-warn" role="alert">
+    <strong>Copie e guarde agora.</strong> Por segurança, esta é a
+    <strong>única vez</strong> que a key completa será exibida — depois de fechar
+    esta janela não há como recuperá-la.
+  </p>
+
+  <label class="sr-only" for="new-key-value">Valor da API key</label>
+  <div class="key-field">
+    <input id="new-key-value" class="key-field-input" type="text" readonly
+           value="{{ new_key }}" spellcheck="false"
+           aria-describedby="key-modal-title">
+    <button type="button" class="btn btn-sm key-copy" data-copy-target="new-key-value"
+            aria-label="Copiar API key">
+      <svg class="icon-copy" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span class="key-copy-label">Copiar</span>
+    </button>
+  </div>
+
+  <div class="key-modal-actions">
+    <button type="button" class="btn btn-block" data-close-key-modal>
+      Já copiei — fechar
+    </button>
+  </div>
+</dialog>
+
+<script>
+  (function () {
+    // Corrige o bug de "criar key ao dar refresh": a página veio de um POST, então
+    // um F5 reenviaria o formulário e criaria OUTRA key. Trocamos a URL da barra
+    // para /portal/dashboard (sem recarregar), de modo que refresh vira um GET.
+    if (window.history && history.replaceState) {
+      history.replaceState(null, "", "/portal/dashboard");
+    }
+
+    var modal = document.getElementById("key-modal");
+    if (!modal) return;
+
+    if (typeof modal.showModal === "function") {
+      modal.showModal();
+    } else {
+      modal.setAttribute("open", "");  // fallback p/ navegadores sem <dialog>
+    }
+
+    // Copiar
+    var copyBtn = modal.querySelector(".key-copy");
+    var input = document.getElementById("new-key-value");
+    var label = copyBtn && copyBtn.querySelector(".key-copy-label");
+    if (copyBtn && input) {
+      copyBtn.addEventListener("click", function () {
+        input.select();
+        input.setSelectionRange(0, input.value.length);
+        var done = function () {
+          copyBtn.classList.add("is-copied");
+          if (label) label.textContent = "Copiado!";
+          setTimeout(function () {
+            copyBtn.classList.remove("is-copied");
+            if (label) label.textContent = "Copiar";
+          }, 2000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(input.value).then(done, function () {
+            document.execCommand("copy"); done();
+          });
+        } else {
+          document.execCommand("copy"); done();
+        }
+      });
+    }
+
+    // Fechar: remove o segredo do DOM para não sobrar em memória do documento.
+    function closeModal() {
+      if (input) input.value = "";
+      if (typeof modal.close === "function") modal.close();
+      modal.remove();
+    }
+    modal.querySelectorAll("[data-close-key-modal]").forEach(function (b) {
+      b.addEventListener("click", closeModal);
+    });
+    // Impede fechar por Esc sem confirmar leitura: reabre? Não — permitimos Esc,
+    // mas garantimos limpeza do segredo.
+    modal.addEventListener("cancel", function () { if (input) input.value = ""; modal.remove(); });
+  })();
+</script>
+{% endif %}
 {% endblock %}

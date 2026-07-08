@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="EuMaker">
+  <defs>
+    <linearGradient id="eumaker-tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d9488"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#eumaker-tile)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- maker "code brackets": a construção como marca -->
+    <path d="M17.5 17.5 11 24l6.5 6.5"/>
+    <path d="M30.5 17.5 37 24l-6.5 6.5"/>
+    <path d="M26.5 15.5 21.5 32.5"/>
+  </g>
+</svg>
