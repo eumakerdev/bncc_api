@@ -120,13 +120,22 @@ async def verify_email(session: AsyncSession, token: str) -> DeveloperAccount:
     return account
 
 
-async def login(session: AsyncSession, email: str, password: str) -> str:
+async def login(
+    session: AsyncSession,
+    email: str,
+    password: str,
+    expires_minutes: int | None = None,
+) -> str:
     """
     Autentica e retorna um JWT de sessão do portal.
 
     Falha (credencial inválida **ou** e-mail não verificado) → 401 com mensagem
     idêntica (anti-enumeração). O hash de senha é sempre verificado, mesmo quando
     a conta não existe, para não vazar timing.
+
+    ``expires_minutes`` permite ao portal SSR emitir uma sessão longa (login
+    persistente); quando ``None`` usa o padrão ``ACCESS_TOKEN_EXPIRE_MINUTES``,
+    que a API REST (``/api/v1/auth/login``) anuncia no contrato.
     """
     normalized = _normalize_email(email)
     result = await session.execute(
@@ -145,4 +154,8 @@ async def login(session: AsyncSession, email: str, password: str) -> str:
     if account is None or not password_ok or not account.email_verified:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=_LOGIN_FAILED)
 
-    return create_access_token(subject=account.id, email=account.email)
+    return create_access_token(
+        subject=account.id,
+        email=account.email,
+        expires_minutes=expires_minutes,
+    )

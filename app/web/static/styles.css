@@ -100,6 +100,18 @@ a:focus-visible, button:focus-visible, .btn:focus-visible {
 .nav-links a.is-active { color: var(--fg); font-weight: 600; }
 .nav-github { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--fg); }
 .nav-github:hover { color: var(--brand); text-decoration: none; }
+.nav-login { color: var(--fg); font-weight: 500; }
+.nav-login:hover { color: var(--brand); text-decoration: none; }
+.nav-cta { flex: none; }
+
+/* Botão do menu mobile (visível só em telas pequenas, quando há JS) */
+.nav-toggle {
+  display: none; align-items: center; justify-content: center;
+  width: 44px; height: 44px; padding: 0; flex: none;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 10px; color: var(--fg); cursor: pointer;
+}
+.nav-toggle:hover { background: var(--bg-soft); }
 .skip-link {
   position: absolute; left: -999px; top: 0; background: var(--brand);
   color: #fff; padding: 0.5rem 1rem; z-index: 100;
@@ -119,6 +131,11 @@ a:focus-visible, button:focus-visible, .btn:focus-visible {
   border: 1px solid transparent; cursor: pointer;
 }
 .btn:hover { text-decoration: none; background: var(--brand-strong); }
+/* CTA primário ganha leve elevação para se destacar (hierarquia de ação). */
+.btn:not(.btn-secondary):not(.btn-oauth):not(.btn-danger) {
+  box-shadow: 0 1px 2px rgb(27 77 255 / 0.18), 0 6px 16px rgb(27 77 255 / 0.16);
+}
+.btn:not(.btn-secondary):not(.btn-oauth):not(.btn-danger):hover { box-shadow: 0 2px 4px rgb(27 77 255 / 0.22), 0 10px 24px rgb(27 77 255 / 0.20); }
 .btn-secondary { background: transparent; color: var(--brand); border-color: var(--border); }
 .btn-secondary:hover { background: var(--brand-soft); border-color: var(--brand); }
 .btn-danger { background: var(--danger); }
@@ -194,6 +211,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   padding: 0; background: transparent; border: 0; color: var(--fg-muted); cursor: pointer;
 }
 .input-affix-btn:hover { color: var(--fg); }
+/* Esconde o "olho" NATIVO do Edge/IE (::-ms-reveal) e o X do Chrome/Edge para não
+   duplicar com o nosso botão de mostrar senha (o usuário via DOIS olhos). */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear { display: none; }
 
 /* ------------------------------ Badges e avisos -------------------------- */
 .badge {
@@ -333,6 +354,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .footer-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
 .footer-links a { color: var(--fg-muted); }
 .footer-links a:hover { color: var(--brand); }
+.footer-brands { gap: 0.6rem; }
+.footer-brand { display: inline-flex; align-items: center; gap: 0.55rem; min-height: 28px; }
+.footer-brand img { display: block; flex: none; width: auto; height: 20px; }
+.footer-brand span { color: var(--fg-muted); }
+.footer-brand:hover span { color: var(--brand); }
 .footer-bottom { border-top: 1px solid var(--border); padding: 1rem 1.25rem; font-size: 0.9rem; }
 
 /* =========================================================================
@@ -353,6 +379,82 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 .key-reveal { margin: 0.5rem 0; }
 .key-reveal pre { margin: 0; }
+
+/* Formulário de criação de key: input + botão lado a lado (empilha no mobile). */
+.key-form-row { display: flex; gap: 0.6rem; align-items: stretch; }
+.key-form-row input { flex: 1 1 auto; min-width: 0; }
+.key-form-row .btn { flex: none; white-space: nowrap; }
+@media (max-width: 560px) {
+  .key-form-row { flex-direction: column; }
+  .key-form-row .btn { width: 100%; }
+}
+
+/* Modal de revelação da API key (exibida uma única vez) */
+.key-modal {
+  width: min(92vw, 34rem); max-height: 90vh; overflow: auto;
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 1.75rem; background: var(--bg); color: var(--fg);
+  box-shadow: 0 24px 60px rgb(16 24 40 / 0.28);
+}
+.key-modal::backdrop { background: rgb(9 11 16 / 0.55); }
+@supports (backdrop-filter: blur(2px)) {
+  .key-modal::backdrop { backdrop-filter: blur(3px); }
+}
+.key-modal[open] { animation: key-modal-in 0.2s ease-out; }
+@keyframes key-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .key-modal[open] { animation: none; } }
+.key-modal-head { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem; }
+.key-modal-head h2 { margin: 0; font-size: 1.3rem; }
+.key-modal-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.4rem; height: 2.4rem; flex: none; border-radius: 10px;
+  background: var(--brand-soft); color: var(--brand);
+}
+.key-modal-warn {
+  margin: 0.5rem 0 0; padding: 0.75rem 1rem; border-radius: 10px;
+  background: var(--danger-soft); border: 1px solid var(--danger);
+  color: var(--fg); font-size: 0.95rem; line-height: 1.5;
+}
+.key-field { display: flex; gap: 0.5rem; align-items: stretch; margin: 1rem 0 0; }
+.key-field-input {
+  flex: 1 1 auto; min-width: 0; font-family: var(--mono); font-size: 0.9rem;
+  background: var(--code-bg); color: var(--code-fg);
+  border-color: var(--code-bg);
+}
+.key-field-input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand-soft); }
+.key-copy { flex: none; }
+.key-copy.is-copied { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: none; }
+.key-copy.is-copied .icon-copy { display: none; }
+.key-modal-actions { margin-top: 1.5rem; }
+@media (max-width: 480px) {
+  .key-field { flex-direction: column; }
+  .key-copy { width: 100%; }
+}
+
+/* Tabela de keys → cartões empilhados no mobile (usa data-label das células). */
+@media (max-width: 640px) {
+  .table-wrap table, .table-wrap thead, .table-wrap tbody,
+  .table-wrap th, .table-wrap td, .table-wrap tr { display: block; }
+  .table-wrap thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .table-wrap tr {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.5rem 0.9rem; margin-bottom: 0.75rem; background: var(--bg-soft);
+  }
+  .table-wrap td {
+    border: 0; padding: 0.4rem 0; display: flex; gap: 1rem;
+    align-items: center; justify-content: space-between;
+  }
+  .table-wrap td::before {
+    content: attr(data-label); font-weight: 600; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 0.03em; color: var(--fg-muted);
+  }
+  .table-wrap .cell-actions { justify-content: flex-end; padding-top: 0.6rem; }
+  .table-wrap .cell-actions::before { content: none; }
+  .table-wrap .inline-form .btn { width: 100%; }
+}
 .empty-state {
   border: 1px dashed var(--border); border-radius: var(--radius);
   padding: 2rem 1.5rem; text-align: center; color: var(--fg-muted);
@@ -473,4 +575,37 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   .docs-nav-title { width: 100%; margin: 0.5rem 0 0.1rem; }
   .docs-nav a { border-left: 0; padding: 0.35rem 0.6rem; border: 1px solid var(--border); }
   .docs-nav a:target, .docs-nav a.is-active { border-color: var(--brand); }
+}
+
+/* =========================================================================
+   Navegação mobile + ajustes responsivos gerais.
+   Com JS (html.js), em telas estreitas o menu colapsa atrás do botão .nav-toggle.
+   Sem JS os links seguem visíveis (quebram em linhas), garantindo acesso.
+   ========================================================================= */
+@media (max-width: 760px) {
+  .site-header .nav { position: relative; flex-wrap: nowrap; }
+  html.js .nav-toggle { display: inline-flex; }
+  html.js .nav-links {
+    display: none; position: absolute; top: calc(100% + 1px); left: 0; right: 0;
+    flex-direction: column; align-items: stretch; gap: 0.15rem;
+    padding: 0.75rem 1.25rem 1rem; background: var(--bg);
+    border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 60;
+  }
+  html.js .nav-links.is-open { display: flex; }
+  html.js .nav-links a {
+    width: 100%; min-height: 48px; padding: 0.4rem 0.25rem;
+    border-radius: 8px; justify-content: flex-start;
+  }
+  html.js .nav-links a:hover { background: var(--bg-soft); text-decoration: none; }
+  html.js .nav-cta { justify-content: center; margin-top: 0.35rem; }
+}
+
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .container { padding: 0 1rem; }
+  .section { padding: 2rem 0; }
+  .hero { padding: 2.5rem 0 2rem; }
+  .lead { font-size: 1.1rem; }
+  .cta-row .btn { width: 100%; }
+  .page-header { align-items: flex-start; }
 }

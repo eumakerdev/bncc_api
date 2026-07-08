@@ -58,13 +58,15 @@ _OAUTH_FAILED_MSG = "Não foi possível concluir o login social. Tente novamente
 
 
 def _set_session(response: RedirectResponse, token: str) -> None:
+    # Cookie persistente (max_age longo) para o login sobreviver a fechar/reabrir a
+    # janela — casa com a validade do JWT de sessão (SESSION_EXPIRE_MINUTES).
     response.set_cookie(
         _SESSION_COOKIE,
         token,
         httponly=True,
         samesite="lax",
         secure=settings.is_production,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        max_age=settings.SESSION_EXPIRE_MINUTES * 60,
     )
 
 
@@ -114,7 +116,10 @@ async def login_submit(
 ):
     async with async_session_factory() as session:
         try:
-            token = await account_service.login(session, email, password)
+            # Sessão longa (login persistente): sobrevive a fechar/reabrir a janela.
+            token = await account_service.login(
+                session, email, password, expires_minutes=settings.SESSION_EXPIRE_MINUTES
+            )
         except Exception:
             return templates.TemplateResponse(
                 request,
@@ -239,7 +244,11 @@ async def oauth_callback(
         info = await oauth_service.fetch_identity(provider, access_token, client)
         async with async_session_factory() as session:
             account = await oauth_service.find_or_create_account(session, info)
-            token = create_access_token(subject=account.id, email=account.email)
+            token = create_access_token(
+                subject=account.id,
+                email=account.email,
+                expires_minutes=settings.SESSION_EXPIRE_MINUTES,
+            )
     except oauth_service.OAuthError:
         logger.warning("Login social falhou (provider=%s)", provider)
         return _login_redirect_with_error(_OAUTH_FAILED_MSG)
