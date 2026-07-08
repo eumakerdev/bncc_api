@@ -59,3 +59,41 @@ async def test_account_usage_shape(async_client, verified_account, api_key):
     assert body["total_keys"] >= 1
     assert body["deterministic_used_today"] >= 0
     assert body["ai_used_today"] >= 0
+
+
+@pytest.mark.asyncio
+async def test_deterministic_request_is_counted_in_portal(
+    async_client, verified_account, api_key, auth_headers
+):
+    """Regressão: uma chamada determinística real precisa aparecer no painel de uso.
+
+    Antes do fix, ``rate_limit_deterministic`` só checava a janela em memória e
+    nunca persistia em ``usage_records`` — logo ``used_today`` ficava sempre 0 no
+    portal, embora a IA fosse contabilizada. Aqui exercitamos o caminho real da
+    key (sem override) num endpoint determinístico e conferimos o painel.
+    """
+    _full_key, key = api_key
+
+    # Baseline: nada consumido ainda.
+    before = await async_client.get(
+        f"/api/v1/keys/{key.id}/usage", headers=_session(verified_account.id)
+    )
+    assert before.status_code == 200, before.text
+    assert before.json()["deterministic"]["used_today"] == 0
+
+    # Duas chamadas determinísticas reais (autenticadas pela key, sem override).
+    for _ in range(2):
+        resp = await async_client.get("/api/v1/taxonomia", headers=auth_headers)
+        assert resp.status_code == 200, resp.text
+
+    # O painel do portal precisa refletir as 2 chamadas no bucket determinístico.
+    after = await async_client.get(
+        f"/api/v1/keys/{key.id}/usage", headers=_session(verified_account.id)
+    )
+    assert after.status_code == 200, after.text
+    assert after.json()["deterministic"]["used_today"] == 2
+
+    # E o agregado da conta também.
+    agg = await async_client.get("/api/v1/usage", headers=_session(verified_account.id))
+    assert agg.status_code == 200, agg.text
+    assert agg.json()["deterministic_used_today"] == 2

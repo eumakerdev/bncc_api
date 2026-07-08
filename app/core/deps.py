@@ -187,9 +187,22 @@ def _enforce(limiter: SlidingWindowLimiter, api_key: ApiKey, bucket: str) -> Non
         )
 
 
-async def rate_limit_deterministic(api_key: ApiKeyAuth) -> ApiKey:
-    """Cota determinística: 60/min + burst 10 (FR-010)."""
+async def rate_limit_deterministic(api_key: ApiKeyAuth, session: SessionDep) -> ApiKey:
+    """Cota determinística: 60/min + burst 10 (FR-010).
+
+    Além do enforcement em memória (janela/min), contabiliza a chamada no bucket
+    ``deterministic`` de ``usage_records`` (métrica durável do painel do portal —
+    US2). Espelha o path de IA; a gravação vem DEPOIS do ``_enforce`` para não
+    contar requisições rejeitadas por 429.
+    """
     _enforce(deterministic_limiter, api_key, "deterministic")
+    try:
+        from app.services.usage_service import record_deterministic
+
+        await record_deterministic(session, api_key.id)
+    except ImportError:
+        # usage_service ainda não implementado (antes de US2) — janela/min já protege.
+        pass
     return api_key
 
 
