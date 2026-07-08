@@ -8,6 +8,7 @@ com as chamadas ao provedor mockadas via monkeypatch (sem rede).
 
 from __future__ import annotations
 
+from http.cookies import SimpleCookie
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -37,13 +38,27 @@ def _mock_provider(monkeypatch, info: OAuthUserInfo) -> None:
     monkeypatch.setattr(oauth_service, "fetch_identity", fake_identity)
 
 
+def _session_value(response) -> str:
+    """Valor do cookie de sessão (`__session`) no Set-Cookie da resposta.
+
+    Atrás do Firebase Hosting só `__session` sobrevive ao backend, então a sessão do
+    portal e o state do OAuth compartilham esse nome. Um valor não-vazio = sessão/state
+    estabelecido; vazio (ou ausente) = deletado/não definido. Substring `"session="`
+    não serve mais para distinguir (é prefixo de `__session=` e casa até na deleção)."""
+    jar: SimpleCookie = SimpleCookie()
+    for header in response.headers.get_list("set-cookie"):
+        jar.load(header)
+    morsel = jar.get("__session")
+    return morsel.value if morsel else ""
+
+
 async def _start(async_client, provider: str = "google") -> str:
     """Inicia o fluxo e devolve o `state` (nonce); o cookie fica no jar do client."""
     r = await async_client.get(f"/portal/auth/{provider}")
     assert r.status_code == 303, r.text
     location = r.headers["location"]
     assert location.startswith(oauth_service.PROVIDERS[provider]["authorize_url"])
-    assert "oauth_state=" in r.headers.get("set-cookie", "")
+    assert _session_value(r)  # state token gravado em __session
     return parse_qs(urlparse(location).query)["state"][0]
 
 
@@ -79,7 +94,7 @@ async def test_callback_creates_account_and_session(async_client, google_enabled
 
     assert r.status_code == 303
     assert r.headers["location"] == "/portal/dashboard"
-    assert "session=" in r.headers.get("set-cookie", "")
+    assert _session_value(r)  # sessão real grava __session (sobrescreve o state)
 
     async with async_session_factory() as session:
         account = (
@@ -127,7 +142,7 @@ async def test_callback_bad_state_rejected(async_client, google_enabled, monkeyp
 
     assert r.status_code == 303
     assert r.headers["location"].startswith("/portal/login")
-    assert "session=" not in r.headers.get("set-cookie", "")
+    assert not _session_value(r)  # state limpo, nenhuma sessão criada
 
 
 @pytest.mark.asyncio
@@ -145,7 +160,7 @@ async def test_callback_provider_error_redirects_to_login(
 
     assert r.status_code == 303
     assert r.headers["location"].startswith("/portal/login")
-    assert "session=" not in r.headers.get("set-cookie", "")
+    assert not _session_value(r)  # falha do provedor: nenhuma sessão criada
 
 
 @pytest.mark.asyncio

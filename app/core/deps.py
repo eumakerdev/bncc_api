@@ -98,7 +98,7 @@ async def get_current_account(
     if credentials is not None:
         token = credentials.credentials
     elif request is not None:
-        token = request.cookies.get("session")
+        token = request.cookies.get("__session")
 
     payload = decode_access_token(token) if token else None
     if not payload or "sub" not in payload:

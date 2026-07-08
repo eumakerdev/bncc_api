@@ -77,19 +77,16 @@ def test_full_authenticated_flow(client, onboarded_account):
     dash = client.get("/portal/dashboard")
     assert dash.status_code == 200
 
-    created = client.post("/portal/keys", data={"name": "minha-key"}, follow_redirects=False)
-    assert created.status_code == 303
-    # A key completa nunca vai na URL (histórico/logs/Referer) — trafega via
-    # cookie httponly de uso único.
-    assert created.headers["location"] == "/portal/dashboard"
-    assert "flash_new_key" in created.cookies
+    # A criação da key renderiza o dashboard DIRETO na resposta do POST, exibindo o
+    # segredo uma única vez. O padrão PRG+cookie-flash não funciona atrás do Firebase
+    # Hosting (descarta todo cookie != `__session`); a key nunca vai na URL.
+    created = client.post("/portal/keys", data={"name": "minha-key"})
+    assert created.status_code == 200
+    assert "minha-key" in created.text
+    assert "Sua nova API key" in created.text
 
-    # dashboard agora lista a key recém-criada e exibe o segredo uma única vez
+    # nova visita ao dashboard lista a key, mas o segredo NÃO reaparece
     dash2 = client.get("/portal/dashboard")
     assert dash2.status_code == 200
     assert "minha-key" in dash2.text
-    assert "Sua nova API key" in dash2.text
-
-    # segunda visita: o cookie de uso único já foi limpo, segredo não reaparece
-    dash3 = client.get("/portal/dashboard")
-    assert "Sua nova API key" not in dash3.text
+    assert "Sua nova API key" not in dash2.text

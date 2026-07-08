@@ -33,7 +33,10 @@ from app.services import account_service
 
 router = APIRouter()
 
-_SESSION_COOKIE = "session"
+# Atrás do Firebase Hosting só o cookie `__session` sobrevive de volta ao backend
+# (os demais são descartados no caminho ao Cloud Run) — por isso a sessão usa esse
+# nome reservado.
+_SESSION_COOKIE = "__session"
 # Valor fictício apenas para os exemplos do OpenAPI (não é um segredo real).
 _EXAMPLE_PW = "SenhaForte123"  # pragma: allowlist secret
 
@@ -164,6 +167,7 @@ async def login(
         token,
         httponly=True,
         samesite="lax",
+        secure=settings.is_production,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     return LoginResponse(

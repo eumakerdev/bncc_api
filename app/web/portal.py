@@ -2,8 +2,9 @@
 Portal SSR self-service (T049/T050/T051) — montado em ``/portal``.
 
 Páginas Jinja para login, cadastro e dashboard (keys + consumo). A sessão usa o
-mesmo JWT do portal, guardado em cookie httponly ``session``. Sem sessão válida,
-``/portal/dashboard`` redireciona para o login.
+mesmo JWT do portal, guardado no cookie httponly ``__session`` (nome reservado que
+o Firebase Hosting deixa passar ao backend — os demais são descartados). Sem sessão
+válida, ``/portal/dashboard`` redireciona para o login.
 
 Import tardio dos serviços/deps para não acoplar o web router à camada de dados
 na importação (ver app/web/router.py).
@@ -41,13 +42,15 @@ from app.web.router import templates
 router = APIRouter()
 logger = logging.getLogger("bncc.oauth")
 
-_SESSION_COOKIE = "session"
-# Cookie de "flash" de uso único para exibir a API key recém-criada sem
-# colocá-la na URL (histórico do navegador, logs de acesso, header Referer).
-_FLASH_NEW_KEY_COOKIE = "flash_new_key"
-# Cookie httponly de curta duração que guarda o token de state assinado do OAuth
-# (anti-CSRF, double-submit contra o parâmetro ?state= do callback).
-_OAUTH_STATE_COOKIE = "oauth_state"
+# Firebase Hosting descarta TODO cookie de request que chegue ao backend, EXCETO um
+# chamado exatamente `__session` (docs: "Only the specially-named `__session` cookie
+# is permitted to pass through"). Atrás do Firebase (bncc.api.br → Cloud Run) qualquer
+# outro nome some no caminho de volta — por isso a sessão do portal E o state assinado
+# do OAuth trafegam ambos por `__session` (nunca são necessários ao mesmo tempo: no
+# início do fluxo social o usuário ainda não tem sessão).
+_SESSION_COOKIE = "__session"
+# Cookie httponly de curta duração para o token de state do OAuth (anti-CSRF,
+# double-submit contra o ?state= do callback). Reusa o nome `__session` (ver acima).
 _OAUTH_STATE_TTL_MINUTES = 10
 
 _OAUTH_DISABLED_MSG = "Login social indisponível para este provedor."
@@ -78,7 +81,8 @@ def _login_redirect_with_error(message: str) -> RedirectResponse:
     response = RedirectResponse(
         url=f"/portal/login?error={quote(message)}", status_code=status.HTTP_303_SEE_OTHER
     )
-    response.delete_cookie(_OAUTH_STATE_COOKIE)
+    # Limpa o state token transitório guardado em `__session`.
+    response.delete_cookie(_SESSION_COOKIE)
     return response
 
 
@@ -167,9 +171,10 @@ async def signup_submit(
 # Login social (OAuth 2.0 — Google / GitHub)
 # --------------------------------------------------------------------------- #
 def _set_oauth_state(response: RedirectResponse, provider: str, nonce: str) -> None:
-    # O state é um JWT curto assinado com SECRET_KEY, guardado em cookie httponly.
-    # O ?state= do provedor carrega só o nonce; no callback exigimos que o nonce
-    # bata com o `sub` do token do cookie (double-submit anti-CSRF).
+    # O state é um JWT curto assinado com SECRET_KEY, guardado no cookie `__session`
+    # (o único que sobrevive atrás do Firebase Hosting; ver constantes acima). O ?state=
+    # do provedor carrega só o nonce; no callback exigimos que o nonce bata com o `sub`
+    # do token do cookie (double-submit anti-CSRF, ligado ao navegador).
     state_token = create_access_token(
         subject=nonce,
         expires_minutes=_OAUTH_STATE_TTL_MINUTES,
@@ -177,7 +182,7 @@ def _set_oauth_state(response: RedirectResponse, provider: str, nonce: str) -> N
         provider=provider,
     )
     response.set_cookie(
-        _OAUTH_STATE_COOKIE,
+        _SESSION_COOKIE,
         state_token,
         httponly=True,
         samesite="lax",
@@ -217,7 +222,7 @@ async def oauth_callback(
 
     # Anti-CSRF: o cookie de state (JWT assinado) precisa existir, ser deste
     # provedor e ter `sub` == ?state= devolvido pelo provedor.
-    state_cookie = request.cookies.get(_OAUTH_STATE_COOKIE)
+    state_cookie = request.cookies.get(_SESSION_COOKIE)
     payload = decode_access_token(state_cookie) if state_cookie else None
     if (
         not code
@@ -244,8 +249,8 @@ async def oauth_callback(
 
     logger.info("Login social concluído (provider=%s)", provider)
     response = RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    # `_set_session` sobrescreve `__session` (que carregava o state) com a sessão real.
     _set_session(response, token)
-    response.delete_cookie(_OAUTH_STATE_COOKIE)
     return response
 
 
@@ -362,6 +367,19 @@ async def onboarding_submit(
 # --------------------------------------------------------------------------- #
 # Dashboard (requer sessão + onboarding concluído)
 # --------------------------------------------------------------------------- #
+async def _render_dashboard(
+    request: Request, account: DeveloperAccount, new_key: str | None = None
+):
+    async with async_session_factory() as session:
+        keys = await apikey_service.list_keys(session, account.id)
+        usage = await usage_service.account_usage(session, account.id)
+    return templates.TemplateResponse(
+        request,
+        "portal/dashboard.html",
+        {"account": account, "keys": keys, "usage": usage, "new_key": new_key},
+    )
+
+
 @router.get("/dashboard")
 async def dashboard(request: Request):
     account = await _account_from_request(request)
@@ -369,25 +387,7 @@ async def dashboard(request: Request):
         return RedirectResponse(url="/portal/login", status_code=status.HTTP_303_SEE_OTHER)
     if await _onboarding_pending(account.id):
         return RedirectResponse(url="/portal/onboarding", status_code=status.HTTP_303_SEE_OTHER)
-
-    async with async_session_factory() as session:
-        keys = await apikey_service.list_keys(session, account.id)
-        usage = await usage_service.account_usage(session, account.id)
-
-    response = templates.TemplateResponse(
-        request,
-        "portal/dashboard.html",
-        {
-            "account": account,
-            "keys": keys,
-            "usage": usage,
-            "new_key": request.cookies.get(_FLASH_NEW_KEY_COOKIE),
-        },
-    )
-    # Uso único: some da tela ao próximo carregamento, mesmo com F5/voltar.
-    if _FLASH_NEW_KEY_COOKIE in request.cookies:
-        response.delete_cookie(_FLASH_NEW_KEY_COOKIE)
-    return response
+    return await _render_dashboard(request, account)
 
 
 @router.post("/keys")
@@ -401,18 +401,11 @@ async def dashboard_create_key(request: Request, name: str = Form(...)):
         return RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     async with async_session_factory() as session:
         _key, full_key = await apikey_service.create(session, account, name)
-    # A key completa NUNCA vai na URL (histórico do navegador, logs de acesso,
-    # header Referer) — trafega só via cookie httponly de uso único.
-    response = RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(
-        _FLASH_NEW_KEY_COOKIE,
-        full_key,
-        httponly=True,
-        samesite="lax",
-        secure=settings.is_production,
-        max_age=30,
-    )
-    return response
+    # A key completa NUNCA vai na URL (histórico do navegador, logs de acesso, header
+    # Referer). O padrão PRG+cookie-flash não funciona atrás do Firebase Hosting, que
+    # descarta qualquer cookie que não seja `__session` (ocupado pela sessão). Então
+    # renderizamos o dashboard direto na resposta do POST, exibindo a key uma só vez.
+    return await _render_dashboard(request, account, new_key=full_key)
 
 
 @router.post("/keys/{key_id}/revoke")
