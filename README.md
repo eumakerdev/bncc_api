@@ -45,7 +45,9 @@ Cansei de reinventar essa roda. Então resolvi extrair a BNCC **inteira**, com f
 oficial, e servir tudo por uma API limpa — do jeito que eu gostaria de ter encontrado pronto. E como
 essa dor é de todo mundo que constrói coisas para educação no Brasil, decidi abrir o código.
 
-**É de graça, é open-source e aceita contribuidores.** Se te ajudar, [me pague um café](#-apoie-o-projeto-) ☕.
+Dado curricular é público. Acredito que ele tem que estar à disposição de quem constrói — sem paywall,
+sem fila. Por isso a API é **gratuita, open-source e aceita contribuidores**. Se ela te poupar o
+trabalho que me poupou, [me pague um café](#-apoie-o-projeto-) ☕.
 
 ---
 
@@ -220,9 +222,14 @@ vulnerabilidade? **Não abra uma issue pública** — siga a [política de segur
 
 ## ❤️ Apoie o projeto
 
-Este projeto é **gratuito e mantido nas horas livres**. Se ele te economizou tempo ou entrou em algo
-que você construiu, considere apoiar — ajuda a cobrir os custos de infraestrutura (a API roda no
-Cloud Run com banco Postgres, e isso tem um custo mensal contínuo) e a manter tudo no ar.
+Esta API é gratuita e vai continuar sendo. Mas "grátis" não quer dizer "sem custo": ela roda em
+infraestrutura real (Cloud Run + Postgres) e essa conta chega todo mês. Hoje a **Expertia** e a
+**EuMaker** bancam isso — e há um teto de quanto conseguimos segurar sozinhos conforme o uso cresce.
+
+Por isso o custo real da infraestrutura fica **público na landing** (`/#transparencia`): o valor
+faturado pelo Google Cloud, atualizado sozinho, sem estimativa. Se você vai pedir apoio, mostra a
+conta. Se a API poupou seu tempo ou entrou no que você construiu, qualquer valor ajuda a manter tudo
+no ar — nem que seja um cafezinho recorrente.
 
 ### 🌍 GitHub Sponsors _(internacional)_
 
@@ -237,10 +244,10 @@ Aponte a câmera para o QR Code ao lado, **ou** copie o código abaixo e cole em
 **Pix › Copia e Cola** no app do seu banco (você escolhe o valor):
 
 ```
-00020126580014br.gov.bcb.pix013636775e59-1e28-45af-88c2-579c24fbe43c5204000053039865802BR5913FABIO SANTANA6006BRASIL62070503***63045A4B
+00020126360014BR.GOV.BCB.PIX0114+55719990084435204000053039865802BR5913FABIO SANTANA6006BRASIL62110507BNCCAPI63040E12
 ```
 
-Ou use a chave aleatória diretamente: `36775e59-1e28-45af-88c2-579c24fbe43c`
+Ou use a chave (telefone) diretamente: `+5571999008443`
 
 <br clear="right" />
 

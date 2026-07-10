@@ -77,7 +77,7 @@ def test_landing_page_replicates_github_funding(client):
     assert "github.com/sponsors/eumakerdev" in body
     assert "pix-qrcode.png" in body
     # Código Pix copia-e-cola presente (mesmo do README):
-    assert "00020126580014br.gov.bcb.pix" in body
+    assert "00020126360014BR.GOV.BCB.PIX" in body
 
 
 def test_landing_page_keeps_ai_marked_non_official(client):
