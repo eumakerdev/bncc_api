@@ -5,11 +5,25 @@
 
 {% block content %}
 <div class="container section auth-wrap">
-  <h1>Crie sua conta gratuita</h1>
-  <p class="lead">
-    API key na hora, sem cartão e sem fila de aprovação. Toda a BNCC a uma
-    chamada de distância.
-  </p>
+  <span class="auth-mark" aria-hidden="true">
+    <svg viewBox="0 0 48 48" width="42" height="42" focusable="false">
+      <defs>
+        <linearGradient id="auth-tile" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#1b4dff"/>
+          <stop offset="1" stop-color="#0aa8dc"/>
+        </linearGradient>
+      </defs>
+      <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#auth-tile)"/>
+      <g fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 22l11 4.5L35 22"/>
+        <path d="M13 28.6l11 4.5 11-4.5"/>
+        <path d="M13 35.2l11 4.5 11-4.5"/>
+      </g>
+      <circle cx="24" cy="13.8" r="3.3" fill="#ffc53d"/>
+    </svg>
+  </span>
+  <h1>Crie sua conta grátis</h1>
+  <p class="lead">Chave na hora, sem cartão. Toda a BNCC a uma chamada de distância.</p>
 
   {% if error %}<div class="notice notice-danger" role="alert">{{ error }}</div>{% endif %}
 
