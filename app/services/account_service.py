@@ -23,7 +23,7 @@ from app.core.security import (
     hash_verification_token,
     verify_password,
 )
-from app.db.tables import DeveloperAccount, EmailVerificationToken
+from app.db.tables import DeveloperAccount, EmailVerificationToken, PasswordResetToken
 from app.services import email_service
 
 # Mensagens neutras (não revelam se o e-mail existe / qual credencial falhou).
@@ -31,6 +31,9 @@ _SIGNUP_CONFLICT = "Não foi possível concluir o cadastro."
 _LOGIN_FAILED = "Credenciais inválidas ou e-mail não verificado."
 _TOKEN_INVALID = "Token de verificação inválido."
 _TOKEN_EXPIRED = "Token de verificação expirado ou já utilizado."
+_CURRENT_PASSWORD_INVALID = "Senha atual incorreta."  # pragma: allowlist secret
+_RESET_TOKEN_INVALID = "Link de redefinição inválido."
+_RESET_TOKEN_EXPIRED = "Link de redefinição expirado ou já utilizado."
 
 # Hash Argon2 fixo (senha nunca usada por conta real) para gastar o mesmo tempo
 # de verificação quando a conta não existe — sem isto, `verify_password` só
@@ -159,3 +162,83 @@ async def login(
         email=account.email,
         expires_minutes=expires_minutes,
     )
+
+
+# --------------------------------------------------------------------------- #
+# Gestão de senha
+# --------------------------------------------------------------------------- #
+async def change_password(
+    session: AsyncSession,
+    account: DeveloperAccount,
+    current_password: str,
+    new_password: str,
+) -> None:
+    """Troca a senha de uma conta autenticada, exigindo a senha atual.
+
+    Contas só-social (``password_hash`` NULL) não têm senha atual válida: a
+    verificação falha e devem usar o fluxo de redefinição para **definir** uma.
+    """
+    hash_to_check = account.password_hash or _DUMMY_PASSWORD_HASH
+    if not verify_password(current_password, hash_to_check) or not account.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=_CURRENT_PASSWORD_INVALID
+        )
+    account.password_hash = hash_password(new_password)
+    await session.commit()
+
+
+async def request_password_reset(session: AsyncSession, email: str) -> str | None:
+    """Emite (e envia) um token de redefinição de senha de uso único.
+
+    **Anti-enumeração:** para e-mail inexistente não cria registro nem envia nada,
+    e o chamador sempre responde de forma idêntica. Retorna o token em claro apenas
+    quando emitido (para o backend de console em dev/testes); nunca é persistido em
+    claro. Funciona também para contas só-social — permite *definir* uma senha.
+    """
+    normalized = _normalize_email(email)
+    result = await session.execute(
+        select(DeveloperAccount).where(DeveloperAccount.email == normalized)
+    )
+    account = result.scalar_one_or_none()
+    if account is None:
+        return None
+
+    token, token_hash = generate_verification_token()
+    reset = PasswordResetToken(
+        account_id=account.id,
+        token_hash=token_hash,
+        expires_at=_now() + timedelta(minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES),
+    )
+    session.add(reset)
+    await session.commit()
+
+    await email_service.send_password_reset_email(account.email, token)
+    return token
+
+
+async def reset_password(session: AsyncSession, token: str, new_password: str) -> DeveloperAccount:
+    """Consome o token de redefinição e grava a nova senha.
+
+    Possuir o link prova controle da caixa de e-mail, então a conta é marcada como
+    verificada (mesma semântica da verificação de e-mail)."""
+    token_hash = hash_verification_token(token)
+    result = await session.execute(
+        select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
+    )
+    record = result.scalar_one_or_none()
+
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_RESET_TOKEN_INVALID)
+    if record.used_at is not None or _as_aware(record.expires_at) <= _now():
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail=_RESET_TOKEN_EXPIRED)
+
+    account = await session.get(DeveloperAccount, record.account_id)
+    if account is None:  # integridade referencial — não deveria ocorrer
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_RESET_TOKEN_INVALID)
+
+    record.used_at = _now()
+    account.password_hash = hash_password(new_password)
+    account.email_verified = True
+    await session.commit()
+    await session.refresh(account)
+    return account

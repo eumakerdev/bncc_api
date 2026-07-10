@@ -14,6 +14,7 @@ from fastapi import APIRouter, Body, Response, status
 from app.core.config import settings
 from app.core.deps import (
     CurrentAccount,
+    ForgotRateLimited,
     LoginRateLimited,
     SessionDep,
     SignupRateLimited,
@@ -22,8 +23,12 @@ from app.core.deps import (
 from app.models.bncc import ErrorResponse
 from app.models.platform import (
     AccountMe,
+    ChangePasswordRequest,
+    ForgotPasswordRequest,
     LoginRequest,
     LoginResponse,
+    MessageResponse,
+    ResetPasswordRequest,
     SignupRequest,
     SignupResponse,
     VerifyEmailRequest,
@@ -209,3 +214,117 @@ async def me(account: CurrentAccount) -> AccountMe:
         email=account.email,
         email_verified=account.email_verified,
     )
+
+
+@router.post(
+    "/change-password",
+    response_model=MessageResponse,
+    summary="Trocar a senha da conta autenticada",
+    response_description="Confirmação de que a senha foi alterada.",
+    description=(
+        "Troca a senha da conta associada à sessão atual, exigindo a senha atual. "
+        "A nova senha deve seguir a política (mín. 10 caracteres, com letras e "
+        "números). Contas criadas apenas por login social não possuem senha atual — "
+        "use o fluxo de redefinição para definir uma."
+    ),
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Senha atual incorreta ou nova senha inválida.",
+        },
+        401: {"model": ErrorResponse, "description": "Sessão ausente, inválida ou expirada."},
+    },
+)
+async def change_password(
+    payload: Annotated[
+        ChangePasswordRequest,
+        Body(
+            openapi_examples={
+                "padrao": {
+                    "summary": "Troca de senha",
+                    "value": {
+                        "current_password": _EXAMPLE_PW,  # pragma: allowlist secret
+                        "new_password": "NovaSenha456",  # pragma: allowlist secret
+                    },
+                },
+            },
+        ),
+    ],
+    account: CurrentAccount,
+    session: SessionDep,
+) -> MessageResponse:
+    await account_service.change_password(
+        session, account, payload.current_password, payload.new_password
+    )
+    return MessageResponse(detail="Senha alterada com sucesso.")
+
+
+@router.post(
+    "/forgot-password",
+    response_model=MessageResponse,
+    summary="Solicitar redefinição de senha",
+    response_description="Resposta neutra: sempre a mesma, exista ou não a conta.",
+    description=(
+        "Dispara um e-mail com um link de redefinição de senha de uso único, quando "
+        "existe uma conta para o e-mail informado. Para preservar a privacidade "
+        "(anti-enumeração — Princípio V), a resposta é idêntica exista ou não a conta."
+    ),
+    responses={
+        429: {"model": ErrorResponse, "description": "Muitas solicitações deste IP."},
+    },
+)
+async def forgot_password(
+    payload: Annotated[
+        ForgotPasswordRequest,
+        Body(
+            openapi_examples={
+                "padrao": {"summary": "Pedido de reset", "value": {"email": "dev@example.com"}},
+            },
+        ),
+    ],
+    session: SessionDep,
+    _rate_limit: ForgotRateLimited,
+) -> MessageResponse:
+    await account_service.request_password_reset(session, payload.email)
+    return MessageResponse(
+        detail="Se houver uma conta para este e-mail, enviamos um link de redefinição."
+    )
+
+
+@router.post(
+    "/reset-password",
+    response_model=MessageResponse,
+    summary="Redefinir a senha com o token do e-mail",
+    response_description="Confirmação de que a senha foi redefinida.",
+    description=(
+        "Consome o token de uso único enviado por e-mail e grava a nova senha "
+        "(seguindo a política). Possuir o link comprova controle do e-mail, então a "
+        "conta é marcada como verificada."
+    ),
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Token inválido ou nova senha fora da política.",
+        },
+        410: {"model": ErrorResponse, "description": "Token expirado ou já utilizado."},
+    },
+)
+async def reset_password(
+    payload: Annotated[
+        ResetPasswordRequest,
+        Body(
+            openapi_examples={
+                "padrao": {
+                    "summary": "Redefinição",
+                    "value": {
+                        "token": "token-recebido-por-email",
+                        "new_password": "NovaSenha456",  # pragma: allowlist secret
+                    },
+                },
+            },
+        ),
+    ],
+    session: SessionDep,
+) -> MessageResponse:
+    await account_service.reset_password(session, payload.token, payload.new_password)
+    return MessageResponse(detail="Senha redefinida com sucesso. Faça login para continuar.")

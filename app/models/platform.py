@@ -8,7 +8,7 @@ Segredos (hash de senha/key/token) nunca aparecem em nenhum schema de saída.
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -68,6 +68,43 @@ class AccountMe(BaseModel):
 
 
 # --------------------------------------------------------------------------- #
+# Gestão de senha (troca logada + "esqueci a senha")
+# --------------------------------------------------------------------------- #
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., description="Senha atual da conta")
+    new_password: str = Field(
+        ..., description="Nova senha: mín. 10 caracteres, com letras e números"
+    )
+
+    @field_validator("new_password")
+    @classmethod
+    def _password_policy(cls, v: str) -> str:
+        return _validate_password_policy(v)
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=8)
+    new_password: str = Field(
+        ..., description="Nova senha: mín. 10 caracteres, com letras e números"
+    )
+
+    @field_validator("new_password")
+    @classmethod
+    def _password_policy(cls, v: str) -> str:
+        return _validate_password_policy(v)
+
+
+class MessageResponse(BaseModel):
+    """Resposta neutra e genérica (usada em fluxos anti-enumeração)."""
+
+    detail: str
+
+
+# --------------------------------------------------------------------------- #
 # API keys
 # --------------------------------------------------------------------------- #
 class CreateApiKeyRequest(BaseModel):
@@ -113,3 +150,34 @@ class AccountUsageResponse(BaseModel):
     total_keys: int
     deterministic_used_today: int
     ai_used_today: int
+
+
+class UsageDailyPoint(BaseModel):
+    """Um ponto da série diária do painel (um dia do calendário UTC)."""
+
+    date: date
+    total: int = Field(..., description="Chamadas autorizadas no dia (qualquer desfecho)")
+    successful: int = Field(..., description="Chamadas com desfecho de sucesso (< 400)")
+    failed: int = Field(..., description="Chamadas com desfecho de erro (>= 400)")
+
+
+class AccountAnalyticsResponse(BaseModel):
+    """BI de uso da conta: série diária + KPIs agregados da janela (30 dias)."""
+
+    account_id: str
+    window_days: int
+    series: list[UsageDailyPoint]
+    total_requests: int
+    successful_requests: int
+    failed_requests: int
+    success_rate: float | None = Field(
+        None, description="successful/total na janela; nulo quando não houve tráfego"
+    )
+    total_requests_prev: int = Field(..., description="Total da janela anterior (para o delta)")
+    total_requests_delta_pct: float | None = Field(
+        None, description="Variação % vs. janela anterior; nulo quando a anterior foi zero"
+    )
+    ai_requests: int = Field(..., description="Chamadas de IA na janela")
+    deterministic_requests: int = Field(..., description="Chamadas determinísticas na janela")
+    active_keys: int
+    new_keys_last_7d: int = Field(..., description="Keys ativas criadas nos últimos 7 dias")

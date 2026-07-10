@@ -53,6 +53,9 @@ verify_ip_limiter = SlidingWindowLimiter(
 oauth_ip_limiter = SlidingWindowLimiter(
     max_requests=settings.RATE_LIMIT_OAUTH_PER_MIN, window_seconds=60
 )
+forgot_ip_limiter = SlidingWindowLimiter(
+    max_requests=settings.RATE_LIMIT_FORGOT_PER_MIN, window_seconds=60
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -187,7 +190,22 @@ def _enforce(limiter: SlidingWindowLimiter, api_key: ApiKey, bucket: str) -> Non
         )
 
 
-async def rate_limit_deterministic(api_key: ApiKeyAuth, session: SessionDep) -> ApiKey:
+def _mark_usage(request: Request | None, api_key_id: str, bucket: str) -> None:
+    """Sinaliza no ``request.state`` a key/bucket cujo ``count`` já foi contabilizado.
+
+    O ``UsageOutcomeMiddleware`` lê estes campos após a resposta e, se o status for
+    de erro (>= 400), incrementa ``error_count`` da mesma linha diária. Só marcamos
+    depois do registro do total — assim taxa de sucesso e total ficam consistentes,
+    e requisições barradas por 429 (sem total) não entram na conta de erros.
+    """
+    if request is not None:
+        request.state.usage_api_key_id = api_key_id
+        request.state.usage_bucket = bucket
+
+
+async def rate_limit_deterministic(
+    api_key: ApiKeyAuth, session: SessionDep, request: Request = None  # type: ignore[assignment]
+) -> ApiKey:
     """Cota determinística: 60/min + burst 10 (FR-010).
 
     Além do enforcement em memória (janela/min), contabiliza a chamada no bucket
@@ -200,13 +218,16 @@ async def rate_limit_deterministic(api_key: ApiKeyAuth, session: SessionDep) -> 
         from app.services.usage_service import record_deterministic
 
         await record_deterministic(session, api_key.id)
+        _mark_usage(request, api_key.id, "deterministic")
     except ImportError:
         # usage_service ainda não implementado (antes de US2) — janela/min já protege.
         pass
     return api_key
 
 
-async def rate_limit_ai(api_key: ApiKeyAuth, session: SessionDep) -> ApiKey:
+async def rate_limit_ai(
+    api_key: ApiKeyAuth, session: SessionDep, request: Request = None  # type: ignore[assignment]
+) -> ApiKey:
     """
     Cota de IA: 20/min (in-process) + teto diário de 500/dia durável (FR-010a).
 
@@ -217,6 +238,7 @@ async def rate_limit_ai(api_key: ApiKeyAuth, session: SessionDep) -> ApiKey:
         from app.services.usage_service import check_and_record_daily_ai
 
         await check_and_record_daily_ai(session, api_key.id)
+        _mark_usage(request, api_key.id, "ai")
     except ImportError:
         # usage_service ainda não implementado (antes de US2) — janela/min já protege.
         pass
@@ -264,10 +286,16 @@ async def rate_limit_oauth_ip(request: Request) -> None:
     _enforce_ip(oauth_ip_limiter, "oauth-ip", request)
 
 
+async def rate_limit_forgot_ip(request: Request) -> None:
+    """Cota por IP para "esqueci a senha" (coíbe spam de e-mail e enumeração)."""
+    _enforce_ip(forgot_ip_limiter, "forgot-ip", request)
+
+
 LoginRateLimited = Annotated[None, Depends(rate_limit_login_ip)]
 SignupRateLimited = Annotated[None, Depends(rate_limit_signup_ip)]
 VerifyRateLimited = Annotated[None, Depends(rate_limit_verify_ip)]
 OAuthRateLimited = Annotated[None, Depends(rate_limit_oauth_ip)]
+ForgotRateLimited = Annotated[None, Depends(rate_limit_forgot_ip)]
 
 
 # --------------------------------------------------------------------------- #

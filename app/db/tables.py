@@ -62,6 +62,9 @@ class DeveloperAccount(Base):
     verification_tokens: Mapped[list[EmailVerificationToken]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )
+    reset_tokens: Mapped[list[PasswordResetToken]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
     onboarding: Mapped[OnboardingProfile | None] = relationship(
         back_populates="account", cascade="all, delete-orphan", uselist=False
     )
@@ -175,6 +178,33 @@ class UsageRecord(Base):
     )
     bucket: Mapped[UsageBucket] = mapped_column(Enum(UsageBucket), nullable=False)
     window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # ``count`` é o total de chamadas autorizadas do dia (passaram no rate limit),
+    # independentemente do desfecho; ``error_count`` é o subconjunto que terminou
+    # em erro (>= 400). Assim taxa de sucesso = (count - error_count) / count sem
+    # tocar a UniqueConstraint (aditivo, migração 0004). Ver usage_service.
     count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    error_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     api_key: Mapped[ApiKey] = relationship(back_populates="usage_records")
+
+
+class PasswordResetToken(Base):
+    """Token de uso único para redefinição de senha (fluxo "esqueci a senha").
+
+    Mesma disciplina do ``EmailVerificationToken``: só o hash SHA-256 é persistido,
+    expira e é invalidado após o uso. Anti-enumeração: solicitar reset para um
+    e-mail inexistente não cria registro nem revela a ausência.
+    """
+
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    account_id: Mapped[str] = mapped_column(
+        ForeignKey("developer_accounts.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    account: Mapped[DeveloperAccount] = relationship(back_populates="reset_tokens")

@@ -46,6 +46,7 @@ def _reset_rate_limiters():
     from app.core.deps import (
         ai_limiter,
         deterministic_limiter,
+        forgot_ip_limiter,
         login_ip_limiter,
         oauth_ip_limiter,
         signup_ip_limiter,
@@ -58,6 +59,7 @@ def _reset_rate_limiters():
     signup_ip_limiter.reset()
     verify_ip_limiter.reset()
     oauth_ip_limiter.reset()
+    forgot_ip_limiter.reset()
     yield
 
 

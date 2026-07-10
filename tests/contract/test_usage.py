@@ -97,3 +97,49 @@ async def test_deterministic_request_is_counted_in_portal(
     agg = await async_client.get("/api/v1/usage", headers=_session(verified_account.id))
     assert agg.status_code == 200, agg.text
     assert agg.json()["deterministic_used_today"] == 2
+
+
+@pytest.mark.asyncio
+async def test_account_analytics_shape(async_client, verified_account, api_key):
+    r = await async_client.get("/api/v1/usage/analytics", headers=_session(verified_account.id))
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["account_id"] == verified_account.id
+    assert body["window_days"] == 30
+    assert len(body["series"]) == 30
+    # Sem tráfego: taxa de sucesso é nula (painel mostra "—", não 0%/100%).
+    assert body["success_rate"] is None
+    assert body["total_requests"] == 0
+    assert body["active_keys"] >= 1
+    # A série é ordenada e termina hoje.
+    assert body["series"][0]["date"] <= body["series"][-1]["date"]
+
+
+@pytest.mark.asyncio
+async def test_analytics_reflects_success_and_failure(
+    async_client, verified_account, api_key, auth_headers
+):
+    """Integração ponta a ponta: uma chamada OK e uma 404 alimentam o BI.
+
+    O ``UsageOutcomeMiddleware`` contabiliza o desfecho de erro (>= 400) da chamada
+    real (sem override), de modo que a taxa de sucesso e a série diária refletem
+    total=2, bem-sucedidas=1."""
+    # 1 chamada determinística bem-sucedida.
+    ok = await async_client.get("/api/v1/taxonomia", headers=auth_headers)
+    assert ok.status_code == 200, ok.text
+    # 1 chamada com formato válido mas código inexistente → 404.
+    missing = await async_client.get("/api/v1/habilidades/EF99ZZ99", headers=auth_headers)
+    assert missing.status_code == 404, missing.text
+
+    r = await async_client.get("/api/v1/usage/analytics", headers=_session(verified_account.id))
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["total_requests"] == 2
+    assert body["failed_requests"] == 1
+    assert body["successful_requests"] == 1
+    assert body["success_rate"] == 0.5
+    # O ponto de hoje (último da série) reflete os desfechos.
+    today = body["series"][-1]
+    assert today["total"] == 2
+    assert today["successful"] == 1
+    assert today["failed"] == 1

@@ -1,6 +1,101 @@
 {
   "components": {
     "schemas": {
+      "AccountAnalyticsResponse": {
+        "description": "BI de uso da conta: série diária + KPIs agregados da janela (30 dias).",
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "string"
+          },
+          "active_keys": {
+            "title": "Active Keys",
+            "type": "integer"
+          },
+          "ai_requests": {
+            "description": "Chamadas de IA na janela",
+            "title": "Ai Requests",
+            "type": "integer"
+          },
+          "deterministic_requests": {
+            "description": "Chamadas determinísticas na janela",
+            "title": "Deterministic Requests",
+            "type": "integer"
+          },
+          "failed_requests": {
+            "title": "Failed Requests",
+            "type": "integer"
+          },
+          "new_keys_last_7d": {
+            "description": "Keys ativas criadas nos últimos 7 dias",
+            "title": "New Keys Last 7D",
+            "type": "integer"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/UsageDailyPoint"
+            },
+            "title": "Series",
+            "type": "array"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "successful/total na janela; nulo quando não houve tráfego",
+            "title": "Success Rate"
+          },
+          "successful_requests": {
+            "title": "Successful Requests",
+            "type": "integer"
+          },
+          "total_requests": {
+            "title": "Total Requests",
+            "type": "integer"
+          },
+          "total_requests_delta_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Variação % vs. janela anterior; nulo quando a anterior foi zero",
+            "title": "Total Requests Delta Pct"
+          },
+          "total_requests_prev": {
+            "description": "Total da janela anterior (para o delta)",
+            "title": "Total Requests Prev",
+            "type": "integer"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "account_id",
+          "window_days",
+          "series",
+          "total_requests",
+          "successful_requests",
+          "failed_requests",
+          "total_requests_prev",
+          "ai_requests",
+          "deterministic_requests",
+          "active_keys",
+          "new_keys_last_7d"
+        ],
+        "title": "AccountAnalyticsResponse",
+        "type": "object"
+      },
       "AccountMe": {
         "properties": {
           "account_id": {
@@ -142,6 +237,29 @@
         "title": "AreaConhecimento",
         "type": "string"
       },
+      "Body_change_password_submit_portal_account_password_post": {
+        "properties": {
+          "confirm_password": {
+            "title": "Confirm Password",
+            "type": "string"
+          },
+          "current_password": {
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password",
+          "confirm_password"
+        ],
+        "title": "Body_change_password_submit_portal_account_password_post",
+        "type": "object"
+      },
       "Body_dashboard_create_key_portal_keys_post": {
         "properties": {
           "name": {
@@ -153,6 +271,19 @@
           "name"
         ],
         "title": "Body_dashboard_create_key_portal_keys_post",
+        "type": "object"
+      },
+      "Body_forgot_password_submit_portal_forgot_password_post": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "Body_forgot_password_submit_portal_forgot_password_post",
         "type": "object"
       },
       "Body_login_submit_portal_login_post": {
@@ -192,6 +323,29 @@
           "step"
         ],
         "title": "Body_onboarding_submit_portal_onboarding_post",
+        "type": "object"
+      },
+      "Body_reset_password_submit_portal_reset_password_post": {
+        "properties": {
+          "confirm_password": {
+            "title": "Confirm Password",
+            "type": "string"
+          },
+          "new_password": {
+            "title": "New Password",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "new_password",
+          "confirm_password"
+        ],
+        "title": "Body_reset_password_submit_portal_reset_password_post",
         "type": "object"
       },
       "Body_signup_submit_portal_signup_post": {
@@ -354,6 +508,26 @@
           "resposta"
         ],
         "title": "BuscaSemanticaResponse",
+        "type": "object"
+      },
+      "ChangePasswordRequest": {
+        "properties": {
+          "current_password": {
+            "description": "Senha atual da conta",
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "description": "Nova senha: mín. 10 caracteres, com letras e números",
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest",
         "type": "object"
       },
       "CompetenciaEspecifica": {
@@ -578,6 +752,20 @@
         "title": "EtapaEnsino",
         "type": "string"
       },
+      "ForgotPasswordRequest": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "ForgotPasswordRequest",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -792,6 +980,20 @@
         "title": "LoginResponse",
         "type": "object"
       },
+      "MessageResponse": {
+        "description": "Resposta neutra e genérica (usada em fluxos anti-enumeração).",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "MessageResponse",
+        "type": "object"
+      },
       "PaginatedResponse": {
         "description": "Resposta paginada genérica.",
         "example": {
@@ -837,6 +1039,26 @@
           "pages"
         ],
         "title": "PaginatedResponse",
+        "type": "object"
+      },
+      "ResetPasswordRequest": {
+        "properties": {
+          "new_password": {
+            "description": "Nova senha: mín. 10 caracteres, com letras e números",
+            "title": "New Password",
+            "type": "string"
+          },
+          "token": {
+            "minLength": 8,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "new_password"
+        ],
+        "title": "ResetPasswordRequest",
         "type": "object"
       },
       "SignupRequest": {
@@ -924,6 +1146,39 @@
           "data_publicacao"
         ],
         "title": "SnapshotMetadata",
+        "type": "object"
+      },
+      "UsageDailyPoint": {
+        "description": "Um ponto da série diária do painel (um dia do calendário UTC).",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "failed": {
+            "description": "Chamadas com desfecho de erro (>= 400)",
+            "title": "Failed",
+            "type": "integer"
+          },
+          "successful": {
+            "description": "Chamadas com desfecho de sucesso (< 400)",
+            "title": "Successful",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Chamadas autorizadas no dia (qualquer desfecho)",
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "total",
+          "successful",
+          "failed"
+        ],
+        "title": "UsageDailyPoint",
         "type": "object"
       },
       "ValidationError": {
@@ -1024,6 +1279,142 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/change-password": {
+      "post": {
+        "description": "Troca a senha da conta associada à sessão atual, exigindo a senha atual. A nova senha deve seguir a política (mín. 10 caracteres, com letras e números). Contas criadas apenas por login social não possuem senha atual — use o fluxo de redefinição para definir uma.",
+        "operationId": "change_password_api_v1_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "padrao": {
+                  "summary": "Troca de senha",
+                  "value": {
+                    "current_password": "SenhaForte123",
+                    "new_password": "NovaSenha456"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Confirmação de que a senha foi alterada."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Senha atual incorreta ou nova senha inválida."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Trocar a senha da conta autenticada",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "description": "Dispara um e-mail com um link de redefinição de senha de uso único, quando existe uma conta para o e-mail informado. Para preservar a privacidade (anti-enumeração — Princípio V), a resposta é idêntica exista ou não a conta.",
+        "operationId": "forgot_password_api_v1_auth_forgot_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "padrao": {
+                  "summary": "Pedido de reset",
+                  "value": {
+                    "email": "dev@example.com"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Resposta neutra: sempre a mesma, exista ou não a conta."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Muitas solicitações deste IP."
+          }
+        },
+        "summary": "Solicitar redefinição de senha",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "description": "Autentica com e-mail/senha e retorna um JWT de sessão do portal (também definido como cookie httponly `session`). Falha de credencial ou e-mail não verificado retornam a mesma mensagem (anti-enumeração — Princípio V / FR-023).",
@@ -1153,6 +1544,77 @@
           }
         ],
         "summary": "Dados da conta autenticada",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "description": "Consome o token de uso único enviado por e-mail e grava a nova senha (seguindo a política). Possuir o link comprova controle do e-mail, então a conta é marcada como verificada.",
+        "operationId": "reset_password_api_v1_auth_reset_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "padrao": {
+                  "summary": "Redefinição",
+                  "value": {
+                    "new_password": "NovaSenha456",
+                    "token": "a1b2c3d4e5f6"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Confirmação de que a senha foi redefinida."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Token inválido ou nova senha fora da política."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Token expirado ou já utilizado."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Redefinir a senha com o token do e-mail",
         "tags": [
           "Autenticação"
         ]
@@ -2446,6 +2908,44 @@
           }
         ],
         "summary": "Uso agregado da conta",
+        "tags": [
+          "Uso",
+          "Uso"
+        ]
+      }
+    },
+    "/api/v1/usage/analytics": {
+      "get": {
+        "description": "Retorna o BI de uso da conta autenticada: uma série diária dos últimos 30 dias (chamadas totais vs. bem-sucedidas) e indicadores agregados para o painel do portal (total de requisições com variação vs. período anterior, taxa de sucesso, chamadas de IA e determinísticas, keys ativas e novas). Exige sessão do portal.",
+        "operationId": "account_analytics_api_v1_usage_analytics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountAnalyticsResponse"
+                }
+              }
+            },
+            "description": "Série diária dos últimos 30 dias (total vs. bem-sucedidas) e KPIs agregados: total de requisições e variação, taxa de sucesso, uso de IA, keys ativas."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Sessão ausente, inválida ou expirada."
+          }
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ],
+        "summary": "Analytics de uso da conta (série diária + KPIs)",
         "tags": [
           "Uso",
           "Uso"

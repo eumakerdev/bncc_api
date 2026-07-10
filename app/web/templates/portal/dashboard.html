@@ -1,112 +1,296 @@
 {% extends "base.html" %}
 
-{% block title %}Painel — BNCC API{% endblock %}
-{% block description %}Painel do portal da BNCC API: gerencie suas API keys e acompanhe o consumo diário.{% endblock %}
+{% block title %}Painel & Analytics — BNCC API{% endblock %}
+{% block description %}Painel do portal da BNCC API: acompanhe o uso ao longo do mês, taxa de sucesso e gerencie suas API keys.{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 
 {% block content %}
-<div class="container section">
-  <div class="page-header">
-    <div>
-      <h1>Painel</h1>
-      <p class="lead account-line">
-        <span>{{ account.email }}</span>
-        {% if account.email_verified %}
-          <span class="badge">verificado</span>
-        {% else %}
-          <span class="badge badge-muted">não verificado</span>
-        {% endif %}
-      </p>
-    </div>
-    <a href="/portal/logout" class="btn btn-secondary">Sair</a>
-  </div>
+{% set delta = analytics.total_requests_delta_pct %}
+<div class="container section dash">
+  <div class="dash-shell">
+    <!-- Sidebar de navegação do painel (reflui para o topo no mobile) -->
+    <aside class="dash-side" aria-label="Navegação do painel">
+      <nav class="dash-nav">
+        <a class="dash-nav-item is-active" href="#painel" aria-current="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span>Painel</span>
+        </a>
+        <a class="dash-nav-item" href="#keys">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/><path d="m16 6 3 3"/></svg>
+          <span>API Keys</span>
+        </a>
+        <a class="dash-nav-item" href="#analytics">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+          <span>Uso &amp; Analytics</span>
+        </a>
+        <a class="dash-nav-item" href="/guia">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+          <span>Documentação</span>
+        </a>
+        <a class="dash-nav-item" href="/portal/account/password">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>Segurança</span>
+        </a>
+      </nav>
+      <div class="dash-account">
+        <div class="dash-account-id">
+          <span class="dash-avatar" aria-hidden="true">{{ account.email[0]|upper }}</span>
+          <div class="dash-account-meta">
+            <span class="dash-account-email" title="{{ account.email }}">{{ account.email }}</span>
+            {% if account.email_verified %}
+              <span class="pill pill-ok">verificado</span>
+            {% else %}
+              <span class="pill pill-muted">não verificado</span>
+            {% endif %}
+          </div>
+        </div>
+        <a href="/portal/logout" class="btn btn-secondary btn-sm btn-block">Sair</a>
+      </div>
+    </aside>
 
-  {% if not account.email_verified %}
-  <div class="notice notice-danger" role="alert">
-    Verifique seu e-mail para liberar a geração de API keys.
-  </div>
-  {% endif %}
+    <!-- Conteúdo principal -->
+    <div class="dash-main" id="painel">
+      <div class="dash-head">
+        <div>
+          <h1>Painel &amp; Analytics</h1>
+          <p class="muted dash-sub">Visão de uso dos últimos {{ analytics.window_days }} dias.</p>
+        </div>
+      </div>
 
-  <h2>Consumo de hoje</h2>
-  <div class="grid metric-grid">
-    <div class="card metric">
-      <p class="metric-label">Keys ativas/criadas</p>
-      <p class="metric-value">{{ usage.total_keys }}</p>
-    </div>
-    <div class="card metric">
-      <p class="metric-label">Requisições determinísticas (hoje)</p>
-      <p class="metric-value">{{ usage.deterministic_used_today }}</p>
-    </div>
-    <div class="card metric">
-      <p class="metric-label">Requisições de IA (hoje)</p>
-      <p class="metric-value">{{ usage.ai_used_today }}</p>
-    </div>
-  </div>
+      {% if not account.email_verified %}
+      <div class="notice notice-danger" role="alert">
+        Verifique seu e-mail para liberar a geração de API keys.
+      </div>
+      {% endif %}
 
-  <h2>API keys</h2>
-  {% if account.email_verified %}
-  <form method="post" action="/portal/keys" class="card key-form">
-    <label for="name">Nome da nova key</label>
-    <div class="key-form-row">
-      <input id="name" name="name" type="text" maxlength="120" required
-             placeholder="ex.: integração-escola" aria-describedby="key-name-help">
-      <button class="btn" type="submit">Gerar nova key</button>
-    </div>
-    <p class="form-help" id="key-name-help">Um nome descritivo ajuda a saber o que revogar depois.</p>
-  </form>
-  {% endif %}
+      <!-- ===================== Usage Insights ===================== -->
+      <section id="analytics" aria-labelledby="analytics-title">
+        <h2 id="analytics-title" class="dash-section-title">Uso ao longo do mês</h2>
 
-  {% if keys %}
-  <div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th scope="col">Nome</th>
-        <th scope="col">Prefixo</th>
-        <th scope="col">Status</th>
-        <th scope="col">Criada</th>
-        <th scope="col">Último uso</th>
-        <th scope="col"><span class="sr-only">Ações</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for k in keys %}
-      <tr>
-        <td data-label="Nome">{{ k.name }}</td>
-        <td data-label="Prefixo"><code>{{ k.prefix }}</code></td>
-        <td data-label="Status">
-          {% if k.status.value == 'active' %}
-            <span class="badge">ativa</span>
+        <div class="card chart-card">
+          <div class="chart-head">
+            <div>
+              <p class="chart-title">Chamadas de API no mês</p>
+              <p class="chart-caption muted">Total de chamadas vs. bem-sucedidas, por dia</p>
+            </div>
+            <ul class="chart-legend" aria-hidden="true">
+              <li><span class="dot dot-total"></span>Total</li>
+              <li><span class="dot dot-success"></span>Bem-sucedidas</li>
+            </ul>
+          </div>
+
+          {% if chart.has_data %}
+          <div class="chart-wrap">
+            <svg class="usage-chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
+                 role="img" preserveAspectRatio="none"
+                 aria-label="Gráfico de chamadas de API por dia nos últimos {{ analytics.window_days }} dias. Total de {{ analytics.total_requests }} chamadas, {{ analytics.successful_requests }} bem-sucedidas.">
+              <!-- gridlines + rótulos do eixo Y -->
+              {% for t in chart.y_ticks %}
+              <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}"/>
+              <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
+              {% endfor %}
+              <!-- áreas -->
+              <path class="chart-area chart-area-total" d="{{ chart.total_area }}"/>
+              <path class="chart-area chart-area-success" d="{{ chart.success_area }}"/>
+              <!-- linhas -->
+              <polyline class="chart-line chart-line-total" points="{{ chart.total_line }}"/>
+              <polyline class="chart-line chart-line-success" points="{{ chart.success_line }}"/>
+              <!-- rótulos do eixo X -->
+              {% for t in chart.x_ticks %}
+              <text class="chart-axis" x="{{ t.pos }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
+              {% endfor %}
+              <!-- pontos (hover) -->
+              {% for p in chart.points %}
+              <circle class="chart-dot chart-dot-total" cx="{{ p.x }}" cy="{{ p.y_total }}" r="2.5"
+                      data-label="{{ p.label }}" data-total="{{ p.total }}" data-success="{{ p.successful }}"/>
+              {% endfor %}
+            </svg>
+            <div class="chart-tip" role="status" aria-live="off" hidden></div>
+          </div>
+
+          <details class="chart-data">
+            <summary>Ver dados em tabela</summary>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th scope="col">Dia</th><th scope="col">Total</th><th scope="col">Bem-sucedidas</th></tr></thead>
+                <tbody>
+                  {% for p in chart.points %}
+                  <tr><td data-label="Dia">{{ p.label }}</td><td data-label="Total">{{ p.total }}</td><td data-label="Bem-sucedidas">{{ p.successful }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </details>
           {% else %}
-            <span class="badge badge-muted">revogada</span>
+          <div class="empty-state chart-empty">
+            <p><strong>Sem chamadas ainda.</strong></p>
+            <p class="muted">Assim que suas API keys começarem a receber chamadas, o consumo aparecerá aqui — veja o <a href="/guia">guia de início rápido</a>.</p>
+          </div>
           {% endif %}
-        </td>
-        <td data-label="Criada">{{ k.created_at.strftime('%d/%m/%Y') }}</td>
-        <td data-label="Último uso">{{ k.last_used_at.strftime('%d/%m/%Y %H:%M') if k.last_used_at else '—' }}</td>
-        <td class="cell-actions">
-          {% if k.status.value == 'active' %}
-          <form method="post" action="/portal/keys/{{ k.id }}/revoke" class="inline-form"
-                onsubmit="return confirm('Revogar a key “{{ k.name }}”? Aplicações que a usam perderão acesso imediatamente.');">
-            <button class="btn btn-danger btn-sm" type="submit">Revogar</button>
-          </form>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid kpi-grid">
+          <div class="card kpi">
+            <p class="kpi-label">Requisições ({{ analytics.window_days }} dias)</p>
+            <p class="kpi-value">{{ "{:,}".format(analytics.total_requests).replace(",", ".") }}</p>
+            {% if delta is not none %}
+            <p class="kpi-delta {{ 'is-up' if delta >= 0 else 'is-down' }}">
+              {{ "%+.0f"|format(delta) }}% vs. período anterior
+            </p>
+            {% else %}
+            <p class="kpi-delta muted">sem base de comparação</p>
+            {% endif %}
+          </div>
+
+          <div class="card kpi">
+            <p class="kpi-label">Taxa de sucesso</p>
+            <p class="kpi-value">
+              {% if analytics.success_rate is not none %}{{ "%.1f"|format(analytics.success_rate * 100) }}%{% else %}—{% endif %}
+            </p>
+            {% if analytics.success_rate is not none %}
+            <div class="kpi-meter" aria-hidden="true">
+              <span style="width: {{ (analytics.success_rate * 100)|round(1) }}%"></span>
+            </div>
+            <p class="kpi-delta muted">{{ analytics.failed_requests }} com erro no período</p>
+            {% else %}
+            <p class="kpi-delta muted">sem chamadas no período</p>
+            {% endif %}
+          </div>
+
+          <div class="card kpi">
+            <p class="kpi-label">Chamadas de IA ({{ analytics.window_days }} dias)</p>
+            <p class="kpi-value">{{ "{:,}".format(analytics.ai_requests).replace(",", ".") }}</p>
+            <p class="kpi-delta muted">{{ "{:,}".format(analytics.deterministic_requests).replace(",", ".") }} determinísticas</p>
+          </div>
+
+          <div class="card kpi">
+            <p class="kpi-label">Keys ativas</p>
+            <p class="kpi-value">{{ analytics.active_keys }}</p>
+            {% if analytics.new_keys_last_7d > 0 %}
+            <p class="kpi-delta is-up">+{{ analytics.new_keys_last_7d }} nos últimos 7 dias</p>
+            {% else %}
+            <p class="kpi-delta muted">nenhuma nova esta semana</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== API Keys ===================== -->
+      <section id="keys" aria-labelledby="keys-title">
+        <h2 id="keys-title" class="dash-section-title">API keys</h2>
+
+        {% if account.email_verified %}
+        <form method="post" action="/portal/keys" class="card key-form">
+          <label for="name">Nome da nova key</label>
+          <div class="key-form-row">
+            <input id="name" name="name" type="text" maxlength="120" required
+                   placeholder="ex.: integração-escola" aria-describedby="key-name-help">
+            <button class="btn" type="submit">Gerar nova key</button>
+          </div>
+          <p class="form-help" id="key-name-help">Um nome descritivo ajuda a saber o que revogar depois.</p>
+        </form>
+        {% endif %}
+
+        {% if keys %}
+        <div class="table-wrap">
+        <table class="keys-table">
+          <thead>
+            <tr>
+              <th scope="col">Nome</th>
+              <th scope="col">Prefixo</th>
+              <th scope="col">Status</th>
+              <th scope="col">Criação</th>
+              <th scope="col">Último uso</th>
+              <th scope="col"><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k in keys %}
+            <tr>
+              <td data-label="Nome">{{ k.name }}</td>
+              <td data-label="Prefixo"><code>{{ k.prefix }}</code></td>
+              <td data-label="Status">
+                {% if k.status.value == 'active' %}
+                  <span class="pill pill-ok">ativa</span>
+                {% else %}
+                  <span class="pill pill-muted">revogada</span>
+                {% endif %}
+              </td>
+              <td data-label="Criação">{{ k.created_at.strftime('%d/%m/%Y') }}</td>
+              <td data-label="Último uso">{{ k.last_used_at.strftime('%d/%m/%Y %H:%M') if k.last_used_at else '—' }}</td>
+              <td class="cell-actions">
+                {% if k.status.value == 'active' %}
+                <form method="post" action="/portal/keys/{{ k.id }}/revoke" class="inline-form"
+                      onsubmit="return confirm('Revogar a key “{{ k.name }}”? Aplicações que a usam perderão acesso imediatamente.');">
+                  <button class="btn btn-danger btn-sm" type="submit">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    Revogar
+                  </button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <p><strong>Nenhuma API key ainda.</strong></p>
+          {% if account.email_verified %}
+          <p class="muted">Gere a primeira no formulário acima e faça sua primeira chamada em minutos — o <a href="/guia">guia de início rápido</a> mostra como.</p>
+          {% else %}
+          <p class="muted">Verifique seu e-mail para liberar a geração de keys.</p>
           {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        </div>
+        {% endif %}
+      </section>
+    </div>
   </div>
-  {% else %}
-  <div class="empty-state">
-    <p><strong>Nenhuma API key ainda.</strong></p>
-    {% if account.email_verified %}
-    <p class="muted">Gere a primeira no formulário acima e faça sua primeira chamada em minutos — o <a href="/guia">guia de início rápido</a> mostra como.</p>
-    {% else %}
-    <p class="muted">Verifique seu e-mail para liberar a geração de keys.</p>
-    {% endif %}
-  </div>
-  {% endif %}
 </div>
+
+{% if chart.has_data %}
+<script>
+  // Tooltip do gráfico de área (progressive enhancement: sem JS, os dados seguem
+  // acessíveis em "Ver dados em tabela"). Posiciona um balão sobre o ponto ativo.
+  (function () {
+    var wrap = document.querySelector(".chart-wrap");
+    if (!wrap) return;
+    var svg = wrap.querySelector(".usage-chart");
+    var tip = wrap.querySelector(".chart-tip");
+    var dots = wrap.querySelectorAll(".chart-dot-total");
+    if (!svg || !tip || !dots.length) return;
+
+    function show(dot) {
+      var label = dot.getAttribute("data-label");
+      var total = dot.getAttribute("data-total");
+      var success = dot.getAttribute("data-success");
+      tip.innerHTML = '<strong>' + label + '</strong>' +
+        '<span><i class="dot dot-total"></i>Total: ' + total + '</span>' +
+        '<span><i class="dot dot-success"></i>Bem-sucedidas: ' + success + '</span>';
+      tip.hidden = false;
+      // Converte coordenada do viewBox para pixel do container.
+      var rect = svg.getBoundingClientRect();
+      var vb = svg.viewBox.baseVal;
+      var px = (parseFloat(dot.getAttribute("cx")) / vb.width) * rect.width;
+      var py = (parseFloat(dot.getAttribute("cy")) / vb.height) * rect.height;
+      tip.style.left = px + "px";
+      tip.style.top = py + "px";
+      dot.classList.add("is-active");
+    }
+    function hide(dot) { tip.hidden = true; dot.classList.remove("is-active"); }
+
+    dots.forEach(function (dot) {
+      dot.addEventListener("mouseenter", function () { show(dot); });
+      dot.addEventListener("mouseleave", function () { hide(dot); });
+      dot.addEventListener("focus", function () { show(dot); });
+      dot.addEventListener("blur", function () { hide(dot); });
+      dot.setAttribute("tabindex", "0");
+    });
+  })();
+</script>
+{% endif %}
 
 {% if new_key %}
 {# Modal de revelação única da key. O segredo NÃO é persistido nem re-renderizado:
@@ -200,8 +384,6 @@
     modal.querySelectorAll("[data-close-key-modal]").forEach(function (b) {
       b.addEventListener("click", closeModal);
     });
-    // Impede fechar por Esc sem confirmar leitura: reabre? Não — permitimos Esc,
-    // mas garantimos limpeza do segredo.
     modal.addEventListener("cancel", function () { if (input) input.value = ""; modal.remove(); });
   })();
 </script>

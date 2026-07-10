@@ -13,7 +13,7 @@ Métricas expostas por key e agregadas por conta alimentam o painel do portal.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
@@ -21,12 +21,17 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.db.tables import ApiKey, UsageBucket, UsageRecord
+from app.db.tables import ApiKey, ApiKeyStatus, UsageBucket, UsageRecord
 from app.models.platform import (
+    AccountAnalyticsResponse,
     AccountUsageResponse,
     BucketUsage,
     KeyUsageResponse,
+    UsageDailyPoint,
 )
+
+# Janela padrão do painel de BI (últimos N dias, inclusive hoje).
+ANALYTICS_WINDOW_DAYS = 30
 
 
 def _now() -> datetime:
@@ -127,6 +132,53 @@ async def record_deterministic(session: AsyncSession, api_key_id: str) -> None:
     await _record(session, api_key_id, UsageBucket.deterministic)
 
 
+async def record_error(session: AsyncSession, api_key_id: str, bucket: UsageBucket) -> None:
+    """Marca uma chamada do dia como malsucedida (desfecho >= 400).
+
+    Incrementa ``error_count`` na linha diária já criada pelo registro do total
+    (o middleware só chama isto para requisições que passaram no rate limit e,
+    portanto, já tiveram ``count`` contabilizado). O ramo defensivo cria a linha
+    caso, por corrida, ainda não exista — mantendo ``error_count <= count``.
+    """
+    window_start = _day_window_start()
+    record = (
+        await session.execute(
+            select(UsageRecord).where(
+                UsageRecord.api_key_id == api_key_id,
+                UsageRecord.bucket == bucket,
+                UsageRecord.window_start == window_start,
+            )
+        )
+    ).scalar_one_or_none()
+
+    if record is None:  # defensivo — não deveria ocorrer no fluxo normal
+        record = UsageRecord(
+            api_key_id=api_key_id,
+            bucket=bucket,
+            window_start=window_start,
+            count=1,
+            error_count=1,
+        )
+        session.add(record)
+        try:
+            await session.commit()
+            return
+        except IntegrityError:
+            await session.rollback()
+            record = (
+                await session.execute(
+                    select(UsageRecord).where(
+                        UsageRecord.api_key_id == api_key_id,
+                        UsageRecord.bucket == bucket,
+                        UsageRecord.window_start == window_start,
+                    )
+                )
+            ).scalar_one()
+
+    record.error_count += 1
+    await session.commit()
+
+
 async def key_usage(session: AsyncSession, api_key_id: str) -> KeyUsageResponse:
     """Métricas de consumo de uma key: minuto (limiters) + dia (DB) + limites."""
     from app.core.deps import ai_limiter, deterministic_limiter
@@ -185,4 +237,131 @@ async def account_usage(session: AsyncSession, account_id: str) -> AccountUsageR
         total_keys=total_keys,
         deterministic_used_today=await _sum(UsageBucket.deterministic),
         ai_used_today=await _sum(UsageBucket.ai),
+    )
+
+
+def _as_date(value: datetime | date) -> date:
+    """Normaliza ``window_start`` (naive no SQLite, aware no Postgres) para ``date``."""
+    return value.date() if isinstance(value, datetime) else value
+
+
+async def account_analytics(
+    session: AsyncSession,
+    account_id: str,
+    days: int = ANALYTICS_WINDOW_DAYS,
+) -> AccountAnalyticsResponse:
+    """Série diária + KPIs de BI para o painel (todas as keys da conta).
+
+    Uma única varredura de ``usage_records`` cobre a janela atual **e** a anterior
+    (para o delta percentual). ``total`` = chamadas autorizadas do dia; ``successful``
+    = ``total - error_count``. Sem tráfego, ``success_rate`` é ``None`` (o painel
+    mostra "—" em vez de forçar 0%/100%).
+    """
+    days = max(1, days)
+    now = _now()
+    today = _day_window_start(now)
+    window_start = today - timedelta(days=days - 1)
+    prev_window_start = window_start - timedelta(days=days)
+
+    rows = (
+        await session.execute(
+            select(
+                UsageRecord.window_start,
+                UsageRecord.bucket,
+                func.sum(UsageRecord.count),
+                func.sum(UsageRecord.error_count),
+            )
+            .join(ApiKey, ApiKey.id == UsageRecord.api_key_id)
+            .where(
+                ApiKey.account_id == account_id,
+                UsageRecord.window_start >= prev_window_start,
+            )
+            .group_by(UsageRecord.window_start, UsageRecord.bucket)
+        )
+    ).all()
+
+    # Agrega por dia (total/erros/IA/determinístico) para a janela atual e a anterior.
+    per_day: dict[date, dict[str, int]] = {}
+    prev_total = 0
+    cur_start_date = window_start.date()
+    for ws, bucket, total, errors in rows:
+        d = _as_date(ws)
+        total = int(total or 0)
+        errors = int(errors or 0)
+        if d < cur_start_date:
+            prev_total += total
+            continue
+        day = per_day.setdefault(d, {"total": 0, "errors": 0, "ai": 0, "det": 0})
+        day["total"] += total
+        day["errors"] += errors
+        if bucket == UsageBucket.ai:
+            day["ai"] += total
+        else:
+            day["det"] += total
+
+    series: list[UsageDailyPoint] = []
+    total_requests = 0
+    failed_requests = 0
+    ai_requests = 0
+    deterministic_requests = 0
+    for i in range(days):
+        d = (window_start + timedelta(days=i)).date()
+        day = per_day.get(d, {"total": 0, "errors": 0, "ai": 0, "det": 0})
+        total = day["total"]
+        failed = min(day["errors"], total)
+        series.append(
+            UsageDailyPoint(date=d, total=total, successful=total - failed, failed=failed)
+        )
+        total_requests += total
+        failed_requests += failed
+        ai_requests += day["ai"]
+        deterministic_requests += day["det"]
+
+    successful_requests = total_requests - failed_requests
+    success_rate = (successful_requests / total_requests) if total_requests else None
+    delta_pct = ((total_requests - prev_total) / prev_total * 100.0) if prev_total else None
+
+    active_keys = int(
+        (
+            await session.execute(
+                select(func.count())
+                .select_from(ApiKey)
+                .where(
+                    ApiKey.account_id == account_id,
+                    ApiKey.status == ApiKeyStatus.active,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    week_ago = now - timedelta(days=7)
+    new_keys_last_7d = int(
+        (
+            await session.execute(
+                select(func.count())
+                .select_from(ApiKey)
+                .where(
+                    ApiKey.account_id == account_id,
+                    ApiKey.status == ApiKeyStatus.active,
+                    ApiKey.created_at >= week_ago,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    return AccountAnalyticsResponse(
+        account_id=account_id,
+        window_days=days,
+        series=series,
+        total_requests=total_requests,
+        successful_requests=successful_requests,
+        failed_requests=failed_requests,
+        success_rate=success_rate,
+        total_requests_prev=prev_total,
+        total_requests_delta_pct=delta_pct,
+        ai_requests=ai_requests,
+        deterministic_requests=deterministic_requests,
+        active_keys=active_keys,
+        new_keys_last_7d=new_keys_last_7d,
     )
