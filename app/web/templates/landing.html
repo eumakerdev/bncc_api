@@ -364,6 +364,92 @@ API keys self-service.{% endblock %}
   </div>
 </section>
 
+<!-- ===================== TRANSPARÊNCIA DE CUSTOS ==================== -->
+{% if cost_chart and cost_chart.has_data %}
+<section class="section container" id="transparencia" aria-labelledby="transparencia-title">
+  <h2 id="transparencia-title">Transparência de custos</h2>
+  <p class="lead">
+    Quanto custa manter a BNCC API no ar. Valores reais faturados pelo Google Cloud,
+    por mês e por serviço, atualizados automaticamente.
+  </p>
+
+  <div class="grid kpi-grid cost-kpis">
+    <div class="kpi">
+      <p class="kpi-label">Total até agora{% if cost_summary and cost_summary.period_start %} · desde {{ cost_summary.period_start.strftime('%m/%Y') }}{% endif %}</p>
+      <p class="kpi-value">{{ cost_summary.total_to_date|brl }}</p>
+    </div>
+    <div class="kpi">
+      <p class="kpi-label">Mês atual</p>
+      <p class="kpi-value">{{ cost_summary.total_month|brl }}</p>
+    </div>
+    {% for item in cost_summary.by_service_to_date %}
+    {% if item.amount > 0 %}
+    <div class="kpi">
+      <p class="kpi-label"><span class="dot cost-seg-{{ item.service.value }}"></span>{{ item.label }}</p>
+      <p class="kpi-value">{{ item.amount|brl }}</p>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="card chart-card">
+    <div class="chart-head">
+      <div>
+        <p class="chart-title">Custo mensal de infraestrutura</p>
+        <p class="chart-caption muted">Por serviço, em reais (R$)</p>
+      </div>
+      <ul class="chart-legend cost-legend" aria-hidden="true">
+        {% for item in cost_chart.legend %}
+        <li><span class="dot {{ item.color_class }}"></span>{{ item.label }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="chart-wrap">
+      <svg class="usage-chart cost-chart" viewBox="0 0 {{ cost_chart.width }} {{ cost_chart.height }}"
+           role="img" preserveAspectRatio="none"
+           aria-label="Custo mensal de infraestrutura por serviço, em reais. Total acumulado de {{ cost_summary.total_to_date|brl }}.">
+        <!-- gridlines + rótulos do eixo Y -->
+        {% for t in cost_chart.y_ticks %}
+        <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ cost_chart.width - 12 }}" y2="{{ t.pos }}"/>
+        <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
+        {% endfor %}
+        <!-- barras empilhadas (um segmento por serviço) -->
+        {% for bar in cost_chart.bars %}
+          {% for seg in bar.segments %}
+          <rect class="cost-bar {{ seg.color_class }}" x="{{ seg.x }}" y="{{ seg.y }}"
+                width="{{ seg.width }}" height="{{ seg.height }}"><title>{{ seg.title }}</title></rect>
+          {% endfor %}
+        {% endfor %}
+        <!-- rótulos do eixo X -->
+        {% for t in cost_chart.x_ticks %}
+        <text class="chart-axis" x="{{ t.pos }}" y="{{ cost_chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
+        {% endfor %}
+      </svg>
+    </div>
+
+    <details class="chart-data">
+      <summary>Ver dados em tabela</summary>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Mês</th><th scope="col">Total</th></tr></thead>
+          <tbody>
+            {% for bar in cost_chart.bars %}
+            <tr><td data-label="Mês">{{ bar.label }}</td><td data-label="Total">{{ bar.total|brl }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+
+  <p class="notice cost-note">
+    Fonte: faturamento real do Google Cloud (BigQuery billing export), líquido de créditos.
+    É o custo de <strong>infraestrutura</strong> da plataforma — não é dado da BNCC.
+  </p>
+</section>
+{% endif %}
+
 <!-- ========================== FOUNDED BY =========================== -->
 <section class="section container section-narrow" aria-labelledby="founders-heading">
   <h2 id="founders-heading">Uma iniciativa Expertia × EuMaker</h2>

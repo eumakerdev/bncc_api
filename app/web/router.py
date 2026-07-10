@@ -28,7 +28,18 @@ def _seo_context(request: Request) -> dict[str, str]:
     return {"site_url": base, "current_path": request.url.path}
 
 
+def _brl(value: object) -> str:
+    """Filtro Jinja: formata um número como moeda pt-BR (R$ 1.234,56)."""
+    try:
+        n = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return ""
+    formatted = f"{n:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {formatted}"
+
+
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR), context_processors=[_seo_context])
+templates.env.filters["brl"] = _brl
 
 web_router = APIRouter()
 

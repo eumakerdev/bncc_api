@@ -31,6 +31,11 @@
   --chart-total-fill: rgba(27, 77, 255, 0.12);
   --chart-success-fill: rgba(10, 157, 110, 0.12);
   --chart-grid: var(--border);
+  /* Custo por serviço (categórico): banco / servidor / IA / outros. */
+  --cost-banco: #4263eb;
+  --cost-servidor: #0ca678;
+  --cost-ia: #f08c00;
+  --cost-outros: #868e96;
   --code-bg: #0b1020;
   --code-fg: #e2e8f0;
   --code-key: #7dd3fc;
@@ -66,6 +71,10 @@
     --chart-success: #34d399;
     --chart-total-fill: rgba(107, 138, 255, 0.16);
     --chart-success-fill: rgba(52, 211, 153, 0.14);
+    --cost-banco: #5c7cfa;
+    --cost-servidor: #38d9a9;
+    --cost-ia: #ffa94d;
+    --cost-outros: #adb5bd;
     --code-bg: #0a0e18;
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 36px -14px rgb(0 0 0 / 0.6);
@@ -789,6 +798,18 @@ input[type="password"]::-ms-clear { display: none; }
 .chart-data { margin-top: 0.85rem; }
 .chart-data summary { cursor: pointer; color: var(--fg-muted); font-size: 0.85rem; min-height: 36px; display: inline-flex; align-items: center; }
 .chart-empty { padding: 2.5rem 1rem; text-align: center; }
+
+/* Custo por serviço (transparência de custos na landing) */
+.cost-kpis { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+.cost-chart .cost-bar { stroke: var(--bg); stroke-width: 1; transition: opacity 0.15s ease; }
+.cost-chart .cost-bar:hover { opacity: 0.82; }
+rect.cost-seg-banco, .dot.cost-seg-banco { fill: var(--cost-banco); background: var(--cost-banco); }
+rect.cost-seg-servidor, .dot.cost-seg-servidor { fill: var(--cost-servidor); background: var(--cost-servidor); }
+rect.cost-seg-ia, .dot.cost-seg-ia { fill: var(--cost-ia); background: var(--cost-ia); }
+rect.cost-seg-outros, .dot.cost-seg-outros { fill: var(--cost-outros); background: var(--cost-outros); }
+.cost-legend { flex-wrap: wrap; }
+.cost-note { margin-top: 1rem; font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .cost-chart .cost-bar { transition: none; } }
 
 /* KPIs */
 .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); margin-top: 1.25rem; }

@@ -134,3 +134,26 @@ Cloud SQL `db-f1-micro` roda continuamente (~US$ 8–10/mês). Cloud Run com `--
 (escolhido para evitar cold start pesado de ML) mantém 1 instância ativa e também gera custo
 contínuo — baixe para `0` se puder tolerar cold start, ou suba o `min` conforme a carga.
 E-mail via **Brevo** é gratuito no free tier (300/dia) — sem custo adicional nesta fase.
+
+## Transparência de custos (seção pública da landing)
+A landing tem uma seção **"Transparência de custos"** que mostra o custo real de infraestrutura
+(mensal + acumulado, por serviço, em BRL) faturado pelo Google Cloud. O dado vem do **billing
+export para BigQuery**; um Cloud Run Job (`scripts/ingest_costs.py`) agrega o export e popula a
+tabela `cost_records`. **A landing lê apenas o banco — nunca o BigQuery** (determinismo/degradação
+graciosa, Princípio VII): se não houver dados, a seção simplesmente não aparece.
+
+Setup:
+1. **Habilitar o export (manual, uma vez):** console GCP → *Faturamento → Exportação de
+   faturamento → BigQuery* → escolher/criar um dataset (ex.: `billing_export`). O export leva
+   ~24h para começar a popular. A tabela criada tem nome tipo
+   `gcp_billing_export_v1_XXXXXX_XXXXXX_XXXXXX`.
+2. **Provisionar Job + agendamento + IAM:** rode `deploy/cloudrun.ps1` passando
+   `-BillingDataset <dataset> -BillingTable <tabela>` (opcional `-CostCron "0 6 * * *"`). O script
+   concede à service account do Cloud Run `roles/bigquery.dataViewer` + `roles/bigquery.jobUser`
+   (IAM mínima), cria o Cloud Run Job `bncc-api-cost-ingest`, o dispara uma vez e agenda a execução
+   diária via Cloud Scheduler. Sem esses parâmetros o bloco é ignorado (deploy inalterado).
+3. **Backfill/manual:** `python scripts/ingest_costs.py --since 2026-01` (ou `--dry-run` para só
+   inspecionar). Config via `GCP_PROJECT`/`GCP_BILLING_DATASET`/`GCP_BILLING_TABLE`.
+
+A conta de faturamento brasileira fatura em **BRL** (usado direto). Se por acaso o export vier em
+outra moeda, defina `USD_BRL_RATE` para converter.

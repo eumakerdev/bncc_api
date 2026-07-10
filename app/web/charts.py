@@ -75,6 +75,16 @@ def _fmt_date(d) -> str:
     return f"{d.day:02d}/{d.month:02d}"
 
 
+def _fmt_month(d) -> str:
+    """mm/aa — rótulo compacto do eixo X do gráfico de custos."""
+    return f"{d.month:02d}/{d.year % 100:02d}"
+
+
+def _fmt_brl_axis(n: float) -> str:
+    """R$ inteiro com milhar por ponto (pt-BR) — rótulo do eixo Y de custos."""
+    return "R$ " + f"{int(round(n)):,}".replace(",", ".")
+
+
 def build_usage_chart(series: list) -> UsageChart:
     """Monta a geometria do gráfico de área (total vs. bem-sucedidas)."""
     chart = UsageChart()
@@ -153,4 +163,145 @@ def build_usage_chart(series: list) -> UsageChart:
             continue
         seen.add(idx)
         chart.x_ticks.append(AxisTick(pos=round(x_at(idx), 2), label=chart.points[idx].label))
+    return chart
+
+
+# --------------------------------------------------------------------------- #
+# Gráfico de barras empilhadas — custo mensal por serviço (transparência)
+# --------------------------------------------------------------------------- #
+@dataclass
+class CostSegment:
+    x: float
+    y: float
+    width: float
+    height: float
+    service: str  # slug do bucket (banco/servidor/ia/outros)
+    color_class: str  # classe CSS do segmento
+    label: str  # rótulo amigável
+    amount: float
+    title: str  # texto do <title> nativo (tooltip acessível sem JS)
+
+
+@dataclass
+class CostBar:
+    label: str  # mm/aa
+    total: float
+    segments: list[CostSegment] = field(default_factory=list)
+
+
+@dataclass
+class CostLegendItem:
+    service: str
+    label: str
+    color_class: str
+
+
+@dataclass
+class CostChart:
+    width: int = _WIDTH
+    height: int = _HEIGHT
+    baseline: float = _HEIGHT - _PAD_B
+    max_value: float = 0.0
+    has_data: bool = False
+    bars: list[CostBar] = field(default_factory=list)
+    y_ticks: list[AxisTick] = field(default_factory=list)
+    x_ticks: list[AxisTick] = field(default_factory=list)
+    legend: list[CostLegendItem] = field(default_factory=list)
+
+
+def _fmt_brl_full(n: float) -> str:
+    """R$ com centavos (pt-BR) — usado no tooltip de cada segmento."""
+    inteiro = f"{n:,.2f}"
+    inteiro = inteiro.replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {inteiro}"
+
+
+def build_cost_chart(series: list) -> CostChart:
+    """Monta a geometria do gráfico de barras empilhadas (custo mensal por serviço).
+
+    Cada item de ``series`` expõe ``month`` (date), ``total`` (float) e
+    ``by_service`` (lista com ``service`` [enum], ``label`` e ``amount``). Segmentos
+    empilham na ordem canônica de ``by_service`` (base → topo). Puro/testável.
+    """
+    chart = CostChart()
+    n = len(series)
+    if n == 0:
+        return chart
+
+    peak = max((float(p.total) for p in series), default=0.0)
+    chart.has_data = peak > 0
+    if not chart.has_data:
+        return chart
+
+    ticks = 4
+    nice_range = _nice_num(peak, round_up=True)
+    step = _nice_num(nice_range / ticks, round_up=True)
+    max_value = step * ticks
+    chart.max_value = max_value
+
+    plot_w = _WIDTH - _PAD_L - _PAD_R
+    plot_h = _HEIGHT - _PAD_T - _PAD_B
+
+    slot = plot_w / n
+    bar_w = round(min(slot * 0.62, 56.0), 2)
+
+    def y_at(v: float) -> float:
+        return _PAD_T + plot_h * (1 - v / max_value)
+
+    # Acumula presença de cada serviço para montar a legenda (só os com custo > 0).
+    seen_service: dict[str, CostLegendItem] = {}
+
+    for i, p in enumerate(series):
+        center = _PAD_L + slot * (i + 0.5)
+        x = round(center - bar_w / 2, 2)
+        bar = CostBar(label=_fmt_month(p.month), total=round(float(p.total), 2))
+        cum = 0.0
+        for seg in p.by_service:
+            amount = float(seg.amount)
+            if amount <= 0:
+                continue
+            slug = seg.service.value if hasattr(seg.service, "value") else str(seg.service)
+            color_class = f"cost-seg-{slug}"
+            y_top = round(y_at(cum + amount), 2)
+            y_bottom = round(y_at(cum), 2)
+            title = f"{p.month.month:02d}/{p.month.year} · {seg.label}: {_fmt_brl_full(amount)}"
+            bar.segments.append(
+                CostSegment(
+                    x=x,
+                    y=y_top,
+                    width=bar_w,
+                    height=round(y_bottom - y_top, 2),
+                    service=slug,
+                    color_class=color_class,
+                    label=seg.label,
+                    amount=amount,
+                    title=title,
+                )
+            )
+            cum += amount
+            if slug not in seen_service:
+                seen_service[slug] = CostLegendItem(
+                    service=slug, label=seg.label, color_class=color_class
+                )
+        chart.bars.append(bar)
+
+    # Eixo Y "bonito".
+    i = 0
+    while i <= ticks:
+        v = step * i
+        chart.y_ticks.append(AxisTick(pos=round(y_at(v), 2), label=_fmt_brl_axis(v)))
+        i += 1
+
+    # Eixo X: rótulos de mês (todos até ~12; senão distribui, sempre o último).
+    max_labels = 12
+    stride = max(1, math.ceil(n / max_labels))
+    seen: set[int] = set()
+    for idx in list(range(0, n, stride)) + [n - 1]:
+        if idx in seen:
+            continue
+        seen.add(idx)
+        center = _PAD_L + slot * (idx + 0.5)
+        chart.x_ticks.append(AxisTick(pos=round(center, 2), label=chart.bars[idx].label))
+
+    chart.legend = list(seen_service.values())
     return chart

@@ -10,6 +10,7 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
@@ -17,6 +18,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     UniqueConstraint,
 )
@@ -41,6 +43,21 @@ class ApiKeyStatus(str, enum.Enum):
 class UsageBucket(str, enum.Enum):
     deterministic = "deterministic"
     ai = "ai"
+
+
+class CostService(str, enum.Enum):
+    """Buckets curados de custo de infraestrutura (catch-all ``outros``).
+
+    O extrator de billing (``scripts/ingest_costs.py``) mapeia cada
+    ``service.description`` do export do GCP para um destes; nada é descartado
+    (o que não casar cai em ``outros``), de modo que a soma dos buckets é sempre
+    igual ao custo total faturado.
+    """
+
+    banco = "banco"  # Cloud SQL
+    servidor = "servidor"  # Cloud Run
+    ia = "ia"  # Gemini / Vertex / Generative Language API
+    outros = "outros"  # Artifact Registry, Secret Manager, rede, etc.
 
 
 class DeveloperAccount(Base):
@@ -208,3 +225,33 @@ class PasswordResetToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     account: Mapped[DeveloperAccount] = relationship(back_populates="reset_tokens")
+
+
+class CostRecord(Base):
+    """Custo mensal de infraestrutura por serviço (transparência pública).
+
+    Grão = ``(period_month, service)``: uma linha por mês e bucket de serviço,
+    com o custo líquido faturado (já incluindo créditos) em BRL. A ``UniqueConstraint``
+    permite upsert idempotente pelo ingestor (``scripts/ingest_costs.py``), que
+    reescreve o mês corrente a cada execução. Diferente das demais tabelas, NÃO é
+    dado de conta/usuário: alimenta a seção "Transparência de custos" da landing,
+    lida em runtime apenas do banco (o BigQuery só é tocado pelo job agendado).
+    """
+
+    __tablename__ = "cost_records"
+    __table_args__ = (UniqueConstraint("period_month", "service", name="uq_cost_period_service"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    # 1º dia do mês (UTC) a que o custo se refere.
+    period_month: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), index=True, nullable=False
+    )
+    service: Mapped[CostService] = mapped_column(Enum(CostService), nullable=False)
+    # Custo líquido do mês/serviço (cost + credits) na moeda de faturamento.
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), default="BRL", nullable=False)
+    source: Mapped[str] = mapped_column(String(20), default="bigquery", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_now, onupdate=_now
+    )

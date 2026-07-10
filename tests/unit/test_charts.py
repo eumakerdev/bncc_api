@@ -9,8 +9,11 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
+import pytest
+from app.db.tables import CostService
+from app.models.cost import SERVICE_LABELS, SERVICE_ORDER, CostMonthPoint, CostServiceAmount
 from app.models.platform import UsageDailyPoint
-from app.web.charts import build_usage_chart
+from app.web.charts import build_cost_chart, build_usage_chart
 
 
 def _series(values: list[tuple[int, int]], start: date | None = None) -> list[UsageDailyPoint]:
@@ -70,3 +73,62 @@ def test_single_point_is_centered():
     assert len(chart.points) == 1
     # Ponto único fica no centro horizontal da área de plotagem (entre as margens).
     assert 400 < chart.points[0].x < 470
+
+
+# --------------------------------------------------------------------------- #
+# Gráfico de custo (barras empilhadas por serviço)
+# --------------------------------------------------------------------------- #
+def _cost_month(month: date, amounts: dict[CostService, float]) -> CostMonthPoint:
+    by_service = [
+        CostServiceAmount(service=s, label=SERVICE_LABELS[s], amount=amounts.get(s, 0.0))
+        for s in SERVICE_ORDER
+    ]
+    total = round(sum(item.amount for item in by_service), 2)
+    return CostMonthPoint(month=month, total=total, by_service=by_service)
+
+
+def test_cost_empty_series_has_no_data():
+    chart = build_cost_chart([])
+    assert chart.has_data is False
+    assert chart.bars == []
+    assert chart.legend == []
+
+
+def test_cost_all_zero_series_is_empty():
+    series = [_cost_month(date(2026, 1, 1), {}), _cost_month(date(2026, 2, 1), {})]
+    chart = build_cost_chart(series)
+    assert chart.has_data is False
+
+
+def test_cost_stacking_and_axes():
+    series = [
+        _cost_month(
+            date(2026, 5, 1),
+            {CostService.banco: 50, CostService.servidor: 90, CostService.ia: 20},
+        ),
+        _cost_month(date(2026, 6, 1), {CostService.banco: 52, CostService.servidor: 90}),
+    ]
+    chart = build_cost_chart(series)
+    assert chart.has_data is True
+    assert chart.max_value >= 160  # topo "bonito" acima do pico (50+90+20)
+    assert len(chart.y_ticks) == 5
+    # Legenda na ordem canônica de aparição (outros não aparece: custo 0).
+    assert [item.service for item in chart.legend] == ["banco", "servidor", "ia"]
+
+    first = chart.bars[0]
+    assert len(first.segments) == 3
+    # A base do empilhamento toca a linha de base do gráfico.
+    bottoms = [seg.y + seg.height for seg in first.segments]
+    assert max(bottoms) == pytest.approx(chart.baseline, abs=0.5)
+    # Soma das alturas dos segmentos = do baseline ao topo (total do mês).
+    top = min(seg.y for seg in first.segments)
+    assert sum(seg.height for seg in first.segments) == pytest.approx(chart.baseline - top, abs=0.6)
+
+
+def test_cost_single_month_one_service():
+    chart = build_cost_chart([_cost_month(date(2026, 7, 1), {CostService.servidor: 120})])
+    assert chart.has_data is True
+    assert len(chart.bars) == 1
+    assert len(chart.bars[0].segments) == 1
+    assert chart.bars[0].segments[0].service == "servidor"
+    assert chart.x_ticks[-1].label == "07/26"

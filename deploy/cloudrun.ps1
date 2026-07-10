@@ -51,6 +51,9 @@ param(
   [string]$GoogleOAuthClientSecret = "",
   [string]$GithubOAuthClientId     = "",  # login social GitHub (opcional; id+secret juntos habilitam)
   [string]$GithubOAuthClientSecret = "",
+  [string]$BillingDataset = "",  # dataset do BigQuery billing export (habilita "Transparencia de custos")
+  [string]$BillingTable   = "",  # tabela do export (ex.: gcp_billing_export_v1_XXXXXX_XXXXXX_XXXXXX)
+  [string]$CostCron       = "0 6 * * *",  # agendamento do ingestor de custos (cron, UTC)
   [switch]$SkipBuild             # reaproveita a imagem ja publicada (nao rebuilda)
 )
 
@@ -273,6 +276,50 @@ Exec { gcloud run jobs $jobVerb $jobName `
   --command="alembic" --args="upgrade,head" }
 Exec { gcloud run jobs execute $jobName --region=$Region --wait }
 Remove-Item $envFileJob -Force
+
+# 6b) Transparencia de custos (opcional) — Job + Scheduler + IAM BigQuery --------
+# Habilita a secao "Transparencia de custos" da landing: um Cloud Run Job le o
+# BigQuery billing export e popula cost_records; o Cloud Scheduler dispara todo dia.
+# PRE-REQUISITO (manual, uma vez): habilitar o export de faturamento para BigQuery
+# no console (Billing > Billing export). O app web NUNCA le o BigQuery (Principio VII).
+if ($BillingDataset -and $BillingTable) {
+  Info "Transparencia de custos: Job de ingestao + agendamento diario"
+  Exec { gcloud services enable bigquery.googleapis.com cloudscheduler.googleapis.com }
+
+  # IAM minima e escopada: ler o dataset de export e rodar queries (Principio V).
+  Exec { gcloud projects add-iam-policy-binding $Project `
+    --member="serviceAccount:$sa" --role="roles/bigquery.dataViewer" }
+  Exec { gcloud projects add-iam-policy-binding $Project `
+    --member="serviceAccount:$sa" --role="roles/bigquery.jobUser" }
+
+  # Job herda DATABASE_URL/Cloud SQL do deploy + adiciona a config de billing.
+  $costJob = "$Service-cost-ingest"
+  $costEnv = [ordered]@{}
+  foreach ($k in $envBase.Keys) { $costEnv[$k] = $envBase[$k] }
+  $costEnv["GCP_PROJECT"]         = $Project
+  $costEnv["GCP_BILLING_DATASET"] = $BillingDataset
+  $costEnv["GCP_BILLING_TABLE"]   = $BillingTable
+  $costVerb = if (Exists { gcloud run jobs describe $costJob --region=$Region }) { "update" } else { "create" }
+  $envFileCost = Write-EnvFile $costEnv
+  Exec { gcloud run jobs $costVerb $costJob `
+    --image=$ImageUri --region=$Region `
+    --set-cloudsql-instances=$Csql `
+    --env-vars-file=$envFileCost `
+    --set-secrets="$commonSecrets" `
+    --command="python" --args="scripts/ingest_costs.py" }
+  Remove-Item $envFileCost -Force
+  # Execucao inicial (semeia os dados; sem export ainda, sai 0 sem gravar).
+  Exec { gcloud run jobs execute $costJob --region=$Region --wait }
+
+  # Cloud Scheduler dispara o Job via Run Admin API (OAuth com a propria SA).
+  $schedName = "$costJob-daily"
+  $runUri = "https://$Region-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/$Project/jobs/${costJob}:run"
+  $schedVerb = if (Exists { gcloud scheduler jobs describe $schedName --location=$Region }) { "update" } else { "create" }
+  Exec { gcloud scheduler jobs $schedVerb http $schedName `
+    --location=$Region --schedule="$CostCron" --time-zone="Etc/UTC" `
+    --uri="$runUri" --http-method=POST `
+    --oauth-service-account-email="$sa" }
+}
 
 # 7) Deploy do servico ----------------------------------------------------------
 # So o servico envia e-mail (o job de migracao segue em console). Se ha SMTP,

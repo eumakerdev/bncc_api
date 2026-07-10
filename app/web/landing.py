@@ -9,6 +9,7 @@ histórias, conforme tasks.md Fase 7).
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import NamedTuple
 
@@ -19,6 +20,7 @@ from app.core.config import settings
 from app.web.router import templates
 
 router = APIRouter()
+logger = logging.getLogger("bncc.landing")
 
 # Cache conservador (a CDN do Firebase Hosting cacheia por variante de
 # accept-encoding e a purga exige redeploy do hosting — TTL curto limita o raio).
@@ -42,10 +44,31 @@ _SITEMAP_ENTRIES = [
 ]
 
 
+async def _cost_context() -> dict:
+    """Monta o contexto da seção "Transparência de custos" de forma resiliente.
+
+    Lê apenas o banco (nunca o BigQuery). Qualquer falha (banco indisponível,
+    tabela vazia) degrada para uma landing sem a seção — nunca quebra a página
+    pública (Princípio VII). Import tardio para não acoplar o web router à camada
+    de dados na importação.
+    """
+    try:
+        from app.db.base import async_session_factory
+        from app.services import cost_service
+        from app.web.charts import build_cost_chart
+
+        async with async_session_factory() as session:
+            summary = await cost_service.public_cost_summary(session)
+        return {"cost_summary": summary, "cost_chart": build_cost_chart(summary.series)}
+    except Exception:
+        logger.exception("Falha ao montar a transparência de custos")
+        return {"cost_summary": None, "cost_chart": None}
+
+
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def landing(request: Request) -> Response:
     """Landing page: proposta de valor, recursos, público-alvo e CTA (SC-008)."""
-    return templates.TemplateResponse(request, "landing.html")
+    return templates.TemplateResponse(request, "landing.html", await _cost_context())
 
 
 @router.get("/favicon.ico", include_in_schema=False)

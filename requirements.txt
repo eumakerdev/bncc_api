@@ -34,6 +34,12 @@ aiosmtplib==5.1.2
 # Rate limiting
 slowapi==0.1.10
 
+# Transparência de custos — leitura do BigQuery billing export (só no job de
+# ingestão `scripts/ingest_costs.py`; import lazy, o app web nunca o carrega).
+# Cliente CORE (sem extras pandas/bqstorage) → não puxa numpy>=2 (mantém o pino
+# numpy<2 exigido por langchain 0.1.0).
+google-cloud-bigquery==3.27.0
+
 # Superfícies visuais (SSR: landing + portal + docs)
 Jinja2==3.1.6
 

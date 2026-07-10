@@ -100,6 +100,18 @@ class Settings(BaseSettings):
     # Base pública usada para montar o redirect_uri do callback OAuth.
     OAUTH_REDIRECT_BASE_URL: str = Field(default="http://localhost:8000")
 
+    # --- Transparência de custos (BigQuery billing export; opcional) ---
+    # Vazio = ingestão de custos desligada. São apenas leitura de números públicos
+    # (custo de infraestrutura), então NÃO entram no fail-fast de produção. Usados só
+    # pelo job agendado `scripts/ingest_costs.py`; o app web nunca toca o BigQuery.
+    GCP_PROJECT: str = Field(default="")
+    GCP_BILLING_DATASET: str = Field(default="")
+    GCP_BILLING_TABLE: str = Field(default="")
+    # Fallback de conversão caso o export venha em outra moeda que não BRL (conta
+    # de billing brasileira fatura em BRL → normalmente não é necessário). 0 = sem
+    # conversão (assume BRL).
+    USD_BRL_RATE: float = Field(default=0.0)
+
     # --- IA / Busca semântica (opcional; degrada graciosamente) ---
     OPENAI_API_KEY: str = Field(default="")
     GOOGLE_API_KEY: str = Field(default="")
