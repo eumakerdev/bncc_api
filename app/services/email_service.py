@@ -18,10 +18,17 @@ from app.core.config import settings
 logger = logging.getLogger("bncc.email")
 
 
-def _verification_link(token: str) -> str:
-    base = settings.EMAIL_VERIFICATION_BASE_URL
+def _link_with_token(base: str, token: str) -> str:
     sep = "&" if "?" in base else "?"
     return f"{base}{sep}token={token}"
+
+
+def _verification_link(token: str) -> str:
+    return _link_with_token(settings.EMAIL_VERIFICATION_BASE_URL, token)
+
+
+def _reset_link(token: str) -> str:
+    return _link_with_token(settings.PASSWORD_RESET_BASE_URL, token)
 
 
 async def send_verification_email(email: str, token: str) -> None:
@@ -37,8 +44,35 @@ async def send_verification_email(email: str, token: str) -> None:
     logger.info("Verificação de e-mail para %s: %s", email, link)
 
 
-async def _send_smtp(email: str, link: str) -> None:
-    """Envia o e-mail de verificação por SMTP assíncrono (produção)."""
+async def send_password_reset_email(email: str, token: str) -> None:
+    """Envia (ou registra, em console) o e-mail de redefinição de senha."""
+    link = _reset_link(token)
+    backend = settings.EMAIL_BACKEND.strip().lower()
+
+    if backend == "smtp":
+        await _send_smtp(
+            email,
+            link,
+            subject="Redefinição de senha — BNCC API",
+            body=(
+                "Recebemos um pedido para redefinir a senha da sua conta na BNCC API.\n\n"
+                "Crie uma nova senha pelo link abaixo (expira em breve):\n\n"
+                f"{link}\n\n"
+                "Se você não solicitou, ignore esta mensagem — sua senha continua a mesma."
+            ),
+        )
+        return
+
+    logger.info("Redefinição de senha para %s: %s", email, link)
+
+
+async def _send_smtp(
+    email: str,
+    link: str,
+    subject: str = "Confirme seu e-mail — BNCC API",
+    body: str | None = None,
+) -> None:
+    """Envia um e-mail transacional por SMTP assíncrono (produção)."""
     from email.message import EmailMessage
 
     import aiosmtplib
@@ -46,12 +80,16 @@ async def _send_smtp(email: str, link: str) -> None:
     message = EmailMessage()
     message["From"] = settings.EMAIL_FROM
     message["To"] = email
-    message["Subject"] = "Confirme seu e-mail — BNCC API"
+    message["Subject"] = subject
     message.set_content(
-        "Bem-vindo(a) à BNCC API.\n\n"
-        "Confirme seu e-mail para liberar a geração de API keys:\n\n"
-        f"{link}\n\n"
-        "Se você não solicitou este cadastro, ignore esta mensagem."
+        body
+        if body is not None
+        else (
+            "Bem-vindo(a) à BNCC API.\n\n"
+            "Confirme seu e-mail para liberar a geração de API keys:\n\n"
+            f"{link}\n\n"
+            "Se você não solicitou este cadastro, ignore esta mensagem."
+        )
     )
 
     await aiosmtplib.send(

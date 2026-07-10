@@ -23,6 +23,7 @@ from fastapi.responses import RedirectResponse
 from app.core.config import settings
 from app.core.deps import (
     get_http_client,
+    rate_limit_forgot_ip,
     rate_limit_login_ip,
     rate_limit_oauth_ip,
     rate_limit_signup_ip,
@@ -30,6 +31,7 @@ from app.core.deps import (
 from app.core.security import create_access_token, decode_access_token
 from app.db.base import async_session_factory
 from app.db.tables import DeveloperAccount
+from app.models.platform import _validate_password_policy
 from app.services import (
     account_service,
     apikey_service,
@@ -37,6 +39,7 @@ from app.services import (
     onboarding_service,
     usage_service,
 )
+from app.web.charts import build_usage_chart
 from app.web.router import templates
 
 router = APIRouter()
@@ -382,10 +385,19 @@ async def _render_dashboard(
     async with async_session_factory() as session:
         keys = await apikey_service.list_keys(session, account.id)
         usage = await usage_service.account_usage(session, account.id)
+        analytics = await usage_service.account_analytics(session, account.id)
+    chart = build_usage_chart(analytics.series)
     return templates.TemplateResponse(
         request,
         "portal/dashboard.html",
-        {"account": account, "keys": keys, "usage": usage, "new_key": new_key},
+        {
+            "account": account,
+            "keys": keys,
+            "usage": usage,
+            "analytics": analytics,
+            "chart": chart,
+            "new_key": new_key,
+        },
     )
 
 
@@ -428,6 +440,140 @@ async def dashboard_revoke_key(request: Request, key_id: str):
         except Exception:
             pass
     return RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+
+
+# --------------------------------------------------------------------------- #
+# Segurança da conta — trocar senha (requer sessão)
+# --------------------------------------------------------------------------- #
+@router.get("/account/password")
+async def change_password_page(request: Request, error: str | None = None, info: str | None = None):
+    account = await _account_from_request(request)
+    if account is None:
+        return RedirectResponse(url="/portal/login", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse(
+        request,
+        "portal/change_password.html",
+        {"account": account, "error": error, "info": info},
+    )
+
+
+@router.post("/account/password")
+async def change_password_submit(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+):
+    account = await _account_from_request(request)
+    if account is None:
+        return RedirectResponse(url="/portal/login", status_code=status.HTTP_303_SEE_OTHER)
+
+    def _error(msg: str):
+        return templates.TemplateResponse(
+            request,
+            "portal/change_password.html",
+            {"account": account, "error": msg},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if new_password != confirm_password:
+        return _error("A confirmação não corresponde à nova senha.")
+    try:
+        _validate_password_policy(new_password)
+    except ValueError as exc:
+        return _error(str(exc))
+
+    async with async_session_factory() as session:
+        # Recarrega a conta nesta sessão para persistir a alteração.
+        db_account = await session.get(DeveloperAccount, account.id)
+        try:
+            await account_service.change_password(
+                session, db_account, current_password, new_password
+            )
+        except Exception:
+            return _error("Senha atual incorreta.")
+
+    return templates.TemplateResponse(
+        request,
+        "portal/change_password.html",
+        {"account": account, "info": "Senha alterada com sucesso."},
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Recuperação de senha — esqueci a senha / redefinir (públicos)
+# --------------------------------------------------------------------------- #
+@router.get("/forgot-password")
+async def forgot_password_page(request: Request, info: str | None = None):
+    return templates.TemplateResponse(request, "portal/forgot_password.html", {"info": info})
+
+
+@router.post("/forgot-password")
+async def forgot_password_submit(
+    request: Request,
+    email: str = Form(...),
+    _rate_limit: None = Depends(rate_limit_forgot_ip),
+):
+    async with async_session_factory() as session:
+        try:
+            await account_service.request_password_reset(session, email)
+        except Exception:
+            logger.exception("Falha ao processar pedido de redefinição de senha")
+    # Resposta idêntica exista ou não a conta (anti-enumeração — Princípio V).
+    return templates.TemplateResponse(
+        request,
+        "portal/forgot_password.html",
+        {"info": "Se houver uma conta para este e-mail, enviamos um link de redefinição."},
+    )
+
+
+@router.get("/reset-password")
+async def reset_password_page(request: Request, token: str | None = None, error: str | None = None):
+    if not token:
+        return templates.TemplateResponse(
+            request,
+            "portal/login.html",
+            {"error": "Link de redefinição inválido ou ausente.", **_oauth_context()},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    return templates.TemplateResponse(
+        request, "portal/reset_password.html", {"token": token, "error": error}
+    )
+
+
+@router.post("/reset-password")
+async def reset_password_submit(
+    request: Request,
+    token: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+):
+    def _error(msg: str):
+        return templates.TemplateResponse(
+            request,
+            "portal/reset_password.html",
+            {"token": token, "error": msg},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if new_password != confirm_password:
+        return _error("A confirmação não corresponde à nova senha.")
+    try:
+        _validate_password_policy(new_password)
+    except ValueError as exc:
+        return _error(str(exc))
+
+    async with async_session_factory() as session:
+        try:
+            await account_service.reset_password(session, token, new_password)
+        except Exception:
+            return _error("Link de redefinição inválido, expirado ou já utilizado.")
+
+    return templates.TemplateResponse(
+        request,
+        "portal/login.html",
+        {"info": "Senha redefinida. Faça login com a nova senha.", **_oauth_context()},
+    )
 
 
 @router.get("/logout")

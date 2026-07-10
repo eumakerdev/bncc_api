@@ -8,6 +8,37 @@ versão referida abaixo é a da aplicação (campo `version` do app FastAPI); o
 contrato público da API permanece em `/api/v1` e **não** sofre quebra dentro da
 versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)).
 
+## [Não lançado]
+
+### Adicionado
+
+- **Painel de BI de uso** no portal (`/portal/dashboard`): série diária dos
+  últimos 30 dias (chamadas totais vs. bem-sucedidas) renderizada como gráfico de
+  área **SSR determinístico** (SVG server-side, sem dependência de JS/CDN;
+  degrada para tabela acessível — Princípio VII), mais KPIs de total de
+  requisições e variação vs. período anterior, taxa de sucesso, uso de IA e keys
+  ativas. Novo endpoint `GET /api/v1/usage/analytics` (`AccountAnalyticsResponse`).
+- **Rastreio de desfecho das chamadas de API** para a taxa de sucesso: coluna
+  aditiva `usage_records.error_count` (migração `0004`) e `UsageOutcomeMiddleware`
+  que contabiliza requisições com desfecho de erro (>= 400) por key/bucket/dia,
+  sem tocar o caminho quente das bem-sucedidas.
+- **Gestão de senha** no portal e na API v1:
+  - Trocar senha autenticado — `POST /api/v1/auth/change-password` e
+    `/portal/account/password`.
+  - Recuperação por e-mail (fluxo "esqueci a senha") com token de uso único —
+    `POST /api/v1/auth/forgot-password`, `POST /api/v1/auth/reset-password` e as
+    páginas `/portal/forgot-password` / `/portal/reset-password`. Nova tabela
+    `password_reset_tokens` (migração `0005`); resposta anti-enumeração
+    (Princípio V).
+
+### Alterado
+
+- Painel do portal redesenhado (shell com sidebar, cartões de KPI, tabela de
+  keys refinada e pílulas de status), fiel ao design system por tokens (tema
+  claro/escuro automático).
+- Snapshots de OpenAPI (contrato e release `v1/1.3.0`) recongelados para incluir
+  os novos caminhos retrocompatíveis sob `/api/v1` (sem quebra — Princípio I).
+
 ## [1.3.0] - 2026-07-07
 
 ### Adicionado

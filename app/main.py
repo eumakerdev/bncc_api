@@ -162,6 +162,53 @@ class SecurityHeadersMiddleware:
 app.add_middleware(SecurityHeadersMiddleware)
 
 
+class UsageOutcomeMiddleware:
+    """Registra o desfecho (sucesso/erro) das chamadas de API autenticadas por key.
+
+    As dependências de rate limit já contabilizam o **total** por dia e marcam em
+    ``request.state`` (via ``scope["state"]``) a key/bucket da requisição. Aqui, após
+    a resposta, se o status for de erro (>= 400) incrementamos ``error_count`` da
+    mesma linha diária — habilitando a taxa de sucesso do painel sem alterar o
+    caminho quente das requisições bem-sucedidas. Nunca quebra a resposta."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        status_code = {"code": 200}
+
+        async def send_wrapper(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                status_code["code"] = message["status"]
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+        if status_code["code"] < 400:
+            return
+        state = scope.get("state") or {}
+        api_key_id = state.get("usage_api_key_id")
+        bucket_name = state.get("usage_bucket")
+        if not api_key_id or not bucket_name:
+            return
+        try:
+            from app.db.base import async_session_factory
+            from app.db.tables import UsageBucket
+            from app.services.usage_service import record_error
+
+            async with async_session_factory() as session:
+                await record_error(session, api_key_id, UsageBucket(bucket_name))
+        except Exception:  # nunca deixa a contabilização derrubar a resposta
+            logger.debug("Falha ao registrar desfecho de erro de uso", exc_info=True)
+
+
+app.add_middleware(UsageOutcomeMiddleware)
+
+
 app.include_router(api_router, prefix="/api/v1")
 # Infra de documentação versionada (/api/versions, /api/{slug}/openapi.json,
 # /api/{slug}/releases/{release}/openapi.json). `/api/v1/openapi.json` continua

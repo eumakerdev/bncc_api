@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = Field(default="no-reply@bncc.example.com")
     EMAIL_VERIFICATION_BASE_URL: str = Field(default="http://localhost:8000/portal/verify-email")
     EMAIL_TOKEN_EXPIRE_MINUTES: int = Field(default=1440)
+    # Redefinição de senha ("esqueci a senha"): página do portal que consome o token.
+    PASSWORD_RESET_BASE_URL: str = Field(default="http://localhost:8000/portal/reset-password")
+    # Token de reset é sensível (troca de credencial) → janela curta.
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
     SMTP_HOST: str = Field(default="")
     SMTP_PORT: int = Field(default=587)
     SMTP_USERNAME: str = Field(default="")
@@ -82,6 +86,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_SIGNUP_PER_MIN: int = Field(default=5)
     RATE_LIMIT_VERIFY_PER_MIN: int = Field(default=30)
     RATE_LIMIT_OAUTH_PER_MIN: int = Field(default=10)
+    # "Esqueci a senha": dispara e-mail com token → coíbe spam/enumeração por IP.
+    RATE_LIMIT_FORGOT_PER_MIN: int = Field(default=5)
 
     # --- Login social (OAuth 2.0) — opcional; desabilita se não configurado ---
     # Secrets carregados do ambiente (Princípio V). Ambos os campos de um provedor

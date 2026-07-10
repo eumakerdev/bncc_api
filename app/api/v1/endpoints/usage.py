@@ -12,7 +12,11 @@ from fastapi import APIRouter, Path
 
 from app.core.deps import CurrentAccount, SessionDep
 from app.models.bncc import ErrorResponse
-from app.models.platform import AccountUsageResponse, KeyUsageResponse
+from app.models.platform import (
+    AccountAnalyticsResponse,
+    AccountUsageResponse,
+    KeyUsageResponse,
+)
 from app.services import apikey_service, usage_service
 
 router = APIRouter()
@@ -65,3 +69,30 @@ async def key_usage(
 )
 async def account_usage(account: CurrentAccount, session: SessionDep) -> AccountUsageResponse:
     return await usage_service.account_usage(session, account.id)
+
+
+@router.get(
+    "/usage/analytics",
+    response_model=AccountAnalyticsResponse,
+    tags=["Uso"],
+    summary="Analytics de uso da conta (série diária + KPIs)",
+    response_description=(
+        "Série diária dos últimos 30 dias (total vs. bem-sucedidas) e KPIs "
+        "agregados: total de requisições e variação, taxa de sucesso, uso de IA, "
+        "keys ativas."
+    ),
+    description=(
+        "Retorna o BI de uso da conta autenticada: uma série diária dos últimos 30 "
+        "dias (chamadas totais vs. bem-sucedidas) e indicadores agregados para o "
+        "painel do portal (total de requisições com variação vs. período anterior, "
+        "taxa de sucesso, chamadas de IA e determinísticas, keys ativas e novas). "
+        "Exige sessão do portal."
+    ),
+    responses={
+        401: {"model": ErrorResponse, "description": "Sessão ausente, inválida ou expirada."},
+    },
+)
+async def account_analytics(
+    account: CurrentAccount, session: SessionDep
+) -> AccountAnalyticsResponse:
+    return await usage_service.account_analytics(session, account.id)
