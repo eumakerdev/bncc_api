@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Entrar — BNCC API</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/static/logo-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="container section auth-wrap">
+  <span class="auth-mark" aria-hidden="true">
+    <svg viewBox="0 0 48 48" width="42" height="42" focusable="false">
+      <defs>
+        <linearGradient id="auth-tile" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#1b4dff"/>
+          <stop offset="1" stop-color="#0aa8dc"/>
+        </linearGradient>
+      </defs>
+      <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#auth-tile)"/>
+      <g fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 22l11 4.5L35 22"/>
+        <path d="M13 28.6l11 4.5 11-4.5"/>
+        <path d="M13 35.2l11 4.5 11-4.5"/>
+      </g>
+      <circle cx="24" cy="13.8" r="3.3" fill="#ffc53d"/>
+    </svg>
+  </span>
+  <h1>Painel de Administração</h1>
+  <p class="lead">Acesso restrito — apenas uso local.</p>
+
+  {% if error %}
+    <div class="notice notice-danger" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <div class="card auth-card">
+    <form method="post" action="/admin/login" class="auth-form">
+      <label for="pw-field">Senha de administrador</label>
+      <div class="input-affix">
+        <input id="pw-field" name="password" type="password" autocomplete="current-password" required autofocus>
+        <button type="button" class="input-affix-btn" data-toggle-passwd="pw-field" aria-label="Mostrar senha" aria-pressed="false"><!-- pragma: allowlist secret -->
+          <svg class="icon-eye" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="icon-eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19M6.61 6.61A18.5 18.5 0 0 0 2 12s3.5 7 10 7a9.12 9.12 0 0 0 5.39-1.61"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="m2 2 20 20"/></svg>
+        </button>
+      </div>
+      <button class="btn btn-block" type="submit">Entrar</button>
+    </form>
+  </div>
+</div>
+<script>
+  document.querySelectorAll("[data-toggle-passwd]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var input = document.getElementById(btn.getAttribute("data-toggle-passwd"));
+      if (!input) return;
+      var reveal = input.type === "password";
+      input.type = reveal ? "text" : "password";
+      btn.setAttribute("aria-pressed", String(reveal));
+      btn.setAttribute("aria-label", reveal ? "Ocultar senha" : "Mostrar senha");
+      var eye = btn.querySelector(".icon-eye");
+      var eyeOff = btn.querySelector(".icon-eye-off");
+      if (eye) eye.hidden = reveal;
+      if (eyeOff) eyeOff.hidden = !reveal;
+    });
+  });
+</script>
+</body>
+</html>

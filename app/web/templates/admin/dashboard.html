@@ -1,0 +1,116 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard — BNCC API{% endblock %}
+
+{% block content %}
+<div class="admin-head">
+  <h1>Dashboard da Plataforma</h1>
+  <p>Visão geral dos últimos {{ analytics.window_days }} dias.</p>
+</div>
+
+<!-- KPIs principais -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Contas cadastradas</div>
+    <div class="kpi-value">{{ overview.total_accounts }}</div>
+    {% if overview.new_accounts_last_7d > 0 %}
+      <div class="kpi-sub kpi-delta-pos">+{{ overview.new_accounts_last_7d }} nos últimos 7 dias</div>
+    {% else %}
+      <div class="kpi-sub">{{ overview.verified_accounts }} verificadas</div>
+    {% endif %}
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">E-mails verificados</div>
+    <div class="kpi-value">{{ overview.verified_accounts }}</div>
+    <div class="kpi-sub">de {{ overview.total_accounts }} total</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">API Keys ativas</div>
+    <div class="kpi-value">{{ overview.active_keys }}</div>
+    <div class="kpi-sub">{{ overview.total_keys }} no total</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Requisições hoje</div>
+    <div class="kpi-value">{{ overview.requests_today }}</div>
+    {% if overview.requests_yesterday > 0 %}
+      {% set delta = ((overview.requests_today - overview.requests_yesterday) / overview.requests_yesterday * 100) | round(1) %}
+      {% if delta >= 0 %}
+        <div class="kpi-sub kpi-delta-pos">+{{ delta }}% vs. ontem</div>
+      {% else %}
+        <div class="kpi-sub kpi-delta-neg">{{ delta }}% vs. ontem</div>
+      {% endif %}
+    {% else %}
+      <div class="kpi-sub">{{ overview.requests_yesterday }} ontem</div>
+    {% endif %}
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Req. IA hoje</div>
+    <div class="kpi-value">{{ overview.ai_requests_today }}</div>
+    <div class="kpi-sub">dos {{ overview.requests_today }} de hoje</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Novos usuários (7d)</div>
+    <div class="kpi-value">{{ overview.new_accounts_last_7d }}</div>
+    <div class="kpi-sub">contas criadas</div>
+  </div>
+</div>
+
+<!-- Gráfico de uso da plataforma -->
+<div class="admin-section">
+  <h2>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+    Requisições da plataforma — últimos {{ analytics.window_days }} dias
+  </h2>
+  {% if chart.has_data %}
+  <div class="chart-wrap">
+    <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="Gráfico de uso da plataforma">
+      <title>Gráfico de requisições da plataforma</title>
+      <!-- Grade e eixo Y -->
+      {% for tick in chart.y_ticks %}
+      <line x1="44" y1="{{ tick.pos }}" x2="{{ chart.width - 12 }}" y2="{{ tick.pos }}"
+            stroke="#e2e8f0" stroke-width="1"/>
+      <text x="40" y="{{ tick.pos }}" text-anchor="end" dominant-baseline="middle"
+            font-size="11" fill="#94a3b8">{{ tick.label }}</text>
+      {% endfor %}
+      <!-- Área total -->
+      <path d="{{ chart.total_area }}" fill="#1b4dff" opacity="0.12"/>
+      <!-- Linha total -->
+      <polyline points="{{ chart.total_line }}" fill="none" stroke="#1b4dff" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Pontos do eixo X -->
+      {% for tick in chart.x_ticks %}
+      <text x="{{ tick.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle"
+            font-size="10" fill="#94a3b8">{{ tick.label }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+  {% else %}
+  <p class="muted" style="text-align:center;padding:2rem 0">Sem dados de uso neste período.</p>
+  {% endif %}
+
+  <!-- Tabela de resumo -->
+  <div style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
+    <div>
+      <div class="kpi-label">Total de requisições</div>
+      <div style="font-size:1.1rem;font-weight:600">{{ analytics.total_requests }}</div>
+    </div>
+    <div>
+      <div class="kpi-label">Req. IA</div>
+      <div style="font-size:1.1rem;font-weight:600">{{ analytics.ai_requests }}</div>
+    </div>
+    <div>
+      <div class="kpi-label">Req. determinísticas</div>
+      <div style="font-size:1.1rem;font-weight:600">{{ analytics.deterministic_requests }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Link rápido para usuários -->
+<div class="admin-section">
+  <h2>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    Ações rápidas
+  </h2>
+  <a href="/admin/users" class="btn btn-secondary btn-sm">Ver todos os usuários ({{ overview.total_accounts }})</a>
+</div>
+{% endblock %}

@@ -64,6 +64,12 @@ def include_web_routers() -> None:
         web_router.include_router(docs_router)
     except ImportError:
         pass
+    try:
+        from app.web.admin import router as admin_router
+
+        web_router.include_router(admin_router, prefix="/admin")
+    except ImportError:
+        pass
 
 
 include_web_routers()

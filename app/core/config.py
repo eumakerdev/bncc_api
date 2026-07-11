@@ -100,6 +100,16 @@ class Settings(BaseSettings):
     # Base pública usada para montar o redirect_uri do callback OAuth.
     OAUTH_REDIRECT_BASE_URL: str = Field(default="http://localhost:8000")
 
+    # --- Painel de administração (local only, Princípio V) ---
+    # Vazio = painel de admin desabilitado (default seguro). Defina com uma senha
+    # forte para habilitar o painel em `/admin` — nunca use em produção sem HTTPS
+    # e restrição de rede. O painel não é publicado nem registrado no OpenAPI.
+    ADMIN_PASSWORD: str = Field(default="")
+
+    @property
+    def admin_enabled(self) -> bool:
+        return bool(self.ADMIN_PASSWORD)
+
     # --- Transparência de custos (BigQuery billing export; opcional) ---
     # Vazio = ingestão de custos desligada. São apenas leitura de números públicos
     # (custo de infraestrutura), então NÃO entram no fail-fast de produção. Usados só

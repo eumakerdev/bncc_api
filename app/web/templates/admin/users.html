@@ -1,0 +1,55 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Usuários — BNCC API{% endblock %}
+
+{% block content %}
+<div class="admin-head">
+  <h1>Usuários da Plataforma</h1>
+  <p>{{ accounts | length }} conta(s) cadastrada(s).</p>
+</div>
+
+<div class="admin-section">
+  <h2>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Todas as contas
+  </h2>
+  {% if accounts %}
+  <div style="overflow-x:auto">
+    <table class="data-table" aria-label="Contas de desenvolvedor">
+      <thead>
+        <tr>
+          <th>E-mail</th>
+          <th>Status</th>
+          <th>Keys</th>
+          <th>Keys ativas</th>
+          <th>Req. hoje</th>
+          <th>Criado em</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acc in accounts %}
+        <tr>
+          <td style="font-family:monospace;font-size:0.82rem" title="{{ acc.account_id }}">{{ acc.email }}</td>
+          <td>
+            {% if acc.email_verified %}
+              <span class="pill pill-ok">verificado</span>
+            {% else %}
+              <span class="pill pill-muted">não verificado</span>
+            {% endif %}
+          </td>
+          <td>{{ acc.total_keys }}</td>
+          <td>{{ acc.active_keys }}</td>
+          <td>{{ acc.requests_today }}</td>
+          <td style="font-size:0.8rem;color:var(--text-muted,#64748b)">
+            {{ acc.created_at.strftime('%d/%m/%Y %H:%M') if acc.created_at else '—' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted" style="text-align:center;padding:2rem 0">Nenhuma conta cadastrada ainda.</p>
+  {% endif %}
+</div>
+{% endblock %}
