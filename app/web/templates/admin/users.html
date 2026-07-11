@@ -29,7 +29,7 @@
       <tbody>
         {% for acc in accounts %}
         <tr>
-          <td style="font-family:monospace;font-size:0.82rem" title="{{ acc.account_id }}">{{ acc.email }}</td>
+          <td title="{{ acc.account_id }}"><a class="link-cell" href="/admin/users/{{ acc.account_id }}">{{ acc.email }}</a></td>
           <td>
             {% if acc.email_verified %}
               <span class="pill pill-ok">verificado</span>

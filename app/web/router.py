@@ -64,12 +64,17 @@ def include_web_routers() -> None:
         web_router.include_router(docs_router)
     except ImportError:
         pass
-    try:
-        from app.web.admin import router as admin_router
+    # Fronteira 1 (isolamento): o painel de admin só é MONTADO quando habilitado.
+    # No deploy público de produção `admin_enabled` é False → não há rota `/admin`
+    # (nem stub 404) nem em `bncc.api.br` nem na URL crua do `run.app`. A superfície
+    # de admin pública fica inexistente; o acesso é local ou pelo serviço dedicado.
+    if settings.admin_enabled:
+        try:
+            from app.web.admin import router as admin_router
 
-        web_router.include_router(admin_router, prefix="/admin")
-    except ImportError:
-        pass
+            web_router.include_router(admin_router, prefix="/admin")
+        except ImportError:
+            pass
 
 
 include_web_routers()

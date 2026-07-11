@@ -88,6 +88,9 @@ class Settings(BaseSettings):
     RATE_LIMIT_OAUTH_PER_MIN: int = Field(default=10)
     # "Esqueci a senha": dispara e-mail com token → coíbe spam/enumeração por IP.
     RATE_LIMIT_FORGOT_PER_MIN: int = Field(default=5)
+    # Tentativas de auth no painel admin por IP/minuto (força bruta de senha e spam
+    # do callback OAuth). Baixo de propósito — admin é de pouquíssimas pessoas.
+    RATE_LIMIT_ADMIN_PER_MIN: int = Field(default=5)
 
     # --- Login social (OAuth 2.0) — opcional; desabilita se não configurado ---
     # Secrets carregados do ambiente (Princípio V). Ambos os campos de um provedor
@@ -100,15 +103,50 @@ class Settings(BaseSettings):
     # Base pública usada para montar o redirect_uri do callback OAuth.
     OAUTH_REDIRECT_BASE_URL: str = Field(default="http://localhost:8000")
 
-    # --- Painel de administração (local only, Princípio V) ---
-    # Vazio = painel de admin desabilitado (default seguro). Defina com uma senha
-    # forte para habilitar o painel em `/admin` — nunca use em produção sem HTTPS
-    # e restrição de rede. O painel não é publicado nem registrado no OpenAPI.
+    # --- Painel de administração (Princípio V — isolado do runtime público) ---
+    # `ADMIN_MODE` é o interruptor mestre: quando False (default seguro), o router
+    # `/admin` NÃO é montado (nem stub 404) — o deploy público de produção deixa
+    # assim, tornando a superfície de admin inexistente. Só o deploy dedicado
+    # (serviço `bncc-admin`) ou o uso local ligam `ADMIN_MODE`.
+    ADMIN_MODE: bool = Field(default=False)
+    # Identidade por pessoa: login por Google restrito a esta allowlist de e-mails
+    # (verificados). É o único caminho de auth em produção/remoto. MFA vem da conta
+    # Google. Vazio = login por Google desabilitado.
+    ADMIN_ALLOWED_EMAILS: list[str] = Field(default=[])
+    # Senha de administrador — APENAS conveniência de desenvolvimento local. É
+    # ignorada em produção (lá, só Google Sign-In). Nunca é armazenada/hasheada.
     ADMIN_PASSWORD: str = Field(default="")
+
+    @field_validator("ADMIN_ALLOWED_EMAILS", mode="before")
+    @classmethod
+    def _split_admin_emails(cls, v: object) -> object:
+        # Aceita "a@x,b@y" além de lista/JSON; normaliza para minúsculas.
+        if isinstance(v, str) and not v.strip().startswith("["):
+            return [item.strip().lower() for item in v.split(",") if item.strip()]
+        if isinstance(v, list):
+            return [str(item).strip().lower() for item in v if str(item).strip()]
+        return v
+
+    @property
+    def admin_google_enabled(self) -> bool:
+        """Login admin por Google disponível: OAuth Google configurado + allowlist."""
+        return self.google_oauth_enabled and bool(self.ADMIN_ALLOWED_EMAILS)
+
+    @property
+    def admin_password_enabled(self) -> bool:
+        """Senha de admin só vale FORA de produção (conveniência de dev local)."""
+        return bool(self.ADMIN_PASSWORD) and not self.is_production
 
     @property
     def admin_enabled(self) -> bool:
-        return bool(self.ADMIN_PASSWORD)
+        """Painel habilitado: ADMIN_MODE ligado E ao menos um caminho de auth válido."""
+        return self.ADMIN_MODE and (self.admin_google_enabled or self.admin_password_enabled)
+
+    def is_admin_email(self, email: str | None) -> bool:
+        """True se o e-mail (case-insensitive) está na allowlist de administradores."""
+        if not email:
+            return False
+        return email.strip().lower() in self.ADMIN_ALLOWED_EMAILS
 
     # --- Transparência de custos (BigQuery billing export; opcional) ---
     # Vazio = ingestão de custos desligada. São apenas leitura de números públicos
@@ -204,6 +242,15 @@ class Settings(BaseSettings):
                     f"OAuth {name}: client_id e client_secret devem ser ambos "
                     "definidos ou ambos vazios"
                 )
+
+        # Admin em produção: só pode subir com Google Sign-In + allowlist. Senha
+        # compartilhada é proibida como caminho de auth em produção (Princípio V).
+        if self.ADMIN_MODE and not self.admin_google_enabled:
+            errors.append(
+                "ADMIN_MODE ligado em produção exige login por Google configurado "
+                "(GOOGLE_OAUTH_CLIENT_ID/SECRET) e ADMIN_ALLOWED_EMAILS não-vazio; "
+                "senha de admin não é aceita em produção"
+            )
 
         if errors:
             raise ValueError(

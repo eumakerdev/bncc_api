@@ -2,10 +2,22 @@
 
 {% block title %}Admin Dashboard — BNCC API{% endblock %}
 
+{% macro period_tabs(base) %}
+<div class="period-tabs" role="tablist" aria-label="Período">
+  {% for w in windows %}
+  <a class="period-tab{% if w == window %} is-active{% endif %}" href="{{ base }}?days={{ w }}"
+     role="tab" aria-selected="{{ 'true' if w == window else 'false' }}">{{ w }}d</a>
+  {% endfor %}
+</div>
+{% endmacro %}
+
 {% block content %}
-<div class="admin-head">
-  <h1>Dashboard da Plataforma</h1>
-  <p>Visão geral dos últimos {{ analytics.window_days }} dias.</p>
+<div class="section-head">
+  <div class="admin-head" style="margin:0">
+    <h1>Dashboard da Plataforma</h1>
+    <p>Visão geral do uso de todos os usuários — últimos {{ analytics.window_days }} dias.</p>
+  </div>
+  {{ period_tabs('/admin/') }}
 </div>
 
 <!-- KPIs principais -->
@@ -20,9 +32,9 @@
     {% endif %}
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">E-mails verificados</div>
-    <div class="kpi-value">{{ overview.verified_accounts }}</div>
-    <div class="kpi-sub">de {{ overview.total_accounts }} total</div>
+    <div class="kpi-label">Contas ativas (7d)</div>
+    <div class="kpi-value">{{ composition.active_last_7d }}</div>
+    <div class="kpi-sub">de {{ composition.total }} cadastradas</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">API Keys ativas</div>
@@ -44,43 +56,44 @@
     {% endif %}
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">Req. IA hoje</div>
-    <div class="kpi-value">{{ overview.ai_requests_today }}</div>
-    <div class="kpi-sub">dos {{ overview.requests_today }} de hoje</div>
+    <div class="kpi-label">Taxa de sucesso ({{ window }}d)</div>
+    <div class="kpi-value">{{ analytics.success_rate }}%</div>
+    <div class="kpi-sub">{{ analytics.error_requests }} erro(s) em {{ analytics.total_requests }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">Novos usuários (7d)</div>
-    <div class="kpi-value">{{ overview.new_accounts_last_7d }}</div>
-    <div class="kpi-sub">contas criadas</div>
+    <div class="kpi-label">Uso de IA ({{ window }}d)</div>
+    <div class="kpi-value">{{ analytics.ai_share }}%</div>
+    <div class="kpi-sub">{{ analytics.ai_requests }} de {{ analytics.total_requests }} req.</div>
   </div>
 </div>
 
-<!-- Gráfico de uso da plataforma -->
+<!-- Gráfico de uso da plataforma (total vs. bem-sucedidas) -->
 <div class="admin-section">
-  <h2>
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
-    Requisições da plataforma — últimos {{ analytics.window_days }} dias
-  </h2>
+  <div class="section-head">
+    <h2>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+      Requisições — últimos {{ analytics.window_days }} dias
+    </h2>
+    <div class="comp-legend">
+      <span><span class="dot" style="background:#1b4dff"></span>Total</span>
+      <span><span class="dot" style="background:#16a34a"></span>Bem-sucedidas</span>
+    </div>
+  </div>
   {% if chart.has_data %}
   <div class="chart-wrap">
     <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="Gráfico de uso da plataforma">
-      <title>Gráfico de requisições da plataforma</title>
-      <!-- Grade e eixo Y -->
+      <title>Requisições da plataforma: total vs. bem-sucedidas</title>
       {% for tick in chart.y_ticks %}
-      <line x1="44" y1="{{ tick.pos }}" x2="{{ chart.width - 12 }}" y2="{{ tick.pos }}"
-            stroke="#e2e8f0" stroke-width="1"/>
-      <text x="40" y="{{ tick.pos }}" text-anchor="end" dominant-baseline="middle"
-            font-size="11" fill="#94a3b8">{{ tick.label }}</text>
+      <line x1="44" y1="{{ tick.pos }}" x2="{{ chart.width - 12 }}" y2="{{ tick.pos }}" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="40" y="{{ tick.pos }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="#94a3b8">{{ tick.label }}</text>
       {% endfor %}
-      <!-- Área total -->
-      <path d="{{ chart.total_area }}" fill="#1b4dff" opacity="0.12"/>
-      <!-- Linha total -->
-      <polyline points="{{ chart.total_line }}" fill="none" stroke="#1b4dff" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- Pontos do eixo X -->
+      <!-- Área total (o vão até a linha verde é o volume com erro) -->
+      <path d="{{ chart.total_area }}" fill="#1b4dff" opacity="0.10"/>
+      <path d="{{ chart.success_area }}" fill="#16a34a" opacity="0.12"/>
+      <polyline points="{{ chart.total_line }}" fill="none" stroke="#1b4dff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="{{ chart.success_line }}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       {% for tick in chart.x_ticks %}
-      <text x="{{ tick.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle"
-            font-size="10" fill="#94a3b8">{{ tick.label }}</text>
+      <text x="{{ tick.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle" font-size="10" fill="#94a3b8">{{ tick.label }}</text>
       {% endfor %}
     </svg>
   </div>
@@ -88,11 +101,14 @@
   <p class="muted" style="text-align:center;padding:2rem 0">Sem dados de uso neste período.</p>
   {% endif %}
 
-  <!-- Tabela de resumo -->
   <div style="margin-top:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
     <div>
       <div class="kpi-label">Total de requisições</div>
       <div style="font-size:1.1rem;font-weight:600">{{ analytics.total_requests }}</div>
+    </div>
+    <div>
+      <div class="kpi-label">Bem-sucedidas</div>
+      <div style="font-size:1.1rem;font-weight:600">{{ analytics.successful_requests }}</div>
     </div>
     <div>
       <div class="kpi-label">Req. IA</div>
@@ -105,12 +121,60 @@
   </div>
 </div>
 
-<!-- Link rápido para usuários -->
+<!-- Top consumidores -->
 <div class="admin-section">
   <h2>
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-    Ações rápidas
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h2a2 2 0 0 1 0 4h-2M7 5H5a2 2 0 0 0 0 4h2"/></svg>
+    Maiores consumidores — {{ window }} dias
   </h2>
-  <a href="/admin/users" class="btn btn-secondary btn-sm">Ver todos os usuários ({{ overview.total_accounts }})</a>
+  {% if top_accounts %}
+  <div style="overflow-x:auto">
+    <table class="data-table" aria-label="Ranking de consumo por conta">
+      <thead>
+        <tr>
+          <th>#</th><th>Conta</th><th>Requisições</th><th>IA</th><th>Determinística</th><th>Sucesso</th><th>Keys ativas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in top_accounts %}
+        <tr>
+          <td><span class="rank-num">{{ loop.index }}</span></td>
+          <td><a class="link-cell" href="/admin/users/{{ c.account_id }}?days={{ window }}">{{ c.email }}</a></td>
+          <td><strong>{{ c.requests }}</strong></td>
+          <td>{{ c.ai }}</td>
+          <td>{{ c.deterministic }}</td>
+          <td>
+            {% if c.success_rate >= 99 %}<span class="pill pill-ok">{{ c.success_rate }}%</span>
+            {% elif c.success_rate >= 90 %}<span class="pill pill-warn">{{ c.success_rate }}%</span>
+            {% else %}<span class="pill pill-danger">{{ c.success_rate }}%</span>{% endif %}
+          </td>
+          <td>{{ c.active_keys }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted" style="text-align:center;padding:1.5rem 0">Sem consumo registrado neste período.</p>
+  {% endif %}
+</div>
+
+<!-- Composição da base -->
+<div class="admin-section">
+  <h2>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.4rem"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    Composição da base de contas
+  </h2>
+  {% set comp_total = composition.total if composition.total > 0 else 1 %}
+  <div class="comp-bar" aria-hidden="true">
+    <div class="comp-seg comp-seg-a" style="width:{{ (composition.with_password / comp_total * 100) | round(1) }}%"></div>
+    <div class="comp-seg comp-seg-b" style="width:{{ (composition.oauth_only / comp_total * 100) | round(1) }}%"></div>
+  </div>
+  <div class="comp-legend">
+    <span><span class="dot" style="background:#1b4dff"></span>E-mail/senha: {{ composition.with_password }}</span>
+    <span><span class="dot" style="background:#0aa8dc"></span>Só login social: {{ composition.oauth_only }}</span>
+    <span><span class="dot" style="background:#16a34a"></span>Verificadas: {{ composition.verified }}</span>
+    <span><span class="dot" style="background:#94a3b8"></span>Onboarding concluído: {{ composition.onboarded }}</span>
+  </div>
 </div>
 {% endblock %}

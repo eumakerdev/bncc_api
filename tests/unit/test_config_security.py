@@ -15,6 +15,9 @@ def _make(**overrides):
         "ENVIRONMENT": "production",
         "SECRET_KEY": "x" * 48,
         "ALLOWED_HOSTS": ["https://bncc.example.com"],
+        # Estes testes cobrem SECRET_KEY/ALLOWED_HOSTS; mantêm o admin fora de cena
+        # (o ambiente de teste liga ADMIN_MODE, que tem seu próprio fail-fast).
+        "ADMIN_MODE": False,
     }
     base.update(overrides)
     return Settings(_env_file=None, **base)
@@ -44,6 +47,25 @@ def test_production_accepts_strong_config():
     settings = _make()
     assert settings.is_production
     assert "*" not in settings.ALLOWED_HOSTS
+
+
+def test_production_admin_mode_requires_google_allowlist():
+    """ADMIN_MODE em produção sem Google+allowlist é bloqueado (só senha não basta)."""
+    with pytest.raises(ValidationError):
+        _make(ADMIN_MODE=True, ADMIN_PASSWORD="qualquer-senha-forte")
+
+
+def test_production_admin_mode_accepts_google_allowlist():
+    settings = _make(
+        ADMIN_MODE=True,
+        GOOGLE_OAUTH_CLIENT_ID="cid",
+        GOOGLE_OAUTH_CLIENT_SECRET="csecret",
+        ADMIN_ALLOWED_EMAILS=["boss@bncc.example.com"],
+    )
+    assert settings.admin_enabled
+    assert settings.admin_google_enabled
+    assert not settings.admin_password_enabled  # senha nunca vale em produção
+    assert settings.is_admin_email("BOSS@bncc.example.com")  # case-insensitive
 
 
 def test_development_tolerates_permissive_defaults():

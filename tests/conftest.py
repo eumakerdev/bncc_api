@@ -19,6 +19,11 @@ os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production-000000")
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_TMP_DB.as_posix()}"
 os.environ.setdefault("EMAIL_BACKEND", "console")
+# Painel admin: habilitado no import (ADMIN_MODE + senha dev) para que o router
+# `/admin` seja MONTADO no processo de teste. Os testes ligam/desligam o acesso em
+# runtime via monkeypatch de `settings.ADMIN_MODE` (o guard por rota retorna 404).
+os.environ.setdefault("ADMIN_MODE", "1")
+os.environ.setdefault("ADMIN_PASSWORD", "admin-test-secret-123")  # pragma: allowlist secret
 
 import pytest_asyncio  # noqa: E402
 from app.core.security import generate_api_key, hash_password  # noqa: E402
@@ -44,6 +49,7 @@ async def _prepare_db():
 def _reset_rate_limiters():
     """Zera os limitadores in-process (globais de módulo) entre testes."""
     from app.core.deps import (
+        admin_ip_limiter,
         ai_limiter,
         deterministic_limiter,
         forgot_ip_limiter,
@@ -60,6 +66,7 @@ def _reset_rate_limiters():
     verify_ip_limiter.reset()
     oauth_ip_limiter.reset()
     forgot_ip_limiter.reset()
+    admin_ip_limiter.reset()
     yield
 
 

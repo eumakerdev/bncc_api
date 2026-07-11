@@ -157,3 +157,44 @@ Setup:
 
 A conta de faturamento brasileira fatura em **BRL** (usado direto). Se por acaso o export vier em
 outra moeda, defina `USD_BRL_RATE` para converter.
+
+## Painel de administração (`/admin`) — isolamento e acesso
+
+O painel de admin é **governado por `ADMIN_MODE`** (default `false`). Só é MONTADO quando habilitado;
+o serviço público de produção **não o monta** (superfície de admin pública = zero). Autenticação:
+
+- **Produção/remoto:** apenas **Google Sign-In** restrito a `ADMIN_ALLOWED_EMAILS` (identidade por
+  pessoa; MFA vem da conta Google). Senha compartilhada é **bloqueada** em produção (fail-fast em
+  `config.py` se `ADMIN_MODE` subir sem Google + allowlist).
+- **Dev local:** além do Google, aceita `ADMIN_PASSWORD` (conveniência; ignorada em produção).
+
+### Uso local com dados de produção (recomendado)
+Nada é exposto na internet. Túnel autenticado por IAM até o banco:
+
+```powershell
+# 1) proxy autenticado (ADC do gcloud) para o Cloud SQL
+cloud-sql-proxy --port 5433 api-bncc:southamerica-east1:bncc-pg
+# 2) app local com o painel ligado, apontando para o banco de produção (só-leitura no painel)
+$env:ADMIN_MODE="1"; $env:ADMIN_PASSWORD="<senha-forte-dev>"
+$env:DATABASE_URL="postgresql+asyncpg://bncc_app:<senha>@127.0.0.1:5433/bncc"
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+# abrir http://127.0.0.1:8000/admin
+```
+
+### Acesso remoto (opcional) — serviço isolado atrás do Google IAP
+Quando for preciso acesso web, use `deploy/admin/deploy-admin.ps1`: sobe um serviço Cloud Run
+**separado** (`bncc-admin`, mesma imagem) com `--ingress=internal-and-cloud-load-balancing` +
+`--no-allow-unauthenticated`, atrás de um Load Balancer HTTPS com **Identity-Aware Proxy (IAP)** em
+`admin.bncc.api.br`. A **autorização é via gcloud/IAM** (`roles/iap.httpsResourceAccessor` por
+e-mail) — dois portões: IAP na borda + `ADMIN_ALLOWED_EMAILS` no app.
+
+```powershell
+./deploy/admin/deploy-admin.ps1 -AllowedEmails "voce@dominio.com,colega@dominio.com" `
+  -IapClientId <oauth-client-id-do-IAP> -IapClientSecret <secret>
+```
+
+Passos **só-Console/manuais** (o script avisa): criar a *OAuth consent screen* e o *OAuth client do
+IAP* (Console → Security → Identity-Aware Proxy), apontar o **DNS** `admin.bncc.api.br → IP` no
+Registro.br, e registrar `https://admin.bncc.api.br/admin/auth/google/callback` nos *Authorized
+redirect URIs* do OAuth client Google. Revogar acesso de alguém: `gcloud iap web
+remove-iam-policy-binding …`.
