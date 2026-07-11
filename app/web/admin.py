@@ -16,7 +16,6 @@ Princípios observados:
 
 from __future__ import annotations
 
-import hashlib
 import hmac
 import logging
 
@@ -46,12 +45,15 @@ def _admin_enabled() -> bool:
 
 
 def _check_password(candidate: str) -> bool:
-    """Compara ``candidate`` com ADMIN_PASSWORD em tempo constante (anti-timing)."""
-    expected = settings.ADMIN_PASSWORD.encode()
-    given = candidate.encode()
+    """Compara ``candidate`` com ADMIN_PASSWORD em tempo constante (anti-timing).
+
+    ``hmac.compare_digest`` compara byte-a-byte sem curto-circuito, prevenindo
+    ataques de timing. A senha de admin vem do ambiente (nunca é armazenada/hash
+    em banco), portanto comparação direta é segura aqui.
+    """
     return hmac.compare_digest(
-        hashlib.sha256(expected).digest(),
-        hashlib.sha256(given).digest(),
+        settings.ADMIN_PASSWORD.encode(),
+        candidate.encode(),
     )
 
 
