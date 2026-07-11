@@ -27,11 +27,19 @@ from app.models.platform import (
     AccountUsageResponse,
     BucketUsage,
     KeyUsageResponse,
+    PublicUsagePoint,
+    PublicUsageSummary,
+    PublicUsageWindow,
     UsageDailyPoint,
 )
 
 # Janela padrão do painel de BI (últimos N dias, inclusive hoje).
 ANALYTICS_WINDOW_DAYS = 30
+
+# Janelas oferecidas no filtro público da landing (dias). Todas são pré-computadas
+# de uma vez; o cliente alterna sem requisição nova.
+PUBLIC_USAGE_WINDOWS: tuple[int, ...] = (7, 30, 90)
+PUBLIC_USAGE_DEFAULT_WINDOW = 30
 
 
 def _now() -> datetime:
@@ -364,4 +372,88 @@ async def account_analytics(
         deterministic_requests=deterministic_requests,
         active_keys=active_keys,
         new_keys_last_7d=new_keys_last_7d,
+    )
+
+
+async def public_usage_summary(
+    session: AsyncSession,
+    windows: tuple[int, ...] = PUBLIC_USAGE_WINDOWS,
+    default_window: int = PUBLIC_USAGE_DEFAULT_WINDOW,
+) -> PublicUsageSummary:
+    """Séries por janela + KPIs de adoção para a seção "Transparência" da landing.
+
+    Espelha ``cost_service.public_cost_summary``: uma única varredura de
+    ``usage_records`` (na maior janela pedida) monta a série diária agregada de TODA
+    a plataforma, da qual fatiamos cada janela (7/30/90). Só totais agregados —
+    nunca por conta/IP/key e **sem taxa de erro** (sinal operacional; fica no /admin).
+    Puro em relação a HTTP: recebe a sessão, devolve o modelo Pydantic.
+    """
+    windows = tuple(sorted({w for w in windows if w > 0})) or (default_window,)
+    today = _day_window_start()
+    max_days = max(windows)
+    max_start = today - timedelta(days=max_days - 1)
+
+    # Uma varredura: total diário da plataforma (soma dos dois buckets) na maior janela.
+    rows = (
+        await session.execute(
+            select(UsageRecord.window_start, func.sum(UsageRecord.count))
+            .where(UsageRecord.window_start >= max_start)
+            .group_by(UsageRecord.window_start)
+        )
+    ).all()
+    per_day: dict[date, int] = {}
+    for ws, total in rows:
+        d = _as_date(ws)
+        per_day[d] = per_day.get(d, 0) + int(total or 0)
+
+    def _window(days: int) -> PublicUsageWindow:
+        start = (today - timedelta(days=days - 1)).date()
+        series = [
+            PublicUsagePoint(date=d, total=per_day.get(d, 0))
+            for d in (start + timedelta(days=i) for i in range(days))
+        ]
+        total = sum(p.total for p in series)
+        return PublicUsageWindow(
+            days=days,
+            series=series,
+            total_requests=total,
+            daily_average=round(total / days) if days else 0,
+            peak=max((p.total for p in series), default=0),
+        )
+
+    window_models = [_window(d) for d in windows]
+
+    # Totais all-time e adoção (agregações enxutas, uma linha cada).
+    total_to_date = int(
+        (await session.execute(select(func.coalesce(func.sum(UsageRecord.count), 0)))).scalar_one()
+        or 0
+    )
+    earliest = (await session.execute(select(func.min(UsageRecord.window_start)))).scalar_one()
+    developers = int(
+        (
+            await session.execute(
+                select(func.count(func.distinct(ApiKey.account_id)))
+                .select_from(UsageRecord)
+                .join(ApiKey, ApiKey.id == UsageRecord.api_key_id)
+            )
+        ).scalar_one()
+        or 0
+    )
+    active_keys = int(
+        (
+            await session.execute(
+                select(func.count()).select_from(ApiKey).where(ApiKey.status == ApiKeyStatus.active)
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    return PublicUsageSummary(
+        has_data=total_to_date > 0,
+        default_window=default_window if default_window in windows else windows[0],
+        windows=window_models,
+        total_to_date=total_to_date,
+        period_start=_as_date(earliest) if earliest is not None else None,
+        developers=developers,
+        active_keys=active_keys,
     )

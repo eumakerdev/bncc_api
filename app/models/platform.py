@@ -181,3 +181,47 @@ class AccountAnalyticsResponse(BaseModel):
     deterministic_requests: int = Field(..., description="Chamadas determinísticas na janela")
     active_keys: int
     new_keys_last_7d: int = Field(..., description="Keys ativas criadas nos últimos 7 dias")
+
+
+# --------------------------------------------------------------------------- #
+# Transparência pública de uso (seção da landing — SSR)
+# --------------------------------------------------------------------------- #
+class PublicUsagePoint(BaseModel):
+    """Um ponto da série diária pública (agregada de TODA a plataforma)."""
+
+    date: date
+    total: int = Field(..., description="Requisições autorizadas no dia (toda a plataforma)")
+
+
+class PublicUsageWindow(BaseModel):
+    """Uma janela temporal pré-computada (7/30/90 dias) para o filtro público.
+
+    Pré-renderizar as três janelas de uma vez permite ao cliente alternar o filtro
+    sem nenhuma requisição nova (Princípio VII — custo previsível): o servidor faz
+    uma varredura, cacheada, e o toggle é só CSS/DOM.
+    """
+
+    days: int
+    series: list[PublicUsagePoint]
+    total_requests: int = Field(0, description="Total de requisições na janela")
+    daily_average: int = Field(0, description="Média diária de requisições na janela")
+    peak: int = Field(0, description="Pico diário de requisições na janela")
+
+
+class PublicUsageSummary(BaseModel):
+    """Transparência pública de uso: séries por janela + KPIs de adoção.
+
+    Só métricas **agregadas** de toda a plataforma — nunca por conta, IP ou key, e
+    **sem taxa de erro** (isso é sinal operacional para atacante e fica restrito ao
+    painel /admin). Alimenta a seção "Transparência" da landing (SSR).
+    """
+
+    has_data: bool = Field(False, description="Falso quando não há nenhuma requisição registrada")
+    default_window: int = Field(30, description="Janela exibida por padrão (dias)")
+    windows: list[PublicUsageWindow] = Field(default_factory=list)
+    total_to_date: int = Field(0, description="Requisições acumuladas desde o início")
+    period_start: date | None = Field(None, description="Primeiro dia com tráfego registrado")
+    developers: int = Field(
+        0, description="Contas distintas que já fizeram ao menos uma requisição"
+    )
+    active_keys: int = Field(0, description="API keys ativas na plataforma")

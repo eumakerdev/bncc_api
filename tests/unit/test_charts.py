@@ -12,8 +12,8 @@ from datetime import date, timedelta
 import pytest
 from app.db.tables import CostService
 from app.models.cost import SERVICE_LABELS, SERVICE_ORDER, CostMonthPoint, CostServiceAmount
-from app.models.platform import UsageDailyPoint
-from app.web.charts import build_cost_chart, build_usage_chart
+from app.models.platform import PublicUsagePoint, UsageDailyPoint
+from app.web.charts import build_cost_chart, build_public_usage_chart, build_usage_chart
 
 
 def _series(values: list[tuple[int, int]], start: date | None = None) -> list[UsageDailyPoint]:
@@ -72,6 +72,55 @@ def test_single_point_is_centered():
     chart = build_usage_chart(_series([(50, 40)]))
     assert len(chart.points) == 1
     # Ponto único fica no centro horizontal da área de plotagem (entre as margens).
+    assert 400 < chart.points[0].x < 470
+
+
+# --------------------------------------------------------------------------- #
+# Gráfico de uso público (área de série única — requisições/dia)
+# --------------------------------------------------------------------------- #
+def _usage_series(totals: list[int], start: date | None = None) -> list[PublicUsagePoint]:
+    start = start or date(2026, 7, 1)
+    return [PublicUsagePoint(date=start + timedelta(days=i), total=t) for i, t in enumerate(totals)]
+
+
+def test_public_usage_empty_has_no_data():
+    chart = build_public_usage_chart([])
+    assert chart.has_data is False
+    assert chart.points == []
+    assert chart.line == ""
+    assert chart.area == ""
+
+
+def test_public_usage_all_zero_is_empty_but_valid_axes():
+    chart = build_public_usage_chart(_usage_series([0] * 7))
+    assert chart.has_data is False
+    assert len(chart.points) == 7
+    assert chart.max_value >= 4  # eixo utilizável mesmo sem tráfego
+    assert chart.y_ticks
+
+
+def test_public_usage_nice_max_and_paths():
+    chart = build_public_usage_chart(_usage_series([120, 890, 1250]))
+    assert chart.has_data is True
+    assert chart.max_value >= 1250
+    assert len(chart.y_ticks) == 5
+    assert chart.area.startswith("M")
+    assert chart.area.endswith("Z")
+    assert len(chart.line.split(" ")) == 3
+    # O último dia sempre rotulado no eixo X.
+    assert chart.x_ticks[-1].label == "03/07"
+
+
+def test_public_usage_higher_value_maps_higher():
+    chart = build_public_usage_chart(_usage_series([100, 1000]))
+    p_low, p_high = chart.points
+    # y cresce para baixo no SVG: total maior deve ter y MENOR (mais no topo).
+    assert p_high.y < p_low.y
+
+
+def test_public_usage_single_point_centered():
+    chart = build_public_usage_chart(_usage_series([50]))
+    assert len(chart.points) == 1
     assert 400 < chart.points[0].x < 470
 
 

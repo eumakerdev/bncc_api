@@ -70,6 +70,15 @@ def _reset_rate_limiters():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _reset_transparency_cache():
+    """Invalida o cache TTL da landing entre testes (estado de módulo, como os limiters)."""
+    from app.web.landing import reset_transparency_cache
+
+    reset_transparency_cache()
+    yield
+
+
 @pytest.fixture
 def client():
     with TestClient(app) as test_client:
