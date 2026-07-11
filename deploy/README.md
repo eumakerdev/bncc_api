@@ -160,6 +160,8 @@ outra moeda, defina `USD_BRL_RATE` para converter.
 
 ## Painel de administração (`/admin`) — isolamento e acesso
 
+> Guia detalhado (uso local, senhas, por que é seguro em open-source, IAP): **`deploy/admin/README.md`**.
+
 O painel de admin é **governado por `ADMIN_MODE`** (default `false`). Só é MONTADO quando habilitado;
 o serviço público de produção **não o monta** (superfície de admin pública = zero). Autenticação:
 
