@@ -28,6 +28,10 @@ specs/
 .specify/
 .claude/
 
+# Auditoria externa de fidelidade: ferramenta LOCAL (relatorios/ledger/cache).
+# Nao e importada em runtime nem usada no build — nao sobe para o Cloud Build.
+audit/
+
 # Dentro de data/: manter apenas bncc_v1.json; excluir DBs, vetores e PDFs grandes
 data/*.db
 data/*.db-*
