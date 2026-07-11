@@ -167,6 +167,96 @@ def build_usage_chart(series: list) -> UsageChart:
 
 
 # --------------------------------------------------------------------------- #
+# Gráfico de área de série única — uso público diário (transparência)
+# --------------------------------------------------------------------------- #
+@dataclass
+class UsagePoint:
+    x: float
+    y: float
+    label: str  # dd/mm
+    total: int
+
+
+@dataclass
+class PublicUsageChart:
+    width: int = _WIDTH
+    height: int = _HEIGHT
+    baseline: float = _HEIGHT - _PAD_B
+    max_value: int = 0
+    has_data: bool = False
+    line: str = ""
+    area: str = ""
+    points: list[UsagePoint] = field(default_factory=list)
+    y_ticks: list[AxisTick] = field(default_factory=list)
+    x_ticks: list[AxisTick] = field(default_factory=list)
+
+
+def build_public_usage_chart(series: list) -> PublicUsageChart:
+    """Monta a geometria do gráfico de área público (uma série: requisições/dia).
+
+    Cada item de ``series`` expõe ``date`` e ``total``. Determinístico e testável:
+    mesma escala "bonita" e mapeamento invertido do gráfico do painel, mas com uma
+    única linha (sem separar sucesso/erro — Princípio da mínima exposição pública).
+    """
+    chart = PublicUsageChart()
+    n = len(series)
+    if n == 0:
+        return chart
+
+    peak = max((p.total for p in series), default=0)
+    chart.has_data = peak > 0
+
+    ticks = 4
+    nice_range = _nice_num(max(peak, 1), round_up=True)
+    step = _nice_num(nice_range / ticks, round_up=True)
+    max_value = int(step * ticks)
+    if max_value < 4:
+        max_value = 4
+        step = max_value / ticks
+    chart.max_value = max_value
+
+    plot_w = _WIDTH - _PAD_L - _PAD_R
+    plot_h = _HEIGHT - _PAD_T - _PAD_B
+
+    def x_at(i: int) -> float:
+        if n == 1:
+            return _PAD_L + plot_w / 2
+        return _PAD_L + plot_w * i / (n - 1)
+
+    def y_at(v: int) -> float:
+        return _PAD_T + plot_h * (1 - v / max_value)
+
+    pts: list[str] = []
+    for i, p in enumerate(series):
+        x = round(x_at(i), 2)
+        y = round(y_at(p.total), 2)
+        pts.append(f"{x},{y}")
+        chart.points.append(UsagePoint(x=x, y=y, label=_fmt_date(p.date), total=p.total))
+
+    baseline = chart.baseline
+    first_x = chart.points[0].x
+    last_x = chart.points[-1].x
+    chart.line = " ".join(pts)
+    chart.area = f"M{first_x},{baseline} L" + " L".join(pts) + f" L{last_x},{baseline} Z"
+
+    i = 0
+    while i <= ticks:
+        v = int(round(step * i))
+        chart.y_ticks.append(AxisTick(pos=round(y_at(v), 2), label=_fmt_int(v)))
+        i += 1
+
+    max_labels = 7
+    stride = max(1, math.ceil(n / max_labels))
+    seen: set[int] = set()
+    for idx in list(range(0, n, stride)) + [n - 1]:
+        if idx in seen:
+            continue
+        seen.add(idx)
+        chart.x_ticks.append(AxisTick(pos=round(x_at(idx), 2), label=chart.points[idx].label))
+    return chart
+
+
+# --------------------------------------------------------------------------- #
 # Gráfico de barras empilhadas — custo mensal por serviço (transparência)
 # --------------------------------------------------------------------------- #
 @dataclass

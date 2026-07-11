@@ -799,6 +799,35 @@ input[type="password"]::-ms-clear { display: none; }
 .chart-data summary { cursor: pointer; color: var(--fg-muted); font-size: 0.85rem; min-height: 36px; display: inline-flex; align-items: center; }
 .chart-empty { padding: 2.5rem 1rem; text-align: center; }
 
+/* Transparência (uso + custos na landing) */
+.transparency-block + .transparency-block { margin-top: 3rem; }
+.transparency-subtitle { font-size: 1.2rem; font-weight: 700; margin: 0 0 0.35rem; letter-spacing: -0.01em; }
+.transparency-note { margin: 0; max-width: 44rem; }
+
+/* Filtro de janela (pílulas segmentadas) */
+.chart-filters {
+  display: inline-flex; gap: 0.25rem; padding: 0.25rem;
+  background: var(--bg-sunken); border-radius: 999px;
+}
+.chart-filter {
+  border: 0; background: transparent; color: var(--fg-muted);
+  font: inherit; font-size: 0.82rem; font-weight: 600;
+  padding: 0.4rem 0.85rem; min-height: 40px; border-radius: 999px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.chart-filter:hover { color: var(--fg); }
+.chart-filter.is-active {
+  background: var(--bg); color: var(--brand); box-shadow: var(--shadow-sm);
+}
+.chart-filter:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .chart-filter { transition: none; } }
+
+.usage-kpis { margin-top: 1.25rem; margin-bottom: 1.5rem; }
+.usage-window-total { margin: 0.85rem 0 0; font-size: 0.9rem; }
+.usage-window-total strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.usage-window[hidden] { display: none; }
+
 /* Custo por serviço (transparência de custos na landing) */
 .cost-kpis { margin-top: 1.5rem; margin-bottom: 1.5rem; }
 .cost-chart .cost-bar { stroke: var(--bg); stroke-width: 1; transition: opacity 0.15s ease; }

@@ -38,8 +38,18 @@ def _brl(value: object) -> str:
     return f"R$ {formatted}"
 
 
+def _milhar(value: object) -> str:
+    """Filtro Jinja: agrupa milhar no padrão pt-BR (2500 → '2.500')."""
+    try:
+        n = int(value)  # type: ignore[call-overload]
+    except (TypeError, ValueError):
+        return ""
+    return f"{n:,}".replace(",", ".")
+
+
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR), context_processors=[_seo_context])
 templates.env.filters["brl"] = _brl
+templates.env.filters["milhar"] = _milhar
 
 web_router = APIRouter()
 
