@@ -1,0 +1,107 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ detail.email }} — Admin BNCC API{% endblock %}
+
+{% block content %}
+<div class="crumb"><a href="/admin/users">← Usuários</a></div>
+
+<div class="section-head">
+  <div class="admin-head" style="margin:0">
+    <h1 style="word-break:break-all">{{ detail.email }}</h1>
+    <p>Uso e identidade da conta — últimos {{ detail.window_days }} dias.</p>
+  </div>
+  <div class="period-tabs" role="tablist" aria-label="Período">
+    {% for w in windows %}
+    <a class="period-tab{% if w == window %} is-active{% endif %}"
+       href="/admin/users/{{ detail.account_id }}?days={{ w }}" role="tab">{{ w }}d</a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Identidade -->
+<div class="admin-section">
+  <h2>Identidade</h2>
+  <dl class="meta-grid">
+    <div>
+      <dt>Status do e-mail</dt>
+      <dd>{% if detail.email_verified %}<span class="pill pill-ok">verificado</span>{% else %}<span class="pill pill-muted">não verificado</span>{% endif %}</dd>
+    </div>
+    <div>
+      <dt>Autenticação</dt>
+      <dd>
+        {% if detail.has_password %}e-mail/senha{% endif %}
+        {%- for p in detail.oauth_providers %}{% if detail.has_password or not loop.first %} · {% endif %}{{ p }}{% endfor %}
+        {% if not detail.has_password and not detail.oauth_providers %}—{% endif %}
+      </dd>
+    </div>
+    <div><dt>Criada em</dt><dd>{{ detail.created_at.strftime('%d/%m/%Y %H:%M') if detail.created_at else '—' }}</dd></div>
+    <div><dt>ID da conta</dt><dd class="mono">{{ detail.account_id }}</dd></div>
+    {% if detail.onboarding %}
+    <div><dt>Perfil</dt><dd>{{ detail.onboarding.role or '—' }}{% if detail.onboarding.org_context %} · {{ detail.onboarding.org_context }}{% endif %}</dd></div>
+    <div><dt>Caso de uso</dt><dd>{{ detail.onboarding.use_case or '—' }}</dd></div>
+    {% endif %}
+  </dl>
+</div>
+
+<!-- KPIs de uso -->
+<div class="kpi-grid">
+  <div class="kpi-card"><div class="kpi-label">Req. ({{ window }}d)</div><div class="kpi-value">{{ detail.requests_window }}</div><div class="kpi-sub">{{ detail.requests_total }} no total</div></div>
+  <div class="kpi-card"><div class="kpi-label">Req. IA ({{ window }}d)</div><div class="kpi-value">{{ detail.ai_window }}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Taxa de sucesso</div><div class="kpi-value">{{ detail.success_rate }}%</div><div class="kpi-sub">{{ detail.error_window }} erro(s)</div></div>
+  <div class="kpi-card"><div class="kpi-label">API Keys</div><div class="kpi-value">{{ detail.active_keys }}</div><div class="kpi-sub">{{ detail.total_keys }} no total</div></div>
+</div>
+
+<!-- Gráfico de uso da conta -->
+<div class="admin-section">
+  <h2>Requisições da conta — {{ detail.window_days }} dias</h2>
+  {% if chart.has_data %}
+  <div class="chart-wrap">
+    <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="Uso da conta">
+      <title>Requisições da conta: total vs. bem-sucedidas</title>
+      {% for tick in chart.y_ticks %}
+      <line x1="44" y1="{{ tick.pos }}" x2="{{ chart.width - 12 }}" y2="{{ tick.pos }}" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="40" y="{{ tick.pos }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="#94a3b8">{{ tick.label }}</text>
+      {% endfor %}
+      <path d="{{ chart.total_area }}" fill="#1b4dff" opacity="0.10"/>
+      <path d="{{ chart.success_area }}" fill="#16a34a" opacity="0.12"/>
+      <polyline points="{{ chart.total_line }}" fill="none" stroke="#1b4dff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="{{ chart.success_line }}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      {% for tick in chart.x_ticks %}
+      <text x="{{ tick.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle" font-size="10" fill="#94a3b8">{{ tick.label }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+  {% else %}
+  <p class="muted" style="text-align:center;padding:2rem 0">Sem uso neste período.</p>
+  {% endif %}
+</div>
+
+<!-- API Keys -->
+<div class="admin-section">
+  <h2>API Keys ({{ detail.total_keys }})</h2>
+  {% if detail.keys %}
+  <div style="overflow-x:auto">
+    <table class="data-table" aria-label="API keys da conta">
+      <thead>
+        <tr><th>Nome</th><th>Prefixo</th><th>Status</th><th>Req. ({{ window }}d)</th><th>Req. total</th><th>Último uso</th><th>Criada</th></tr>
+      </thead>
+      <tbody>
+        {% for k in detail.keys %}
+        <tr>
+          <td>{{ k.name }}</td>
+          <td class="mono">{{ k.prefix }}</td>
+          <td>{% if k.status == 'active' %}<span class="pill pill-ok">ativa</span>{% else %}<span class="pill pill-muted">revogada</span>{% endif %}</td>
+          <td>{{ k.requests_window }}</td>
+          <td>{{ k.requests_total }}</td>
+          <td style="font-size:0.8rem;color:var(--text-muted,#64748b)">{{ k.last_used_at.strftime('%d/%m/%Y %H:%M') if k.last_used_at else '—' }}</td>
+          <td style="font-size:0.8rem;color:var(--text-muted,#64748b)">{{ k.created_at.strftime('%d/%m/%Y') if k.created_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted" style="text-align:center;padding:1.5rem 0">Nenhuma API key criada.</p>
+  {% endif %}
+</div>
+{% endblock %}

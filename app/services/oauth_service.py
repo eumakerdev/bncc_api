@@ -76,19 +76,26 @@ def _credentials(provider: str) -> tuple[str, str]:
     raise OAuthError(f"Provedor desconhecido: {provider}")
 
 
-def redirect_uri(provider: str) -> str:
-    """URL de callback registrada no provedor (deriva de OAUTH_REDIRECT_BASE_URL)."""
+def redirect_uri(provider: str, callback_path: str | None = None) -> str:
+    """URL de callback registrada no provedor (deriva de OAUTH_REDIRECT_BASE_URL).
+
+    ``callback_path`` permite superfícies distintas reusarem o mesmo fluxo: o portal
+    usa o default ``/portal/auth/{provider}/callback``; o painel admin passa
+    ``/admin/auth/{provider}/callback``. Cada caminho deve estar registrado como
+    "Authorized redirect URI" no cliente OAuth do provedor.
+    """
     base = settings.OAUTH_REDIRECT_BASE_URL.rstrip("/")
-    return f"{base}/portal/auth/{provider}/callback"
+    path = callback_path or f"/portal/auth/{provider}/callback"
+    return f"{base}{path}"
 
 
-def build_authorize_url(provider: str, state: str) -> str:
+def build_authorize_url(provider: str, state: str, callback_path: str | None = None) -> str:
     """Monta a URL de autorização do provedor com o ``state`` anti-CSRF."""
     meta = PROVIDERS[provider]
     client_id, _ = _credentials(provider)
     params = {
         "client_id": client_id,
-        "redirect_uri": redirect_uri(provider),
+        "redirect_uri": redirect_uri(provider, callback_path),
         "scope": meta["scopes"],
         "response_type": "code",
         "state": state,
@@ -100,15 +107,21 @@ def _as_bool(value: object) -> bool:
     return value is True or (isinstance(value, str) and value.strip().lower() == "true")
 
 
-async def exchange_code(provider: str, code: str, client: httpx.AsyncClient) -> str:
-    """Troca o ``code`` de autorização por um ``access_token`` do provedor."""
+async def exchange_code(
+    provider: str, code: str, client: httpx.AsyncClient, callback_path: str | None = None
+) -> str:
+    """Troca o ``code`` de autorização por um ``access_token`` do provedor.
+
+    ``callback_path`` DEVE casar com o usado em ``build_authorize_url`` (o provedor
+    valida que o ``redirect_uri`` da troca é idêntico ao da autorização).
+    """
     meta = PROVIDERS[provider]
     client_id, client_secret = _credentials(provider)
     data = {
         "client_id": client_id,
         "client_secret": client_secret,
         "code": code,
-        "redirect_uri": redirect_uri(provider),
+        "redirect_uri": redirect_uri(provider, callback_path),
         "grant_type": "authorization_code",
     }
     try:

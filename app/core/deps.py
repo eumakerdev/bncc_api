@@ -56,6 +56,10 @@ oauth_ip_limiter = SlidingWindowLimiter(
 forgot_ip_limiter = SlidingWindowLimiter(
     max_requests=settings.RATE_LIMIT_FORGOT_PER_MIN, window_seconds=60
 )
+# Painel admin: cota por IP para tentativas de auth (senha dev e callback OAuth).
+admin_ip_limiter = SlidingWindowLimiter(
+    max_requests=settings.RATE_LIMIT_ADMIN_PER_MIN, window_seconds=60
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -253,6 +257,19 @@ AiRateLimited = Annotated[ApiKey, Depends(rate_limit_ai)]
 # Rate limiting por IP (endpoints de sessão — sem API key)
 # --------------------------------------------------------------------------- #
 def _client_ip(request: Request) -> str:
+    """IP do cliente para as cotas por IP.
+
+    Atrás do Cloud Run/Firebase, ``request.client.host`` é o IP do balanceador —
+    o que faria todas as requisições caírem no mesmo balde de rate limit. Em
+    produção, o front-end do Google popula ``X-Forwarded-For`` como
+    ``<cliente>, <proxies…>``; usamos o primeiro item (o cliente original). Fora de
+    produção não há proxy confiável, então mantemos ``request.client.host``."""
+    if settings.is_production:
+        xff = request.headers.get("x-forwarded-for")
+        if xff:
+            first = xff.split(",")[0].strip()
+            if first:
+                return first
     return request.client.host if request.client else "unknown"
 
 
@@ -291,11 +308,17 @@ async def rate_limit_forgot_ip(request: Request) -> None:
     _enforce_ip(forgot_ip_limiter, "forgot-ip", request)
 
 
+async def rate_limit_admin_ip(request: Request) -> None:
+    """Cota por IP para auth do painel admin (força bruta de senha/spam de OAuth)."""
+    _enforce_ip(admin_ip_limiter, "admin-ip", request)
+
+
 LoginRateLimited = Annotated[None, Depends(rate_limit_login_ip)]
 SignupRateLimited = Annotated[None, Depends(rate_limit_signup_ip)]
 VerifyRateLimited = Annotated[None, Depends(rate_limit_verify_ip)]
 OAuthRateLimited = Annotated[None, Depends(rate_limit_oauth_ip)]
 ForgotRateLimited = Annotated[None, Depends(rate_limit_forgot_ip)]
+AdminRateLimited = Annotated[None, Depends(rate_limit_admin_ip)]
 
 
 # --------------------------------------------------------------------------- #

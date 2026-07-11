@@ -1,0 +1,80 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Custos — BNCC API{% endblock %}
+
+{% block content %}
+<div class="admin-head">
+  <h1>Custos de Infraestrutura</h1>
+  <p>Faturamento real do Google Cloud (BigQuery billing export), líquido de créditos.</p>
+</div>
+
+{% if summary.has_data %}
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Total até agora{% if summary.period_start %} · desde {{ summary.period_start.strftime('%m/%Y') }}{% endif %}</div>
+    <div class="kpi-value">{{ summary.total_to_date|brl }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Mês corrente</div>
+    <div class="kpi-value">{{ summary.total_month|brl }}</div>
+  </div>
+  {% for item in summary.by_service_to_date %}
+  <div class="kpi-card">
+    <div class="kpi-label"><span class="dot cost-seg-{{ item.service.value }}" style="display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:0.35rem"></span>{{ item.label }}</div>
+    <div class="kpi-value" style="font-size:1.25rem">{{ item.amount|brl }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="admin-section">
+  <div class="section-head">
+    <h2>Custo mensal por serviço</h2>
+    <div class="comp-legend">
+      {% for item in chart.legend %}
+      <span><span class="dot cost-seg-{{ item.service }}" style="display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:0.35rem"></span>{{ item.label }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% if chart.has_data %}
+  <div class="chart-wrap">
+    <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" preserveAspectRatio="none"
+         aria-label="Custo mensal de infraestrutura por serviço, em reais.">
+      {% for t in chart.y_ticks %}
+      <line x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="40" y="{{ t.pos }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="#94a3b8">{{ t.label }}</text>
+      {% endfor %}
+      {% for bar in chart.bars %}
+        {% for seg in bar.segments %}
+        <rect class="cost-bar {{ seg.color_class }}" x="{{ seg.x }}" y="{{ seg.y }}" width="{{ seg.width }}" height="{{ seg.height }}"><title>{{ seg.title }}</title></rect>
+        {% endfor %}
+      {% endfor %}
+      {% for t in chart.x_ticks %}
+      <text x="{{ t.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle" font-size="10" fill="#94a3b8">{{ t.label }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+  {% endif %}
+
+  <details style="margin-top:1rem">
+    <summary style="cursor:pointer;font-size:0.85rem;color:var(--text-muted,#64748b)">Ver dados em tabela</summary>
+    <div style="overflow-x:auto;margin-top:0.75rem">
+      <table class="data-table">
+        <thead><tr><th>Mês</th><th>Total</th></tr></thead>
+        <tbody>
+          {% for bar in chart.bars %}
+          <tr><td>{{ bar.label }}</td><td>{{ bar.total|brl }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</div>
+{% else %}
+<div class="admin-section">
+  <p class="muted" style="text-align:center;padding:2rem 0">
+    Sem dados de custo ainda. O export de faturamento do GCP para o BigQuery leva ~24h
+    para popular após ser ligado; enquanto isso esta seção fica vazia (comportamento esperado).
+  </p>
+</div>
+{% endif %}
+{% endblock %}

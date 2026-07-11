@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Admin — BNCC API{% endblock %}</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/static/logo-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    /* Faixa de aviso de painel interno */
+    .admin-banner {
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 0.3rem 1rem;
+    }
+    .admin-banner strong { color: #f59e0b; }
+    .admin-shell { display: flex; min-height: calc(100vh - 36px); }
+    .admin-side {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--surface, #f8fafc);
+      border-right: 1px solid var(--border, #e2e8f0);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 0;
+    }
+    .admin-brand {
+      padding: 0 1.25rem 1.25rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--text, #0f172a);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+      margin-bottom: 1rem;
+    }
+    .admin-nav { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; padding: 0 0.75rem; }
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      color: var(--text-muted, #64748b);
+      text-decoration: none;
+      transition: background 0.12s, color 0.12s;
+    }
+    .admin-nav-item:hover, .admin-nav-item.is-active {
+      background: var(--primary-soft, #eff6ff);
+      color: var(--primary, #1b4dff);
+    }
+    .admin-nav-section {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted, #94a3b8);
+      padding: 0.75rem 0.75rem 0.25rem;
+      margin-top: 0.25rem;
+    }
+    .admin-side-footer {
+      padding: 1rem 1.25rem 0;
+      border-top: 1px solid var(--border, #e2e8f0);
+      margin-top: 1rem;
+    }
+    .admin-main { flex: 1; padding: 2rem; overflow-x: auto; }
+    .admin-head { margin-bottom: 1.5rem; }
+    .admin-head h1 { font-size: 1.5rem; margin: 0 0 0.25rem; }
+    .admin-head p { color: var(--text-muted, #64748b); margin: 0; font-size: 0.9rem; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .kpi-card { background: var(--surface, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 1.1rem 1.25rem; }
+    .kpi-label { font-size: 0.75rem; color: var(--text-muted, #64748b); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.4rem; }
+    .kpi-value { font-size: 1.75rem; font-weight: 700; line-height: 1; color: var(--text, #0f172a); }
+    .kpi-sub { font-size: 0.75rem; color: var(--text-muted, #94a3b8); margin-top: 0.3rem; }
+    .kpi-delta-pos { color: #16a34a; }
+    .kpi-delta-neg { color: #dc2626; }
+    .admin-section { background: var(--surface, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .admin-section h2 { font-size: 1rem; margin: 0 0 1rem; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table th { text-align: left; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted, #94a3b8); padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border, #e2e8f0); }
+    .data-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border, #f1f5f9); color: var(--text, #1e293b); vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--surface-hover, #f8fafc); }
+    .pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+    .pill-ok { background: #dcfce7; color: #166534; }
+    .pill-muted { background: #f1f5f9; color: #64748b; }
+    .chart-wrap { overflow-x: auto; }
+    .chart-wrap svg { display: block; width: 100%; max-width: 840px; height: 260px; }
+    /* Cabeçalho de seção com ação à direita (ex.: seletor de período) */
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .section-head h2 { margin: 0; }
+    /* Seletor de período (7/30/90 dias) */
+    .period-tabs { display: inline-flex; gap: 0.15rem; background: var(--surface, #f1f5f9); border: 1px solid var(--border, #e2e8f0); border-radius: 8px; padding: 0.15rem; }
+    .period-tab { padding: 0.25rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; color: var(--text-muted, #64748b); text-decoration: none; }
+    .period-tab.is-active { background: var(--primary, #1b4dff); color: #fff; }
+    /* Barra de composição (proporção horizontal, sem JS) */
+    .comp-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: #f1f5f9; margin: 0.5rem 0 0.75rem; }
+    .comp-seg { height: 100%; }
+    .comp-seg-a { background: #1b4dff; }
+    .comp-seg-b { background: #0aa8dc; }
+    .comp-legend { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-muted, #64748b); }
+    .comp-legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 0.35rem; vertical-align: baseline; }
+    .rank-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: var(--primary-soft, #eff6ff); color: var(--primary, #1b4dff); font-size: 0.72rem; font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+    .link-cell { color: var(--primary, #1b4dff); text-decoration: none; font-weight: 500; }
+    .link-cell:hover { text-decoration: underline; }
+    .pill-warn { background: #fef3c7; color: #92400e; }
+    .pill-danger { background: #fee2e2; color: #991b1b; }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem 1.5rem; font-size: 0.85rem; }
+    .meta-grid dt { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted, #94a3b8); }
+    .meta-grid dd { margin: 0.1rem 0 0; color: var(--text, #1e293b); font-weight: 500; }
+    .crumb { font-size: 0.8rem; color: var(--text-muted, #64748b); margin-bottom: 0.75rem; }
+    .crumb a { color: var(--primary, #1b4dff); text-decoration: none; }
+    @media (max-width: 768px) {
+      .admin-shell { flex-direction: column; }
+      .admin-side { width: 100%; flex-direction: row; flex-wrap: wrap; padding: 1rem; }
+      .admin-brand { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+      .admin-nav { flex-direction: row; flex-wrap: wrap; padding: 0; }
+      .admin-nav-section { display: none; }
+      .admin-side-footer { display: none; }
+      .admin-main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-banner">
+    <strong>⚠ Painel de Administração</strong> — uso interno, não publicar.
+  </div>
+  <div class="admin-shell">
+    <aside class="admin-side" aria-label="Navegação do admin">
+      <div class="admin-brand">
+        <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
+          <defs>
+            <linearGradient id="adm-tile" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#1b4dff"/>
+              <stop offset="1" stop-color="#0aa8dc"/>
+            </linearGradient>
+          </defs>
+          <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#adm-tile)"/>
+          <g fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 22l11 4.5L35 22"/>
+            <path d="M13 28.6l11 4.5 11-4.5"/>
+          </g>
+        </svg>
+        BNCC Admin
+      </div>
+      <nav class="admin-nav">
+        <span class="admin-nav-section">Visão geral</span>
+        <a class="admin-nav-item{% if current_path == '/admin/' %} is-active{% endif %}" href="/admin/">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Dashboard
+        </a>
+        <span class="admin-nav-section">Plataforma</span>
+        <a class="admin-nav-item{% if current_path.startswith('/admin/users') %} is-active{% endif %}" href="/admin/users">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Usuários
+        </a>
+        <a class="admin-nav-item{% if current_path == '/admin/costs' %} is-active{% endif %}" href="/admin/costs">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Custos
+        </a>
+      </nav>
+      <div class="admin-side-footer">
+        <a href="/admin/logout" class="btn btn-secondary btn-sm btn-block">Sair</a>
+      </div>
+    </aside>
+    <main id="conteudo" class="admin-main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>
