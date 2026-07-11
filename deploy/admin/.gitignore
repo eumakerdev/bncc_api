@@ -1,0 +1,4 @@
+# Arquivos de runtime do local-admin.ps1 (não versionar)
+bin/
+.logs/
+.local-admin.pids
