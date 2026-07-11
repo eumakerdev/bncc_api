@@ -39,6 +39,10 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Auditoria externa: cache de fontes (respostas de PDF/portal) nunca versionado.
+# Relatorios, ledger e PROGRESSO.md SAO versionados (produto da auditoria).
+/audit/cache/
+
 # Data Files
 # Ignora o CONTEUDO de data/ (nao o diretorio): so assim a negacao abaixo
 # consegue re-incluir o snapshot (o git nao re-inclui arquivo sob diretorio

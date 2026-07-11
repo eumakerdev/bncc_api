@@ -1,0 +1,141 @@
+{
+  "gerado_em": "2026-07-11",
+  "snapshot_versao": "v1",
+  "codigos": {
+    "EF01CI01": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    },
+    "EF01CI02": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    },
+    "EF01CI03": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    },
+    "EF01CI04": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    },
+    "EF01CI05": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    },
+    "EF01CI06": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    },
+    "EF01CO01": {
+      "veredito": "sem_fontes",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": null
+    },
+    "EF01CO02": {
+      "veredito": "sem_fontes",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": null
+    },
+    "EF01CO03": {
+      "veredito": "sem_fontes",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": null
+    },
+    "EF01CO04": {
+      "veredito": "sem_fontes",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": null
+    },
+    "EF01CO05": {
+      "veredito": "sem_fontes",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": null
+    },
+    "EF01CO06": {
+      "veredito": "sem_fontes",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": null
+    },
+    "EF01CO07": {
+      "veredito": "sem_fontes",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": null
+    },
+    "EF01ER01": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    },
+    "EF01ER02": {
+      "veredito": "concordante",
+      "lote": 1,
+      "ultima_auditoria": "2026-07-11",
+      "fontes_consultadas": [
+        "arbiter_pdf"
+      ],
+      "melhor_cobertura": 1.0
+    }
+  }
+}
