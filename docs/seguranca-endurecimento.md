@@ -18,7 +18,8 @@ caminho seguro de resolução.
 | Erros sem stack trace / paths internos ao cliente | `app/core/errors.py` |
 | Rate limiting por API key (determinístico + IA) e por IP (login/signup/verify/forgot/oauth/admin) | `app/core/deps.py` |
 | Container roda como usuário **não-root**; ferramentas de build removidas da imagem | `Dockerfile` |
-| CI: `detect-secrets` (mesmo rev do pre-commit), `dependency-review` em PR, `pip-audit`, CodeQL (SAST) | `.github/workflows/` |
+| CI: CodeQL (SAST), `dependency-review` (PR, informativo), `pip-audit` | `.github/workflows/` |
+| Scan de segredos no gate local de pre-commit (`detect-secrets` v1.5.0 + baseline) | `.pre-commit-config.yaml`, `.secrets.baseline` |
 | Dependências pinadas com CVEs anotadas; Dependabot ativo | `requirements.txt`, `.github/dependabot.yml` |
 
 ### Content-Security-Policy — rollout seguro
@@ -74,13 +75,27 @@ terceiros com scripts inline e `eval`) e as páginas SSR (landing/portal).
   `app/core/deps.py::_client_ip`; se um dia houver exposição direta, validar o número
   de proxies confiáveis em vez de confiar cegamente no primeiro item.
 
-### 4. `mypy` com gate parcial
+### 4. Scan de segredos no CI (baseline não-portável)
+
+- **Estado:** o gate de segredos roda no pre-commit **local** (`detect-secrets` +
+  `.secrets.baseline`). A baseline foi gerada no Windows, com caminhos em `\`; no CI
+  Linux (`/`) as entradas não casam, então rodar o mesmo hook no CI re-sinaliza tudo
+  (além de falsos positivos no bundle minificado `scalar.standalone.js` e nos
+  snapshots `docs/openapi/`). Por isso o scan **não** foi replicado no CI.
+- **Recomendado (sem código, melhor para repo público):** habilitar **Secret
+  Scanning + Push Protection** nativos do GitHub em *Settings → Code security*.
+- **Caminho seguro para reintroduzir no CI:** regenerar a baseline no Linux e
+  adicionar `exclude` para vendor/`docs/openapi/`/`.specify/` ao hook, esvaziando os
+  `results` da baseline (torna-a independente de separador de caminho). Validar que
+  `pre-commit run detect-secrets --all-files` passa **nos dois** SOs antes de reativar.
+
+### 5. `mypy` com gate parcial
 
 - **Estado:** bloqueante só nos módulos novos limpos; o legado roda `|| true`.
 - **Caminho seguro (catraca):** a cada PR que tocar um módulo hoje fora do gate,
   adicioná-lo à lista bloqueante do `ci.yml`, fechando o cerco sem big-bang.
 
-### 5. `last_used_at` de API key gravado sem commit explícito
+### 6. `last_used_at` de API key gravado sem commit explícito
 
 - **Observação:** `app/core/deps.py::require_api_key` atribui `api_key.last_used_at`
   mas o commit depende do fluxo da request. É best-effort (métrica de auditoria, não
