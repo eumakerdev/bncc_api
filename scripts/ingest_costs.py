@@ -199,8 +199,16 @@ async def _run(since_ym: str, dry_run: bool) -> int:
 
     agg = aggregate_rows(rows, rate=settings.USD_BRL_RATE)
     if not agg:
-        logger.warning("Nenhuma linha de custo retornada (since=%s).", since_ym)
-        return 0
+        # Zero linhas é anômalo para um projeto com gasto: sinaliza export de billing
+        # não habilitado/atrasado ou tabela errada. Retorna != 0 para o Cloud Scheduler
+        # acusar falha (alerta), em vez de "sucesso" mascarar a landing vazia por dias.
+        logger.error(
+            "Nenhuma linha de custo retornada (since=%s). Verifique se o BigQuery billing "
+            "export está habilitado e populado para %s.",
+            since_ym,
+            since_ym,
+        )
+        return 5
 
     for (month, service), amount in sorted(agg.items()):
         logger.info("%s  %-9s  R$ %s", month.isoformat(), service.value, amount.quantize(_CENTS))

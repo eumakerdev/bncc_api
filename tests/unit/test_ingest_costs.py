@@ -8,10 +8,12 @@ na coluna ``net``). Não toca o BigQuery — linhas são dicts fake.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from decimal import Decimal
 
 from app.db.tables import CostService
+from scripts import ingest_costs
 from scripts.ingest_costs import aggregate_rows, bucket_service
 
 
@@ -55,3 +57,12 @@ def test_aggregate_rows_keeps_net_credits_even_negative():
     rows = [{"ym": "202607", "svc": "Cloud SQL", "currency": "BRL", "net": "-3.50"}]
     agg = aggregate_rows(rows)
     assert agg[(date(2026, 7, 1), CostService.banco)] == Decimal("-3.50")
+
+
+def test_run_returns_error_when_bigquery_empty(monkeypatch):
+    # Regressão: BigQuery sem linhas (export não habilitado/atrasado) deve retornar
+    # código != 0 para o Scheduler alertar — não mascarar como sucesso.
+    monkeypatch.setattr(ingest_costs, "_config_ok", lambda: True)
+    monkeypatch.setattr(ingest_costs, "_fetch_rows", lambda since: [])
+    code = asyncio.run(ingest_costs._run("202601", dry_run=False))
+    assert code == 5

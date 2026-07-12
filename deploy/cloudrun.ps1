@@ -54,6 +54,7 @@ param(
   [string]$BillingDataset = "",  # dataset do BigQuery billing export (habilita "Transparencia de custos")
   [string]$BillingTable   = "",  # tabela do export (ex.: gcp_billing_export_v1_XXXXXX_XXXXXX_XXXXXX)
   [string]$CostCron       = "0 6 * * *",  # agendamento do ingestor de custos (cron, UTC)
+  [string]$CostSince      = "",  # fixa o 1o mes que o ingestor le do BigQuery (YYYY-MM); vazio = padrao de ~13 meses. Use quando meses anteriores foram semeados a mao (scripts/seed_cost_history.py) para o job nao sobrescreve-los.
   [switch]$SkipBuild             # reaproveita a imagem ja publicada (nao rebuilda)
 )
 
@@ -301,12 +302,15 @@ if ($BillingDataset -and $BillingTable) {
   $costEnv["GCP_BILLING_TABLE"]   = $BillingTable
   $costVerb = if (Exists { gcloud run jobs describe $costJob --region=$Region }) { "update" } else { "create" }
   $envFileCost = Write-EnvFile $costEnv
+  # Args do ingestor: fixa --since quando $CostSince e informado (nao sobrescreve
+  # meses historicos semeados a mao; ver scripts/seed_cost_history.py).
+  $costArgs = if ($CostSince) { "scripts/ingest_costs.py,--since,$CostSince" } else { "scripts/ingest_costs.py" }
   Exec { gcloud run jobs $costVerb $costJob `
     --image=$ImageUri --region=$Region `
     --set-cloudsql-instances=$Csql `
     --env-vars-file=$envFileCost `
     --set-secrets="$commonSecrets" `
-    --command="python" --args="scripts/ingest_costs.py" }
+    --command="python" --args="$costArgs" }
   Remove-Item $envFileCost -Force
   # Execucao inicial (semeia os dados; sem export ainda, sai 0 sem gravar).
   Exec { gcloud run jobs execute $costJob --region=$Region --wait }
