@@ -68,6 +68,34 @@ jobs:
           DATABASE_URL: "sqlite+aiosqlite:///./data/test_platform.db"
         run: pytest --cov=app --cov-report=term-missing --cov-fail-under=80
 
+  # Varreduras de segurança (Princípio V). Separadas em job próprio para atribuição
+  # clara de falha e execução em paralelo. Nenhuma toca o runtime da aplicação.
+  security-scans:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+
+      # Varredura de segredos: mantida no gate LOCAL de pre-commit (detect-secrets
+      # v1.5.0 + baseline). A baseline foi gerada no Windows (paths com "\"), então
+      # não é portável para o CI Linux ("/") — replicá-la aqui daria falso negativo/
+      # positivo. A via correta de scan de segredo no CI para este repo PÚBLICO é o
+      # Secret Scanning + Push Protection nativos do GitHub (Settings → Code security),
+      # superiores ao detect-secrets. Ver docs/seguranca-endurecimento.md.
+
+      # Revisão de dependências em PRs: sinaliza quando a MUDANÇA introduz uma
+      # dependência com vulnerabilidade alta+. Informativo (continue-on-error), no
+      # mesmo espírito do pip-audit — dá visibilidade sem travar o merge por config
+      # de repositório. Roda apenas em pull_request.
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+        continue-on-error: true
+
   docker-build:
     runs-on: ubuntu-latest
     steps:
