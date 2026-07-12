@@ -799,20 +799,66 @@ input[type="password"]::-ms-clear { display: none; }
 .chart-data summary { cursor: pointer; color: var(--fg-muted); font-size: 0.85rem; min-height: 36px; display: inline-flex; align-items: center; }
 .chart-empty { padding: 2.5rem 1rem; text-align: center; }
 
-/* Transparência (uso + custos na landing) */
-.transparency-block + .transparency-block { margin-top: 3rem; }
-.transparency-subtitle { font-size: 1.2rem; font-weight: 700; margin: 0 0 0.35rem; letter-spacing: -0.01em; }
-.transparency-note { margin: 0; max-width: 44rem; }
+/* ---------------------- Transparência (uso + custos) -------------------- */
+.transparency-lead { margin-bottom: 2rem; }
+.transparency-board { display: grid; gap: 1.25rem; }
+
+/* Um painel compacto por domínio: número-herói + estatísticas enxutas + gráfico */
+.transparency-panel {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg-soft); padding: 1.6rem;
+}
+
+.tp-head { display: flex; flex-direction: column; gap: 0.15rem; }
+.tp-overline {
+  margin: 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.09em; color: var(--fg-subtle);
+}
+.tp-hero { margin: 0.15rem 0 0; display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.tp-value {
+  font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 700; color: var(--fg);
+  letter-spacing: -0.025em; line-height: 1.05; font-variant-numeric: tabular-nums;
+}
+.tp-unit { font-size: 0.95rem; color: var(--fg-muted); font-weight: 500; }
+.tp-since { margin: 0.3rem 0 0; font-size: 0.85rem; color: var(--fg-muted); }
+
+/* Faixa de estatísticas secundárias — enxuta, sem cartões grandes */
+.tp-stats {
+  display: flex; flex-wrap: wrap; gap: 1.1rem 2rem; margin: 1.2rem 0 0;
+  padding: 1.15rem 0 0; border-top: 1px solid var(--border);
+}
+.tp-stat { display: flex; flex-direction: column; gap: 0.2rem; }
+.tp-stat dt {
+  font-size: 0.8rem; color: var(--fg-muted); font-weight: 500;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.tp-stat dd {
+  margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--fg);
+  letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+}
+
+/* Gráfico dentro do painel */
+.tp-chart { margin-top: 1.4rem; }
+.tp-chart-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 0.5rem 1rem; flex-wrap: wrap; margin-bottom: 0.65rem;
+}
+.tp-chart-title { margin: 0; font-weight: 600; font-size: 0.95rem; }
+.tp-chart-caption { margin: 0; font-size: 0.82rem; }
+.tp-chart-foot { margin: 0.55rem 0 0; font-size: 0.85rem; color: var(--fg-muted); }
+.tp-chart-foot strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.tp-source { margin: 1.2rem 0 0; font-size: 0.8rem; color: var(--fg-muted); }
+.usage-window[hidden] { display: none; }
 
 /* Filtro de janela (pílulas segmentadas) */
 .chart-filters {
-  display: inline-flex; gap: 0.25rem; padding: 0.25rem;
+  display: inline-flex; gap: 0.2rem; padding: 0.2rem;
   background: var(--bg-sunken); border-radius: 999px;
 }
 .chart-filter {
   border: 0; background: transparent; color: var(--fg-muted);
-  font: inherit; font-size: 0.82rem; font-weight: 600;
-  padding: 0.4rem 0.85rem; min-height: 40px; border-radius: 999px;
+  font: inherit; font-size: 0.8rem; font-weight: 600;
+  padding: 0.4rem 0.8rem; min-height: 40px; border-radius: 999px;
   cursor: pointer; white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -821,24 +867,25 @@ input[type="password"]::-ms-clear { display: none; }
   background: var(--bg); color: var(--brand); box-shadow: var(--shadow-sm);
 }
 .chart-filter:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .chart-filter { transition: none; } }
 
-.usage-kpis { margin-top: 1.25rem; margin-bottom: 1.5rem; }
-.usage-window-total { margin: 0.85rem 0 0; font-size: 0.9rem; }
-.usage-window-total strong { color: var(--fg); font-variant-numeric: tabular-nums; }
-.usage-window[hidden] { display: none; }
-
-/* Custo por serviço (transparência de custos na landing) */
-.cost-kpis { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+/* Custo por serviço */
 .cost-chart .cost-bar { stroke: var(--bg); stroke-width: 1; transition: opacity 0.15s ease; }
 .cost-chart .cost-bar:hover { opacity: 0.82; }
 rect.cost-seg-banco, .dot.cost-seg-banco { fill: var(--cost-banco); background: var(--cost-banco); }
 rect.cost-seg-servidor, .dot.cost-seg-servidor { fill: var(--cost-servidor); background: var(--cost-servidor); }
 rect.cost-seg-ia, .dot.cost-seg-ia { fill: var(--cost-ia); background: var(--cost-ia); }
 rect.cost-seg-outros, .dot.cost-seg-outros { fill: var(--cost-outros); background: var(--cost-outros); }
-.cost-legend { flex-wrap: wrap; }
-.cost-note { margin-top: 1rem; font-size: 0.85rem; }
-@media (prefers-reduced-motion: reduce) { .cost-chart .cost-bar { transition: none; } }
+
+/* Painéis empilhados e full-width: mantém os rótulos dos eixos legíveis (as
+   séries vêm em SVG 840x260 do servidor; em coluna dupla o texto ficaria pequeno
+   demais). A compactação vem do painel enxuto, não de espremer o gráfico. */
+@media (max-width: 40rem) {
+  .transparency-panel { padding: 1.2rem; }
+  .tp-stats { gap: 1rem 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-filter, .cost-chart .cost-bar { transition: none; }
+}
 
 /* KPIs */
 .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); margin-top: 1.25rem; }
