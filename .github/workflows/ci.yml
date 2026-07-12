@@ -83,15 +83,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      # Varredura de segredos: mesma ferramenta/rev do hook local de pre-commit
-      # (detect-secrets v1.5.0), agora também no CI — o gate local é contornável
-      # com `git commit --no-verify`, o do CI não. Usa a baseline existente, então
-      # passa no estado atual e só FALHA se um NOVO segredo for introduzido.
-      - name: Secret scan (detect-secrets)
+      # Varredura de segredos: roda o MESMO hook do pre-commit (detect-secrets
+      # v1.5.0 + a baseline existente) via `pre-commit`, garantindo paridade exata
+      # com o gate local — que é contornável com `git commit --no-verify`, mas o do
+      # CI não. Passa no estado atual (a baseline reconcilia os achados conhecidos,
+      # inclusive fixtures de teste) e só FALHA se um NOVO segredo for introduzido.
+      - name: Secret scan (detect-secrets via pre-commit)
         run: |
           python -m pip install --upgrade pip
-          pip install "detect-secrets==1.5.0"
-          git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline
+          pip install pre-commit
+          pre-commit run detect-secrets --all-files
 
       # Revisão de dependências em PRs: falha só quando a MUDANÇA introduz uma
       # dependência com vulnerabilidade alta+ (não penaliza a dívida legada já
