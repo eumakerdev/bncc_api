@@ -47,7 +47,7 @@ async def test_landing_shows_cost_section_when_seeded(async_client):
     assert resp.status_code == 200
     body = resp.text
     assert 'id="transparencia"' in body
-    assert "Transparência de custos" in body
+    assert "Custo de infraestrutura" in body
     # Total acumulado formatado em BRL (52,30 + 90,00).
     assert "R$ 142,30" in body
 
