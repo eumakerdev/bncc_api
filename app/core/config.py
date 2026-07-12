@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     # --- Segurança ---
     SECRET_KEY: str = Field(default="change-me-dev-only-not-for-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60)
+    # Content-Security-Policy (defesa em profundidade, Princípio V). Por padrão a
+    # política é emitida em modo **Report-Only** — NÃO bloqueia nada, só reporta
+    # violações ao console do navegador — garantindo que a referência Scalar (/docs)
+    # e as páginas SSR (landing/portal) continuem funcionando sem risco. Vire para
+    # `True` (enforcing) somente após validar /, /guia, /docs e /portal num
+    # navegador real. A política em si vive em `app/main.py`.
+    CSP_ENFORCE: bool = Field(default=False)
     # Sessão do portal (login persistente): duração do JWT de sessão E do cookie
     # `__session`. Longa por padrão (30 dias) para que o login sobreviva a fechar/
     # reabrir janelas e abas — sem exigir novo login a cada hora.

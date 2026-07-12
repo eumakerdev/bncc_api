@@ -132,6 +132,29 @@ app.add_middleware(
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.TRUSTED_HOSTS)
 
 
+# Content-Security-Policy (Princípio V — defesa em profundidade). Deliberadamente
+# permissiva o bastante para não quebrar a referência Scalar (/docs), que é um
+# bundle de terceiros com scripts/estilos inline e `eval`, nem as páginas SSR
+# (landing/portal) que usam scripts/estilos inline. Ainda assim bloqueia a classe
+# de ataque mais comum: injeção de `<script src=host-externo>` e clickjacking.
+# Recursos externos referenciados nas páginas são apenas navegação (`<a href>`),
+# nunca `src` — por isso `default-src 'self'` é seguro aqui.
+_CSP_POLICY = "; ".join(
+    [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "frame-ancestors 'none'",
+        "img-src 'self' data: blob:",
+        "font-src 'self' data:",
+        "style-src 'self' 'unsafe-inline'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "connect-src 'self'",
+        "worker-src 'self' blob:",
+    ]
+)
+
+
 class SecurityHeadersMiddleware:
     """Middleware ASGI puro (`@app.middleware("http")`/`BaseHTTPMiddleware` foram
     removidos no Starlette 1.0) que injeta headers de segurança em toda resposta HTTP."""
@@ -150,6 +173,15 @@ class SecurityHeadersMiddleware:
                 headers["X-Content-Type-Options"] = "nosniff"
                 headers["X-Frame-Options"] = "DENY"
                 headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+                # CSP: por padrão em Report-Only (não bloqueia — só reporta), para
+                # rollout sem risco de quebrar Scalar/SSR. `CSP_ENFORCE=true` passa
+                # ao modo bloqueante depois de validado em navegador (ver config).
+                csp_header = (
+                    "Content-Security-Policy"
+                    if settings.CSP_ENFORCE
+                    else "Content-Security-Policy-Report-Only"
+                )
+                headers[csp_header] = _CSP_POLICY
                 # HSTS só faz sentido quando a conexão real é HTTPS (produção atrás do LB do
                 # Cloud Run).
                 if settings.is_production:

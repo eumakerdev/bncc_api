@@ -68,6 +68,40 @@ jobs:
           DATABASE_URL: "sqlite+aiosqlite:///./data/test_platform.db"
         run: pytest --cov=app --cov-report=term-missing --cov-fail-under=80
 
+  # Varreduras de segurança (Princípio V). Separadas em job próprio para atribuição
+  # clara de falha e execução em paralelo. Nenhuma toca o runtime da aplicação.
+  security-scans:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      # Varredura de segredos: mesma ferramenta/rev do hook local de pre-commit
+      # (detect-secrets v1.5.0), agora também no CI — o gate local é contornável
+      # com `git commit --no-verify`, o do CI não. Usa a baseline existente, então
+      # passa no estado atual e só FALHA se um NOVO segredo for introduzido.
+      - name: Secret scan (detect-secrets)
+        run: |
+          python -m pip install --upgrade pip
+          pip install "detect-secrets==1.5.0"
+          git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline
+
+      # Revisão de dependências em PRs: falha só quando a MUDANÇA introduz uma
+      # dependência com vulnerabilidade alta+ (não penaliza a dívida legada já
+      # pinada — só barra piorar). Roda apenas em pull_request.
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
   docker-build:
     runs-on: ubuntu-latest
     steps:

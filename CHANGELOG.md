@@ -10,6 +10,22 @@ versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)
 
 ## [Não lançado]
 
+### Segurança
+
+- **Content-Security-Policy** adicionada a todas as respostas (Princípio V —
+  defesa em profundidade). Emitida em modo **Report-Only por padrão** (não
+  bloqueia nada; rollout sem risco para a referência Scalar e as páginas SSR);
+  vira bloqueante com `CSP_ENFORCE=true` após validação em navegador. Sem impacto
+  no contrato público (Princípio I).
+- **Container roda como usuário não-root** (menor privilégio) e a imagem não leva
+  mais as ferramentas de build (`gcc`/`g++`) para runtime — superfície de ataque
+  reduzida. O gate de build do CI valida a imagem.
+- **Varreduras de segurança no CI**: `detect-secrets` (mesmo rev do pre-commit,
+  agora não contornável via `--no-verify`), `dependency-review` em PRs e análise
+  estática **CodeQL** (SAST). Nenhuma altera o runtime.
+- Postura de segurança e dívida rastreável consolidadas em
+  `docs/seguranca-endurecimento.md`.
+
 ### Adicionado
 
 - **Painel de BI de uso** no portal (`/portal/dashboard`): série diária dos
