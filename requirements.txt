@@ -79,5 +79,5 @@ mkdocs==1.6.1
 mkdocs-material==9.7.6
 
 # Produção
-gunicorn==21.2.0
+gunicorn==26.0.0
 python-dotenv==1.2.2
