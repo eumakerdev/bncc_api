@@ -64,7 +64,7 @@ pikepdf==10.9.1
 
 # Testes + cobertura (gate de CI ≥ 80%)
 pytest==9.1.1
-pytest-cov==6.0.0  # >=5 para API de plugin compatível com pytest 9
+pytest-cov==7.1.0  # >=5 para API de plugin compatível com pytest 9
 pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: FixtureDef.unittest)
 # httpx é dependência de runtime (login social) — declarado na seção de segurança acima.
 
