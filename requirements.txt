@@ -56,7 +56,7 @@ pandas==2.1.4
 numpy==1.24.3
 requests==2.34.2
 beautifulsoup4==4.15.0
-lxml==4.9.3
+lxml==6.1.1
 pdfplumber==0.11.10
 PyPDF2==3.0.1
 pypdf==6.14.2
