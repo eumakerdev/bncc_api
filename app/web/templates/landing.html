@@ -416,6 +416,7 @@ API keys self-service.{% endblock %}
         {% for w in usage_summary.windows %}
         {% set chart = usage_charts[w.days] %}
         <div class="usage-window" data-window="{{ w.days }}"{% if w.days != usage_summary.default_window %} hidden{% endif %}>
+          <div class="chart-scroll">
           <svg class="usage-chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
                role="img" preserveAspectRatio="none"
                aria-label="Requisições por dia nos últimos {{ w.days }} dias. Total de {{ w.total_requests|milhar }} requisições, média de {{ w.daily_average|milhar }} por dia.">
@@ -429,6 +430,7 @@ API keys self-service.{% endblock %}
             <text class="chart-axis" x="{{ t.pos }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
             {% endfor %}
           </svg>
+          </div>
           <p class="tp-chart-foot">
             <strong>{{ w.total_requests|milhar }}</strong> em {{ w.days }} dias · <strong>{{ w.daily_average|milhar }}</strong>/dia em média
           </p>
@@ -485,6 +487,7 @@ API keys self-service.{% endblock %}
           <p class="tp-chart-caption muted">por serviço, em R$</p>
         </div>
 
+        <div class="chart-scroll">
         <svg class="usage-chart cost-chart" viewBox="0 0 {{ cost_chart.width }} {{ cost_chart.height }}"
              role="img" preserveAspectRatio="none"
              aria-label="Custo mensal de infraestrutura por serviço, em reais. Total acumulado de {{ cost_summary.total_to_date|brl }}.">
@@ -502,6 +505,7 @@ API keys self-service.{% endblock %}
           <text class="chart-axis" x="{{ t.pos }}" y="{{ cost_chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
           {% endfor %}
         </svg>
+        </div>
 
         <details class="chart-data">
           <summary>Ver dados em tabela</summary>
@@ -524,6 +528,23 @@ API keys self-service.{% endblock %}
       </p>
     </article>
   {% endif %}
+
+    <article class="transparency-panel funding-block">
+      <header class="tp-head">
+        <p class="tp-overline">Apoio financeiro recebido</p>
+        <p class="tp-hero">
+          <span class="tp-value">R$ 0</span>
+          <span class="tp-unit">até agora</span>
+        </p>
+        <p class="tp-since">nenhum patrocínio, edital ou doação registrado até hoje</p>
+      </header>
+      <p class="funding-note">
+        A infraestrutura que mantém a BNCC API no ar sai do bolso de quem cuida do
+        projeto. Quando chegar o primeiro apoio, esta seção passa a mostrar quanto
+        foi, de onde veio e no que foi aplicado — a mesma auditoria pública que já
+        fazemos com os custos. Prestação de contas do gasto e da receita, no mesmo lugar.
+      </p>
+    </article>
 
   </div>
 </section>

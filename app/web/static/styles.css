@@ -850,6 +850,20 @@ input[type="password"]::-ms-clear { display: none; }
 .tp-source { margin: 1.2rem 0 0; font-size: 0.8rem; color: var(--fg-muted); }
 .usage-window[hidden] { display: none; }
 
+/* Envelope de rolagem do gráfico. No desktop é transparente (o SVG ocupa 100%);
+   no mobile ganha min-width + overflow-x para não espremer os rótulos dos eixos
+   (ver bloco mobile abaixo). */
+.chart-scroll { overflow-x: auto; overflow-y: hidden; }
+
+/* Painel de apoio financeiro: espelha o de custos (número-herói + nota), mas sem
+   gráfico. Comunica que nenhuma verba entrou ainda e o compromisso de auditar
+   publicamente qualquer apoio futuro. */
+.funding-block { border-style: dashed; }
+.funding-note {
+  margin: 1.25rem 0 0; padding-top: 1.15rem; border-top: 1px solid var(--border);
+  color: var(--fg-muted); font-size: 0.95rem; line-height: 1.6; max-width: 46rem;
+}
+
 /* Filtro de janela (pílulas segmentadas) */
 .chart-filters {
   display: inline-flex; gap: 0.2rem; padding: 0.2rem;
@@ -928,4 +942,69 @@ rect.cost-seg-outros, .dot.cost-seg-outros { fill: var(--cost-outros); backgroun
 }
 @media (prefers-reduced-motion: no-preference) {
   .chart-dot { transition: opacity 0.15s ease; }
+}
+
+/* =========================================================================
+   Landing — experiência mobile dedicada (refatoração).
+   Toda regra vive em media queries max-width: o desktop, já validado, não é
+   tocado. Prioridades (ui-ux-pro-max): alvos de toque ≥44px, ritmo de
+   espaçamento em múltiplos de 8, hierarquia acima da dobra, gráficos de
+   transparência legíveis por rolagem e zero scroll horizontal na página.
+   Breakpoints sistemáticos: 640 (celular grande) · 480 (celular) · 380 (compacto).
+   ========================================================================= */
+
+/* ---- Celular grande / tablet estreito (≤ 640px) ---- */
+@media (max-width: 640px) {
+  /* Ritmo vertical mais próximo, com respiro consistente. */
+  .section { padding: 3rem 0; }
+  h2 { margin: 1.75rem 0 0.75rem; }
+
+  /* Hero: título e lead ancorados; a janela de código empilha abaixo do texto. */
+  .hero { padding: 2.75rem 0 2.25rem; }
+  .hero-grid { gap: 2rem; }
+  .hero .lead { font-size: 1.15rem; }
+
+  /* Janela de código: cabe na largura; rola só dentro de si mesma, nunca a página. */
+  .code-window { font-size: 0.82rem; border-radius: var(--radius); }
+  .code-window pre { padding: 0.9rem 1rem; }
+
+  /* Faixa de números: 2×2 equilibrado em vez de auto-fit desalinhado. */
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 1rem; padding: 2rem 1.25rem; }
+  .stat strong { font-size: 2rem; }
+
+  /* Cartões da landing: 1 coluna com toque confortável (portal fica intacto). */
+  .uc-card, .step, .sponsor-card { padding: 1.25rem; }
+
+  /* Transparência: painéis coesos e filtros com alvo de toque cheio. */
+  .transparency-board { gap: 1rem; }
+  .chart-filter { min-height: 44px; padding: 0.5rem 0.9rem; }
+  .chart-data summary { min-height: 44px; }
+}
+
+/* ---- Celular (≤ 480px) ---- */
+@media (max-width: 480px) {
+  .section { padding: 2.5rem 0; }
+  .stat-grid { gap: 1.25rem 0.75rem; }
+  .stat strong { font-size: 1.85rem; }
+
+  /* Gráficos de transparência: no viewBox 840×260, encolher para ~320px deixaria
+     os rótulos dos eixos ilegíveis (~4px). A rolagem horizontal com min-width
+     preserva a leitura; a tabela em <details> segue como alternativa acessível
+     (ui-ux-pro-max: responsive-chart / axis-readability). */
+  .chart-scroll { -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .chart-scroll .usage-chart { min-width: 30rem; }
+  .chart-scroll .cost-chart { min-width: 32rem; }
+
+  /* Estatísticas secundárias: respiro maior entre pares. */
+  .tp-stats { gap: 1rem 1.25rem; }
+
+  /* Apoio: botões (Sponsors, repositório, copiar Pix) como alvos cheios. */
+  .sponsor-card .btn, .pix-copy .btn { align-self: stretch; }
+}
+
+/* ---- Celular compacto (≤ 380px) ---- */
+@media (max-width: 380px) {
+  .stat strong { font-size: 1.65rem; }
+  .transparency-panel { padding: 1.1rem; }
+  .code-window { font-size: 0.78rem; }
 }
