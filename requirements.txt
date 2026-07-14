@@ -70,7 +70,7 @@ pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: Fixt
 # Qualidade de código
 ruff==0.15.21
 black==26.5.1
-mypy==2.2.0
+mypy==2.3.0
 pre-commit==4.6.0
 
 # Documentação
