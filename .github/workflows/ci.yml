@@ -26,9 +26,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Dependency vulnerability audit (pip-audit)
-        # continue-on-error: a stack de IA (chromadb 0.4.18, langchain 0.1.0 etc.) é antiga e
-        # tem CVEs conhecidas em transitivos que exigem upgrade maior e coordenado (fora de escopo
-        # agora); o objetivo aqui é dar visibilidade no log do CI, não travar o build.
+        # continue-on-error: transitivos (sobretudo da stack de IA) podem carregar CVEs
+        # sem fix publicado; o objetivo aqui é dar visibilidade no log do CI, não travar
+        # o build. (A dívida original — chromadb 0.4/langchain 0.1 — foi resolvida:
+        # chromadb 1.5.9 e LangChain removido da stack, Constituição v1.1.0.)
         run: |
           pip install pip-audit
           pip-audit -r requirements.txt

@@ -36,20 +36,16 @@ slowapi==0.1.10
 
 # Transparência de custos — leitura do BigQuery billing export (só no job de
 # ingestão `scripts/ingest_costs.py`; import lazy, o app web nunca o carrega).
-# Cliente CORE (sem extras pandas/bqstorage) → não puxa numpy>=2 (mantém o pino
-# numpy<2 exigido por langchain 0.1.0).
-# TETO 3.30.0: >=3.31 exige packaging>=24.2, mas langchain-core 0.1.x (arrastado
-# por langchain==0.1.0) pina packaging<24 → ResolutionImpossible no pip. Subir
-# além exige upgrade coordenado do ecossistema LangChain (ignore no dependabot.yml).
-google-cloud-bigquery==3.30.0
+# Cliente CORE (sem extras pandas/bqstorage): superfície mínima de dependências.
+google-cloud-bigquery==3.42.2
 
 # Superfícies visuais (SSR: landing + portal + docs)
 Jinja2==3.1.6
 
-# Vetores / IA (RAG) — camada aumentada e opcional
+# Vetores / IA (RAG) — camada aumentada e opcional. LangChain foi REMOVIDO da
+# stack canônica (Constituição v1.1.0): nunca foi importado no código e seus pinos
+# legados travavam numpy<2 e packaging<24 na resolução de dependências.
 chromadb==1.5.9
-langchain==0.1.0
-langchain-community==0.0.10  # travado por langchain==0.1.0 (exige >=0.0.9,<0.1); Dependabot ignora este pacote
 sentence-transformers==5.6.0  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_download removido)
 openai==2.45.0
 google-generativeai==0.8.6
