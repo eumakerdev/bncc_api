@@ -1,30 +1,37 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (template/unversioned) → 1.0.0
-Rationale: Initial ratification of the project constitution (MAJOR baseline).
+Version change: 1.0.0 → 1.1.0
+Rationale: MINOR — redefinição material de uma restrição operacional (stack canônica):
+LangChain é removido da stack de RAG. Nenhum princípio ou regra de governança foi
+removido/redefinido (critério de MAJOR não atingido). Evidência: langchain/langchain-community
+nunca foram importados no código (app/, scripts/, tests/) — o RAG real usa ChromaDB +
+sentence-transformers diretamente. Os pinos legados (langchain==0.1.0) travavam a resolução
+de dependências (numpy<2, packaging<24 → teto google-cloud-bigquery 3.30.0) e geravam
+conflitos recorrentes nos PRs do Dependabot (ex.: PR #29).
 
-Modified principles: N/A (first ratification)
-Added principles:
-  I.   Contrato Primeiro & Versionamento Explícito
-  II.  Arquitetura em Camadas & Inversão de Dependência
-  III. Testes em Primeiro Lugar (NÃO NEGOCIÁVEL)
-  IV.  Fidelidade e Integridade dos Dados da BNCC
-  V.   Segurança e Proteção por Padrão
-  VI.  Observabilidade & Operabilidade
-  VII. Simplicidade e Determinismo sobre a Camada de IA
-Added sections:
-  - Padrões Técnicos & Restrições Operacionais
-  - Fluxo de Desenvolvimento & Portões de Qualidade
-  - Governança
+Modified principles: nenhum (Princípios I–VII intactos)
+Modified sections:
+  - Padrões Técnicos & Restrições Operacionais: stack canônica de RAG passa de
+    "sentence-transformers/LangChain" para "sentence-transformers" (uso direto, sem framework
+    de orquestração).
+Added sections: nenhuma
+Removed sections: nenhuma
 
 Templates requiring updates:
   ✅ .specify/templates/plan-template.md   (Constitution Check é genérico; alinhado — sem edição necessária)
   ✅ .specify/templates/spec-template.md   (sem referências a princípios; alinhado)
   ✅ .specify/templates/tasks-template.md   (categorias de tarefa cobrem testes/contrato/observabilidade; alinhado)
-  ✅ README.md                              (stack e metas consistentes com os princípios; alinhado)
+  ✅ CLAUDE.md                              (stack atualizada na mesma emenda)
+  ✅ requirements.txt                       (langchain/langchain-community removidos; comentários atualizados)
+  ✅ .github/dependabot.yml                 (ignores de langchain/bigquery removidos)
+  ✅ .github/workflows/ci.yml               (comentário sobre stack de IA legada atualizado)
+  ✅ docs/seguranca-endurecimento.md        (dívida da stack de IA atualizada)
+  ⚠ specs/001-public-api-platform/{plan.md,tasks.md} — mencionam LangChain como registro
+    histórico da feature entregue; não editados deliberadamente (snapshot do plano aprovado).
 
-Follow-up TODOs: nenhum. Todos os placeholders foram preenchidos.
+Follow-up TODOs: com o pino langchain removido, numpy/pandas/google-cloud-bigquery ficam
+livres para o Dependabot propor upgrades (validados pelos portões de CI).
 -->
 
 # BNCC API Constitution
@@ -155,8 +162,9 @@ Isolá-los garante que o núcleo da API permaneça rápido, barato e confiável.
 ## Padrões Técnicos & Restrições Operacionais
 
 - **Stack canônica:** Python 3.11+, FastAPI, Pydantic v2, ChromaDB (banco vetorial),
-  sentence-transformers/LangChain para RAG, Docker + Docker Compose para empacotamento.
-  Substituições de componentes estruturais exigem emenda a esta constituição.
+  sentence-transformers para RAG (uso direto, sem framework de orquestração), Docker +
+  Docker Compose para empacotamento. Substituições de componentes estruturais exigem emenda
+  a esta constituição.
 - **Qualidade de código:** `ruff` e `black` DEVEM passar sem erros; `mypy` DEVERIA passar em
   código novo. Formatação e lint são portões automatizados, não sugestões.
 - **Desempenho:** endpoints determinísticos DEVERIAM responder em p95 < 300ms sob carga nominal.
@@ -196,4 +204,4 @@ até que seja formalmente emendado.
   `README.md` e nos artefatos gerados pelo Spec Kit; esta constituição define os limites que essas
   orientações NÃO PODEM violar.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-03 | **Last Amended**: 2026-07-03
+**Version**: 1.1.0 | **Ratified**: 2026-07-03 | **Last Amended**: 2026-07-13

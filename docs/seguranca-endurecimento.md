@@ -40,18 +40,17 @@ terceiros com scripts inline e `eval`) e as páginas SSR (landing/portal).
 
 ## Dívida rastreada (resolução requer coordenação — não mexer às cegas)
 
-### 1. Stack de IA legada com CVEs (`chromadb 0.4.18`, `langchain 0.1.0`)
+### 1. Stack de IA legada com CVEs — RESOLVIDA (jul/2026)
 
-- **Risco:** CVEs conhecidas em transitivos; trava `numpy<2`. Por isso o `pip-audit`
-  do CI é informativo (`continue-on-error`).
-- **Por que não agora:** o LangChain 0.1 → 0.2/0.3 partiu o pacote-base
-  (`langchain-core`/`langchain-community`); bump piecemeal quebra a resolução do pip
-  (ver nota no `.github/dependabot.yml`). É migração coordenada, com risco real de
-  regressão na busca semântica (Princípio VII: IA não pode derrubar o núcleo).
-- **Caminho seguro:** migração dedicada em branch próprio, cobrindo a suíte da camada
-  de IA + recalibração do threshold PT-BR; validar `scripts/generate_embeddings.py` e
-  a busca ponta a ponta antes do merge. Só então tornar o `pip-audit` bloqueante para
-  as dependências não-IA.
+- **Como foi resolvida:** `chromadb` subiu 0.4.18 → 1.5.9 (PR #30; o gate de build do
+  Docker executa `generate_embeddings.py --reset`, validando a indexação real) e o
+  LangChain foi **removido** da stack canônica por emenda constitucional (v1.1.0):
+  `langchain`/`langchain-community` nunca foram importados no código — o RAG usa
+  ChromaDB + sentence-transformers diretamente. A remoção destravou os pinos
+  `numpy<2` e `packaging<24` que quebravam a resolução do pip nos PRs do Dependabot.
+- **Resta:** o `pip-audit` do CI segue informativo (`continue-on-error`) porque
+  transitivos podem carregar CVEs sem fix publicado; avaliar torná-lo bloqueante
+  agora que a stack está moderna.
 
 ### 2. Rate limiting in-process (por instância, não global)
 

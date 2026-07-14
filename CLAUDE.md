@@ -8,7 +8,7 @@ confiança acima de conveniência**.
 ## Stack (canônica — mudanças estruturais exigem emenda à Constituição)
 - **Python 3.11+ · FastAPI · Pydantic v2** (pydantic-settings)
 - **Dados oficiais BNCC**: snapshot estático versionado em JSON (`data/bncc_v1.json`), read-only em runtime
-- **Vetores/IA**: ChromaDB + sentence-transformers/LangChain (RAG); LLM opcional (OpenAI/Google)
+- **Vetores/IA**: ChromaDB + sentence-transformers (RAG, uso direto — sem LangChain desde a Constituição v1.1.0); LLM opcional (OpenAI/Google)
 - **Plataforma (contas/keys/uso)**: SQLAlchemy 2.0 async + Alembic (SQLite dev → Postgres prod)
 - **Superfícies visuais**: Jinja2 + Tailwind (SSR: landing + portal); docs via OpenAPI gerado
 - **Auth**: portal e-mail+senha (Argon2) + verificação de e-mail + JWT; API por API keys (Bearer, hasheadas)
