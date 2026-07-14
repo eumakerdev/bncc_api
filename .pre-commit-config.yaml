@@ -42,7 +42,7 @@ repos:
 
   # --- Lint / Format (espelha o gate de CI; versões idênticas) ---------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.20
+    rev: v0.15.21
     hooks:
       - id: ruff
         args: ["--fix"]

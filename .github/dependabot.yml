@@ -31,6 +31,12 @@ updates:
     ignore:
       - dependency-name: "langchain"
       - dependency-name: "langchain-community"
+      # google-cloud-bigquery >=3.31 exige packaging>=24.2, mas langchain-core
+      # 0.1.x (arrastado por langchain==0.1.0) pina packaging<24 — o pip não
+      # resolve (visto no PR #29). Destravado só com o upgrade coordenado do
+      # ecossistema LangChain acima.
+      - dependency-name: "google-cloud-bigquery"
+        versions: [">3.30.0"]
     groups:
       # Agrupa patch/minor de todas as libs num só PR para reduzir ruído.
       python-minor-e-patch:
