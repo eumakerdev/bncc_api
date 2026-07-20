@@ -6,25 +6,74 @@
    /guia e onboarding — sem estilos inline nos templates.
    ========================================================================= */
 
-/* ------------------------------ Tokens ---------------------------------- */
+/* ------------------------------ Tokens ----------------------------------
+   Paleta em OKLCH, exceto --brand, fixado no hex exato da identidade.
+   Estratégia de cor: COMMITTED — o azul da marca carrega superfície (bandas
+   inteiras), não é só cor de botão. Contraste de cada par verificado; os
+   números nos comentários são WCAG reais, não estimativa.
+
+   Regra dura: --amber NUNCA é texto sobre fundo claro (1.61:1). Ele é
+   preenchimento, marcador e display sobre azul profundo (6.19:1). */
 :root {
-  --bg: #ffffff;
-  --bg-soft: #f6f7f9;
-  --bg-sunken: #f0f2f5;
-  --fg: #0e1117;
-  --fg-muted: #5a6270;
-  --fg-subtle: #8a92a0;
-  --border: #e7e9ee;
-  --border-strong: #d6d9e0;
-  --brand: #1b4dff;
-  --brand-strong: #1640d9;
-  --brand-fg: #ffffff;
-  --brand-soft: #eef2ff;
-  --accent: #0d9488;
-  --danger: #b42318;
-  --danger-soft: #fef3f2;
-  --ok: #0a7d5a;
-  --ok-soft: #e7f7f0;
+  color-scheme: light dark;
+
+  /* Marca — identidade travada (logo, theme-color, og-image dependem disto) */
+  --brand: #1b4dff;                        /* branco sobre: 5.91:1 */
+  --brand-lift: oklch(0.575 0.212 265);    /* hover; branco sobre: 4.58:1 */
+  --brand-deep: oklch(0.392 0.196 265);    /* banda drenched; branco: 10.13:1 */
+  --brand-deeper: oklch(0.268 0.128 265);  /* banda mais densa; branco: 15.62:1 */
+  --brand-wash: oklch(0.955 0.028 265);    /* fundo tênue, tingido para a marca */
+  --brand-fg: oklch(0.995 0.002 265);      /* texto SOBRE --brand (botão) */
+  --band-ink: oklch(0.990 0.004 265);      /* texto SOBRE a banda drenched */
+  --amber: oklch(0.842 0.150 84);          /* #ffc53d do logo — só fill/display */
+  --amber-deep: oklch(0.660 0.145 68);     /* quando o âmbar precisa ser texto */
+
+  /* Rampa da barra de cobertura. Fixa nos DOIS temas: é dado, não superfície,
+     e os rótulos em branco por cima precisam de contraste estável. Nenhuma
+     passa de L 0.575, o ponto em que o branco ainda fecha 4.5:1. */
+  --cov-1: oklch(0.392 0.196 265);         /* branco sobre: 10.13:1 */
+  --cov-2: oklch(0.512 0.271 265);         /* branco sobre:  6.28:1 */
+  --cov-3: oklch(0.575 0.212 265);         /* branco sobre:  4.58:1 */
+
+  /* Neutros tingidos para o matiz da marca (265), nunca para o quente */
+  --paper: oklch(0.993 0.003 265);
+  --surface: oklch(0.968 0.007 265);
+  --sunken: oklch(0.940 0.010 265);
+  --ink: oklch(0.215 0.026 265);           /* sobre paper: 17.24:1 */
+  --ink-muted: oklch(0.468 0.030 265);     /* sobre paper: 6.79:1 */
+  --ink-subtle: oklch(0.540 0.029 265);    /* sobre paper: 4.97:1 — piso do AA */
+  --line: oklch(0.905 0.012 265);
+  --line-strong: oklch(0.855 0.016 265);
+
+  /* Aliases legados: portal, admin, /guia e onboarding consomem estes nomes.
+     Mantidos para o sistema novo valer em todas as telas sem reescrever 18
+     templates de uma vez. */
+  --bg: var(--paper);
+  --bg-soft: var(--surface);
+  --bg-sunken: var(--sunken);
+  --fg: var(--ink);
+  --fg-muted: var(--ink-muted);
+  --fg-subtle: var(--ink-subtle);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --brand-strong: var(--brand-lift);
+  --brand-soft: var(--brand-wash);
+  --accent: var(--brand);
+
+  /* O <style> inline do admin consome estes nomes com fallback claro fixo.
+     Enquanto --surface não existia ele caía no fallback e o painel era
+     claro-só; agora que existe, sem estes aliases o admin ficaria com texto
+     escuro sobre fundo escuro no tema escuro. */
+  --text: var(--ink);
+  --text-muted: var(--ink-muted);
+  --surface-hover: var(--sunken);
+  --primary: var(--brand);
+  --primary-soft: var(--brand-wash);
+
+  --danger: oklch(0.505 0.185 27);
+  --danger-soft: oklch(0.962 0.018 27);
+  --ok: oklch(0.505 0.108 162);
+  --ok-soft: oklch(0.955 0.035 162);
   /* Séries do gráfico de uso (BI): total (marca) vs. bem-sucedidas (verde). */
   --chart-total: var(--brand);
   --chart-success: #0a9d6e;
@@ -40,45 +89,99 @@
   --code-fg: #e2e8f0;
   --code-key: #7dd3fc;
   --code-val: #86efac;
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
-  --shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 12px 28px -10px rgb(15 23 42 / 0.12);
-  --shadow-lg: 0 24px 60px -18px rgb(15 23 42 / 0.24);
+  --shadow-sm: 0 1px 2px oklch(0.215 0.026 265 / 0.05);
+  --shadow: 0 1px 2px oklch(0.215 0.026 265 / 0.05), 0 12px 28px -10px oklch(0.215 0.026 265 / 0.12);
+  --shadow-lg: 0 24px 60px -18px oklch(0.215 0.026 265 / 0.24);
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 18px;
   --maxw: 72rem;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Escala tipográfica — razão 1.25 (o skill reprova escalas achatadas, que
+     lêem como indecisão). Fluida via clamp; o teto de display fica em 5rem,
+     abaixo do limite de 6rem. */
+  --t-xs: 0.79rem;
+  --t-sm: 0.889rem;
+  --t-base: 1rem;
+  --t-md: 1.125rem;
+  --t-lg: clamp(1.25rem, 0.6vw + 1.1rem, 1.406rem);
+  --t-xl: clamp(1.5rem, 1.2vw + 1.2rem, 1.802rem);
+  --t-2xl: clamp(1.85rem, 2.1vw + 1.35rem, 2.441rem);
+  --t-3xl: clamp(2.25rem, 3.4vw + 1.4rem, 3.052rem);
+  --t-display: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+
+  /* Escala de espaçamento fluida — o ritmo respira em viewport grande em vez
+     de congelar num valor fixo. */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: clamp(2.5rem, 3vw, 3.5rem);
+  --s-8: clamp(3.5rem, 5vw, 5.5rem);
+  --s-9: clamp(5rem, 8vw, 8rem);
+
+  /* Z-index semântico — sem 999 nem 9999 espalhados pelo arquivo. */
+  --z-base: 1;
+  --z-sticky: 50;
+  --z-nav: 60;
+  --z-backdrop: 70;
+  --z-modal: 80;
+  --z-toast: 90;
+  --z-skip: 100;
+
+  /* Curvas: saída exponencial, sem bounce nem elástico. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);        /* out-quint */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);    /* out-expo */
+  --dur-fast: 0.16s;
+  --dur: 0.28s;
+  --dur-slow: 0.6s;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b0d12;
-    --bg-soft: #12151d;
-    --bg-sunken: #0e1117;
-    --fg: #eceef2;
-    --fg-muted: #9aa2b1;
-    --fg-subtle: #6b7280;
-    --border: #23272f;
-    --border-strong: #333844;
-    --brand: #6b8aff;
-    --brand-strong: #86a0ff;
-    --brand-soft: #161d33;
-    --danger: #f97066;
-    --danger-soft: #2a1715;
-    --ok: #34d399;
-    --ok-soft: #0f2a22;
-    --chart-total: #6b8aff;
-    --chart-success: #34d399;
-    --chart-total-fill: rgba(107, 138, 255, 0.16);
-    --chart-success-fill: rgba(52, 211, 153, 0.14);
-    --cost-banco: #5c7cfa;
-    --cost-servidor: #38d9a9;
-    --cost-ia: #ffa94d;
-    --cost-outros: #adb5bd;
-    --code-bg: #0a0e18;
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 36px -14px rgb(0 0 0 / 0.6);
-    --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 0.7);
+    /* Sem preto puro: o fundo escuro também é tingido para o matiz da marca. */
+    --paper: oklch(0.178 0.019 265);
+    --surface: oklch(0.222 0.023 265);
+    --sunken: oklch(0.148 0.017 265);
+    --ink: oklch(0.945 0.008 265);          /* sobre paper: 16.09:1 */
+    --ink-muted: oklch(0.740 0.021 265);    /* sobre paper: 8.19:1 */
+    --ink-subtle: oklch(0.630 0.024 265);   /* sobre paper: 5.38:1 */
+    --line: oklch(0.298 0.024 265);
+    --line-strong: oklch(0.365 0.028 265);
+
+    /* No escuro o azul da marca precisa clarear para virar texto legível;
+       a banda drenched inverte e usa o azul profundo como superfície. */
+    --brand: oklch(0.700 0.138 265);        /* sobre paper: 6.96:1 */
+    --brand-lift: oklch(0.775 0.115 265);
+    --brand-deep: oklch(0.330 0.150 265);
+    --brand-deeper: oklch(0.242 0.110 265);
+    --brand-wash: oklch(0.268 0.078 265);   /* ink sobre: 13.06:1 */
+    /* No escuro --brand clareia, então a tinta sobre ele escurece. Mas a
+       banda drenched continua escura, e a tinta dela segue clara: são dois
+       papéis diferentes e confundi-los deixava o hero preto-no-azul. */
+    --brand-fg: oklch(0.145 0.030 265);
+    --band-ink: oklch(0.965 0.006 265);
+    --amber: oklch(0.842 0.150 84);
+    --amber-deep: oklch(0.800 0.150 78);
+
+    --danger: oklch(0.700 0.170 27);
+    --danger-soft: oklch(0.268 0.070 27);
+    --ok: oklch(0.760 0.140 162);
+    --ok-soft: oklch(0.268 0.055 162);
+    --chart-success: oklch(0.760 0.140 162);
+    --chart-total-fill: oklch(0.700 0.138 265 / 0.18);
+    --chart-success-fill: oklch(0.760 0.140 162 / 0.16);
+    --cost-banco: oklch(0.680 0.150 265);
+    --cost-servidor: oklch(0.790 0.135 168);
+    --cost-ia: oklch(0.800 0.135 62);
+    --cost-outros: oklch(0.720 0.020 265);
+    --code-bg: oklch(0.148 0.024 265);
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
+    --shadow: 0 1px 2px oklch(0 0 0 / 0.4), 0 16px 36px -14px oklch(0 0 0 / 0.6);
+    --shadow-lg: 0 30px 70px -20px oklch(0 0 0 / 0.7);
   }
 }
 
@@ -100,32 +203,47 @@ body {
 }
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
-h1, h2, h3 { line-height: 1.15; letter-spacing: -0.021em; text-wrap: balance; }
-h1 { font-size: clamp(2.25rem, 5.2vw, 3.6rem); margin: 0 0 1.1rem; letter-spacing: -0.03em; }
-h2 { font-size: clamp(1.6rem, 3.2vw, 2.15rem); margin: 2.5rem 0 1rem; }
+h1, h2, h3, h4 { line-height: 1.14; letter-spacing: -0.022em; text-wrap: balance; }
+h4 { font-size: var(--t-base); margin: 0 0 var(--s-2); }
+h1 { font-size: var(--t-3xl); margin: 0 0 var(--s-4); letter-spacing: -0.032em; }
+h2 { font-size: var(--t-2xl); margin: var(--s-6) 0 var(--s-4); letter-spacing: -0.028em; }
+h3 { font-size: var(--t-lg); }
 p { text-wrap: pretty; }
+/* Todo número da página é dado real; alinhamento tabular para poder comparar
+   colunas de cifra e contagem sem dançar. */
+.tabular, .stat strong, .metric-value, .kpi-value, .tp-value, .tp-stat dd { font-variant-numeric: tabular-nums; }
 .muted { color: var(--fg-muted); }
-.container { max-width: var(--maxw); margin: 0 auto; padding: 0 1.5rem; }
-.section { padding: 4.5rem 0; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--s-5); }
+.section { padding: var(--s-8) 0; }
 .section-narrow { max-width: 52rem; }
 /* Header sticky: âncoras (#apoie, #casos-de-uso…) não escondem sob a barra. */
 :where(section, [id])[id] { scroll-margin-top: 5rem; }
-.lead { font-size: 1.2rem; line-height: 1.55; color: var(--fg-muted); max-width: 40rem; }
+.lead {
+  font-size: var(--t-md); line-height: 1.6; color: var(--fg-muted);
+  max-width: 65ch; /* teto de medida: o skill trava linha entre 65 e 75ch */
+}
 
 /* Foco visível e movimento reduzido (a11y) */
-a:focus-visible, button:focus-visible, .btn:focus-visible {
+a:focus-visible, button:focus-visible, .btn:focus-visible, summary:focus-visible {
   outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 6px;
 }
-.btn, a, button { transition: opacity 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease; }
+/* Dentro da banda azul o foco precisa contrastar com o azul, não com o papel. */
+.band-brand a:focus-visible, .band-brand button:focus-visible, .band-brand .btn:focus-visible {
+  outline-color: var(--amber);
+}
+.btn, a, button {
+  transition: opacity var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 
 /* ------------------------------ Header ---------------------------------- */
 .site-header {
-  position: sticky; top: 0; z-index: 50;
+  position: sticky; top: 0; z-index: var(--z-sticky);
   border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
 }
 @supports (backdrop-filter: blur(8px)) {
   .site-header { backdrop-filter: saturate(140%) blur(10px); }
@@ -159,9 +277,13 @@ a:focus-visible, button:focus-visible, .btn:focus-visible {
   border-radius: 10px; color: var(--fg); cursor: pointer;
 }
 .nav-toggle:hover { background: var(--bg-soft); }
+/* "hidden" é atributo global de HTML e não vale para elementos SVG (outro
+   namespace), então a regra [hidden]{display:none} do navegador não pegava os
+   ícones do menu e os dois apareciam juntos no celular. */
+svg[hidden] { display: none; }
 .skip-link {
   position: absolute; left: -999px; top: 0; background: var(--brand);
-  color: #fff; padding: 0.5rem 1rem; z-index: 100;
+  color: var(--brand-fg); padding: 0.5rem 1rem; z-index: var(--z-skip);
 }
 .skip-link:focus { left: 0; }
 .sr-only {
@@ -170,27 +292,36 @@ a:focus-visible, button:focus-visible, .btn:focus-visible {
 }
 
 /* ------------------------------ Botões ----------------------------------- */
+/* Botão: presença por peso e cor sólida, não por brilho difuso. O halo azul
+   soprado sob o CTA é assinatura de landing de SaaS e some aqui. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
-  padding: 0.68rem 1.25rem; border-radius: var(--radius); min-height: 44px;
+  padding: 0.7rem 1.3rem; border-radius: var(--radius-sm); min-height: 44px;
   background: var(--brand); color: var(--brand-fg); font-weight: 600;
-  font-size: 1rem; font-family: inherit; line-height: 1.2; letter-spacing: -0.01em;
+  font-size: var(--t-base); font-family: inherit; line-height: 1.2; letter-spacing: -0.011em;
   border: 1px solid transparent; cursor: pointer;
-  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease,
-    transform 0.18s ease, box-shadow 0.18s ease;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
-.btn:hover { text-decoration: none; background: var(--brand-strong); }
-/* CTA primário: elevação discreta e micro-lift (hierarquia de ação sem estridência). */
-.btn:not(.btn-secondary):not(.btn-oauth):not(.btn-danger) {
-  box-shadow: 0 1px 2px rgb(27 77 255 / 0.16), 0 8px 20px -8px rgb(27 77 255 / 0.42);
+.btn:hover { text-decoration: none; background: var(--brand-lift); }
+.btn:active { transform: translateY(1px); }
+.btn-secondary {
+  background: transparent; color: var(--fg); border-color: var(--line-strong); box-shadow: none;
 }
-.btn:not(.btn-secondary):not(.btn-oauth):not(.btn-danger):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgb(27 77 255 / 0.18), 0 12px 26px -8px rgb(27 77 255 / 0.5);
+.btn-secondary:hover { background: var(--surface); border-color: var(--fg-subtle); }
+/* Sobre a banda azul os botões invertem: o primário vira papel, o secundário
+   vira contorno claro. Sem isso o CTA sumiria dentro da própria cor. */
+.band-brand .btn { background: var(--band-ink); color: var(--brand-deep); }
+.band-brand .btn:hover { background: var(--amber); color: var(--brand-deeper); }
+.band-brand .btn-secondary {
+  background: transparent; color: var(--band-ink);
+  border-color: color-mix(in oklab, var(--band-ink) 45%, transparent);
 }
-.btn:active { transform: translateY(0); }
-.btn-secondary { background: var(--bg); color: var(--fg); border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
-.btn-secondary:hover { background: var(--bg-soft); border-color: var(--fg-subtle); }
+.band-brand .btn-secondary:hover {
+  background: color-mix(in oklab, var(--band-ink) 12%, transparent);
+  border-color: var(--band-ink); color: var(--band-ink);
+}
 .btn-danger { background: var(--danger); }
 .btn-danger:hover { background: var(--danger); opacity: 0.88; }
 .btn-lg { padding: 0.85rem 1.6rem; font-size: 1.05rem; min-height: 50px; }
@@ -297,158 +428,255 @@ input[type="password"]::-ms-clear { display: none; }
   border-radius: 999px; background: var(--accent); color: #fff; vertical-align: middle;
 }
 .badge-muted { background: var(--border); color: var(--fg-muted); }
+/* Aviso: borda completa + fundo tingido. A tarja lateral colorida (border-left
+   grosso) é banida — é o tell mais reconhecível de UI gerada por IA. */
 .notice {
-  border-left: 3px solid var(--accent); background: var(--bg-soft);
-  padding: 0.75rem 1rem; border-radius: 6px; margin: 1rem 0;
+  border: 1px solid color-mix(in oklab, var(--brand) 30%, var(--line));
+  background: var(--brand-wash); color: var(--fg);
+  padding: var(--s-3) var(--s-4); border-radius: var(--radius-sm); margin: var(--s-4) 0;
 }
-.notice-danger { border-left-color: var(--danger); background: var(--danger-soft); }
+.notice-danger {
+  border-color: color-mix(in oklab, var(--danger) 38%, var(--line));
+  background: var(--danger-soft);
+}
 
 /* =========================================================================
    Landing comercial (v2)
    ========================================================================= */
+/* Rótulo de contexto acima do título de uma página de documentação. Sem
+   caixa-alta com tracking largo: o "eyebrow" miúdo repetido acima de cada
+   seção é scaffolding de IA, e aqui ele aparece uma vez, como localização. */
 .eyebrow {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.01em;
-  color: var(--fg-muted); background: var(--bg-soft); border: 1px solid var(--border);
-  padding: 0.3rem 0.85rem 0.3rem 0.7rem; border-radius: 999px; margin: 0 0 1.4rem;
-}
-.eyebrow::before {
-  content: ""; width: 0.45rem; height: 0.45rem; border-radius: 50%;
-  background: var(--accent); flex: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-.hero { padding: 5rem 0 4rem; }
-.hero-grid {
-  display: grid; gap: 3rem; align-items: center;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-}
-@media (max-width: 820px) { .hero-grid { grid-template-columns: 1fr; gap: 2.25rem; } }
-.hero .lead { font-size: 1.25rem; max-width: 34rem; }
-.hero .cta-row { margin-top: 1.75rem; }
-.hero-note {
-  font-size: 0.88rem; margin-top: 0.85rem; color: var(--fg-subtle);
-  display: inline-flex; align-items: center; gap: 0.45rem;
-}
-.hero-note::before {
-  content: ""; width: 1.05rem; height: 1.05rem; flex: none;
-  background: currentColor;
-  -webkit-mask: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
-  mask: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  display: block; margin: 0 0 var(--s-2);
+  font-size: var(--t-sm); font-weight: 500; color: var(--fg-muted);
 }
 
-/* Janela de código */
-.code-window {
-  background: var(--code-bg); color: var(--code-fg); border-radius: var(--radius-lg);
-  border: 1px solid rgb(255 255 255 / 0.08); box-shadow: var(--shadow-lg); overflow: hidden;
-  font-size: 0.88rem;
+/* Bandas full-bleed. A estratégia de cor é committed: o azul da marca carrega
+   superfície inteira em vez de aparecer só na borda de um botão. */
+.band { padding: var(--s-8) 0; }
+.band-brand { background: var(--brand-deep); color: var(--band-ink); }
+.band-brand .muted,
+.band-brand .lead { color: color-mix(in oklab, var(--band-ink) 80%, transparent); }
+/* :not(.btn) — sem isso o sublinhado de link vaza para dentro dos botões. */
+.band-brand a:not(.btn) { color: var(--band-ink); text-decoration: underline; text-underline-offset: 3px; }
+.band-brand a:not(.btn):hover { color: var(--amber); }
+.band-surface { background: var(--surface); border-block: 1px solid var(--line); }
+
+/* ------------------------------ Hero ------------------------------------
+   Uma ideia por dobra: a afirmação e a prova dela, lado a lado. Sem selo,
+   sem eyebrow, sem badge — a página abre falando. */
+.hero { padding: var(--s-9) 0 var(--s-8); }
+.hero-inner {
+  display: grid; gap: var(--s-7) var(--s-8); align-items: end;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
 }
-.code-window pre { background: transparent; border: 0; margin: 0; padding: 1.1rem 1.25rem; }
-.code-window code { color: var(--code-fg); }
-.code-window-bar {
-  display: flex; align-items: center; gap: 0.45rem;
-  padding: 0.65rem 1rem; border-bottom: 1px solid rgb(255 255 255 / 0.08);
+/* minmax(0, 1fr), não 1fr: "1fr" é minmax(auto, 1fr), e o auto impede o item
+   de encolher abaixo do conteúdo — o <pre> do registro estourava a página
+   inteira no celular. Mesma correção vale para todo grid de coluna única. */
+@media (max-width: 900px) { .hero-inner { grid-template-columns: minmax(0, 1fr); align-items: start; } }
+.hero-inner > * { min-width: 0; }
+.hero h1 {
+  font-size: var(--t-display); letter-spacing: -0.038em; line-height: 1.02;
+  margin: 0 0 var(--s-5); max-width: 20ch;
 }
-.code-window-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: rgb(255 255 255 / 0.22); }
-.code-window-title { margin-left: 0.5rem; font-family: var(--mono); font-size: 0.8rem; color: rgb(255 255 255 / 0.65); }
+/* O âmbar do logo vira grifo tipográfico: sobre o azul profundo dá 6.19:1,
+   suficiente para display. Nunca use âmbar em texto corrido claro. */
+.hero h1 em { font-style: normal; color: var(--amber); }
+.hero-lead {
+  font-size: var(--t-lg); line-height: 1.5; max-width: 46ch;
+  color: color-mix(in oklab, var(--band-ink) 84%, transparent); margin: 0 0 var(--s-6);
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; }
+/* 72% de branco sobre o azul reprovava o AA em texto pequeno; 88% passa. */
+.hero-note {
+  margin: var(--s-4) 0 0; font-size: var(--t-sm);
+  color: color-mix(in oklab, var(--band-ink) 88%, transparent);
+}
+
+/* O registro: a resposta real da API tratada como documento público, não como
+   "screenshot de produto" flutuando com sombra. Ele encosta na banda. */
+.record {
+  margin: 0; border-radius: var(--radius); overflow: hidden;
+  background: color-mix(in oklab, var(--brand-deeper) 82%, black);
+  border: 1px solid color-mix(in oklab, var(--band-ink) 18%, transparent);
+}
+.record-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid color-mix(in oklab, var(--band-ink) 14%, transparent);
+  font-family: var(--mono); font-size: var(--t-xs);
+  color: color-mix(in oklab, var(--band-ink) 72%, transparent);
+}
+.record-verb { color: var(--amber); font-weight: 600; }
+.record pre {
+  background: transparent; border: 0; margin: 0; padding: var(--s-4);
+  font-size: var(--t-sm); line-height: 1.7; color: var(--code-fg);
+  overflow-x: auto;
+}
+.record code { color: inherit; }
 .tk { color: var(--code-key); }
 .tv { color: var(--code-val); }
 
-/* Faixa de números */
-.stat-strip { background: var(--bg-soft); border-block: 1px solid var(--border); }
-.stat-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 1rem 2rem; padding: 2.25rem 1.5rem; text-align: center;
+/* --------------------------- Cobertura da base ---------------------------
+   Substitui a faixa de 4 números soltos. O dado é a imagem: as três etapas
+   em proporção real, para "a BNCC inteira" ser visto e não afirmado. */
+.cov-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s-5); }
+.cov-total-label { margin: 0; }
+.cov-total {
+  font-size: var(--t-3xl); font-weight: 800; letter-spacing: -0.04em; line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
-.stat strong {
-  display: block; font-size: 2.35rem; font-weight: 700; letter-spacing: -0.04em;
-  color: var(--fg); font-variant-numeric: tabular-nums; line-height: 1.05;
+.cov-total-label { color: var(--fg-muted); font-size: var(--t-md); }
+.cov-bar {
+  display: flex; width: 100%; height: 3.25rem; margin: var(--s-6) 0 var(--s-5);
+  border-radius: var(--radius-sm); overflow: hidden; background: var(--sunken);
 }
-.stat span { display: block; margin-top: 0.35rem; color: var(--fg-muted); font-size: 0.92rem; }
+.cov-seg {
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--t-sm); font-weight: 700; color: var(--band-ink);
+  font-variant-numeric: tabular-nums; min-width: 0; overflow: hidden;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+.cov-seg:hover { filter: brightness(1.12); }
+/* Rampa sequencial de um matiz só: as etapas são ordenadas, então a cor
+   segue a ordem. O tom mais escuro (deeper) lia como buraco na barra. */
+.cov-seg-ei { background: var(--cov-1); }
+.cov-seg-ef { background: var(--cov-2); }
+.cov-seg-em { background: var(--cov-3); }
+/* A informação não pode depender só da cor: cada segmento tem legenda com
+   rótulo textual abaixo, e o segmento estreito (EM) recebe o número lá. */
+.cov-legend {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap;
+  gap: var(--s-3) var(--s-6);
+}
+.cov-legend li { display: flex; align-items: baseline; gap: var(--s-2); font-size: var(--t-sm); }
+.cov-legend .swatch { width: 0.7rem; height: 0.7rem; border-radius: 3px; flex: none; align-self: center; }
+.cov-legend b { font-variant-numeric: tabular-nums; }
+.cov-legend span { color: var(--fg-muted); }
+.cov-note { margin: var(--s-5) 0 0; color: var(--fg-muted); font-size: var(--t-sm); max-width: 70ch; }
 
-/* Casos de uso */
-.uc-grid { grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); margin-top: 2rem; }
-.uc-card { display: flex; flex-direction: column; gap: 0.4rem; box-shadow: none; }
-.uc-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: var(--shadow); }
-.uc-card h3 { margin: 0.4rem 0 0; font-size: 1.1rem; letter-spacing: -0.01em; }
-@media (prefers-reduced-motion: reduce) { .uc-card:hover { transform: none; } }
-.uc-card p:last-child { margin-top: auto; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.uc-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 2.6rem; height: 2.6rem; border-radius: 10px;
-  background: var(--brand-soft); color: var(--brand);
+/* ---------------------------- Prova de fidelidade ------------------------
+   O argumento mais forte do projeto e o mais escondido na versão anterior.
+   Layout assimétrico: a afirmação pesa mais que a lista que a sustenta. */
+.proof-grid {
+  display: grid; gap: var(--s-7) var(--s-8); align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
 }
-.uc-icon svg { width: 1.4rem; height: 1.4rem; }
+@media (max-width: 880px) { .proof-grid { grid-template-columns: minmax(0, 1fr); } }
+.proof-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-5); }
+.proof-list li { display: grid; gap: var(--s-1); padding-bottom: var(--s-5); border-bottom: 1px solid var(--line); }
+.proof-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.proof-list dfn { font-style: normal; font-weight: 650; font-size: var(--t-md); }
+.proof-list p { margin: 0; color: var(--fg-muted); max-width: 62ch; }
+.proof-figure { font-variant-numeric: tabular-nums; color: var(--brand); font-weight: 700; }
+
+/* ------------------------------ Casos de uso -----------------------------
+   Sem grid de cards idênticos e sem ladrilho de ícone arredondado acima de
+   cada título (ambos banidos pelo skill). O endpoint é a âncora visual: ele
+   é a coisa concreta que o leitor vai usar, e serve de "ícone" honesto.
+   O primeiro caso ocupa a largura toda — hierarquia, não repetição. */
+.uc-list {
+  list-style: none; margin: var(--s-6) 0 0; padding: 0;
+  display: grid; gap: 0; border-top: 1px solid var(--line);
+}
+.uc-item {
+  display: grid; gap: var(--s-2) var(--s-6); align-items: start;
+  grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+  padding: var(--s-5) 0; border-bottom: 1px solid var(--line);
+}
+.uc-item h3 { margin: 0; font-size: var(--t-md); letter-spacing: -0.015em; }
+.uc-item p { margin: 0; color: var(--fg-muted); max-width: 68ch; }
+.uc-endpoints { display: flex; flex-wrap: wrap; gap: var(--s-2); align-content: start; }
+.uc-lead .uc-body { display: grid; gap: var(--s-2); }
+.uc-lead h3 { font-size: var(--t-xl); letter-spacing: -0.025em; }
+@media (max-width: 760px) {
+  .uc-item { grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
+  .uc-endpoints { order: 2; }
+}
+/* overflow-wrap: anywhere quebrava "relacoes" no meio da palavra. O chip
+   rola dentro de si quando não cabe, em vez de picar o identificador. */
 .endpoint {
-  display: inline-block; font-size: 0.78rem; padding: 0.2rem 0.55rem;
-  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-  color: var(--fg-muted); white-space: nowrap; max-width: 100%; overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline-block; font-family: var(--mono); font-size: var(--t-xs);
+  padding: 0.25rem 0.5rem; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 5px;
+  color: var(--fg-muted); max-width: 100%;
+  white-space: nowrap; overflow-x: auto; vertical-align: bottom;
 }
-.uc-card-cta { border-style: dashed; align-items: flex-start; justify-content: center; }
 
-/* Passos */
-.steps-grid { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin: 1.5rem 0; }
-.step { position: relative; padding-top: 1.5rem; }
-.step-num {
-  position: absolute; top: -1.1rem; left: 1.1rem;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 2.2rem; height: 2.2rem; border-radius: 50%;
-  background: var(--brand); color: var(--brand-fg); font-weight: 700;
+/* ------------------------------ Passos -----------------------------------
+   Numeração legítima: isto é de fato uma sequência ordenada, e a ordem
+   carrega informação. O skill só bane número como enfeite de seção. */
+.steps { list-style: none; counter-reset: step; margin: var(--s-6) 0; padding: 0;
+  display: grid; gap: var(--s-5); grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.step { counter-increment: step; display: grid; gap: var(--s-2); align-content: start; }
+.step::before {
+  content: counter(step); font-variant-numeric: tabular-nums;
+  font-size: var(--t-xl); font-weight: 800; line-height: 1;
+  color: var(--brand); letter-spacing: -0.04em;
 }
-.curl-block { font-size: 0.88rem; }
+.step h3 { margin: 0; font-size: var(--t-md); }
+.step p { margin: 0; color: var(--fg-muted); }
+.curl-block { font-size: var(--t-sm); background: var(--code-bg); color: var(--code-fg); border-color: transparent; }
+.curl-block code { color: inherit; }
 
-/* FAQ */
-.faq-list { max-width: 52rem; display: grid; gap: 0.75rem; margin-top: 1.5rem; }
-.faq-item {
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg-soft);
-}
+/* ------------------------------ FAQ --------------------------------------
+   Filetes em vez de cartões empilhados: cartão aqui só adicionaria moldura
+   sem afordância nova. */
+.faq-list { max-width: 62rem; display: grid; margin-top: var(--s-6); border-top: 1px solid var(--line); }
+.faq-item { border-bottom: 1px solid var(--line); }
 .faq-item summary {
-  cursor: pointer; font-weight: 600; padding: 1rem 1.25rem;
-  list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  cursor: pointer; font-weight: 650; font-size: var(--t-md);
+  padding: var(--s-4) 0; list-style: none; min-height: 44px;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
 }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::after {
-  content: ""; flex: none; width: 0.6rem; height: 0.6rem;
+  content: ""; flex: none; width: 0.65rem; height: 0.65rem; margin-right: 0.2rem;
   border-right: 2px solid var(--fg-muted); border-bottom: 2px solid var(--fg-muted);
-  transform: rotate(45deg); transition: transform 0.18s ease;
+  transform: rotate(45deg); transition: transform var(--dur-fast) var(--ease-out);
 }
 .faq-item[open] summary::after { transform: rotate(-135deg); }
-.faq-item p { margin: 0; padding: 0 1.25rem 1rem; color: var(--fg-muted); }
+.faq-item p { margin: 0; padding: 0 0 var(--s-5); color: var(--fg-muted); max-width: 70ch; }
 
-/* Apoie o projeto */
-.sponsor-section { background: var(--bg-soft); border-block: 1px solid var(--border); }
-.sponsor-grid { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); margin-top: 1.5rem; }
-.sponsor-card { background: var(--bg); display: flex; flex-direction: column; gap: 0.5rem; }
-.sponsor-card h3 { margin: 0.25rem 0 0; }
-.sponsor-card .btn { align-self: flex-start; }
+/* --------------------------- Apoie o projeto -----------------------------
+   Três formas de apoiar, sem três cartões idênticos com ícone: uma coluna
+   de texto e o Pix como o único bloco com peso visual (é o que exige ação
+   manual do leitor). */
+.support-grid {
+  display: grid; gap: var(--s-7) var(--s-8); align-items: start; margin-top: var(--s-6);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+}
+@media (max-width: 880px) { .support-grid { grid-template-columns: minmax(0, 1fr); } }
+.support-ways { display: grid; gap: var(--s-5); }
+.support-title { margin: 0; font-size: var(--t-lg); letter-spacing: -0.022em; }
+.support-way { display: grid; gap: var(--s-2); }
+.support-way h4 { margin: 0; font-size: var(--t-md); letter-spacing: -0.015em; }
+.support-way p { margin: 0; color: var(--fg-muted); max-width: 60ch; }
+.pix-panel h4 { margin: 0; font-size: var(--t-md); letter-spacing: -0.015em; }
+.support-way .btn { justify-self: start; margin-top: var(--s-1); }
+.pix-panel {
+  display: grid; gap: var(--s-4); padding: var(--s-5);
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  justify-items: start;
+}
 .pix-qr {
-  border: 1px solid var(--border); border-radius: 8px; background: #fff;
-  padding: 6px; image-rendering: pixelated;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: #fff; /* QR precisa de branco real para leitura óptica, nos dois temas */
+  padding: 8px; image-rendering: pixelated;
 }
-.pix-copy { display: flex; flex-direction: column; gap: 0.5rem; }
+.pix-copy { display: grid; gap: var(--s-3); width: 100%; }
 .pix-copy code {
-  font-size: 0.72rem; word-break: break-all; color: var(--fg-muted);
-  background: var(--bg-soft); border: 1px solid var(--border);
-  border-radius: 6px; padding: 0.5rem 0.6rem; display: block;
+  font-size: var(--t-xs); overflow-wrap: anywhere; color: var(--fg-muted);
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: var(--s-3); display: block; line-height: 1.5;
 }
-.pix-copy .btn { align-self: flex-start; }
 
-/* CTA final — painel destacado, centralizado */
+/* ------------------------------ CTA final --------------------------------
+   Fecha na cor da marca, ecoando o hero. Sem gradiente radial decorativo. */
 .cta-final { text-align: center; }
-.cta-final-inner {
-  position: relative; overflow: hidden;
-  padding: 3.5rem 1.75rem; border-radius: var(--radius-lg);
-  border: 1px solid var(--border); background: var(--bg-soft);
-}
-.cta-final-inner::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(60rem 22rem at 50% -30%, var(--brand-soft), transparent 70%);
-}
-.cta-final-inner > * { position: relative; }
-.cta-final h2 { margin-top: 0; }
-.cta-final .lead { margin-inline: auto; }
-.cta-final .cta-row { justify-content: center; margin-top: 1.75rem; }
+.cta-final h2 { margin: 0 auto var(--s-4); font-size: var(--t-2xl); max-width: 20ch; }
+.cta-final .lead { margin-inline: auto; color: color-mix(in oklab, var(--band-ink) 82%, transparent); }
+.cta-final .cta-row { justify-content: center; margin-top: var(--s-6); }
 
 /* ------------------------------ Rodapé ----------------------------------- */
 .site-footer { border-top: 1px solid var(--border); background: var(--bg); color: var(--fg-muted); }
@@ -456,8 +684,8 @@ input[type="password"]::-ms-clear { display: none; }
   display: grid; gap: 2rem;
   grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
 }
-@media (max-width: 820px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .footer-grid { grid-template-columns: minmax(0, 1fr); } }
 .footer-title { font-weight: 700; color: var(--fg); margin: 0 0 0.5rem; }
 .footer-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
 .footer-links a { color: var(--fg-muted); }
@@ -583,9 +811,13 @@ input[type="password"]::-ms-clear { display: none; }
 .onb-bar {
   height: 0.4rem; border-radius: 999px; background: var(--border); overflow: hidden;
 }
+/* Progresso por transform: animar width causa layout thrash a cada passo do
+   wizard. A largura fica em 100% e o preenchimento é escalado no eixo X. */
 .onb-bar-fill {
-  display: block; height: 100%; border-radius: inherit; background: var(--brand);
-  transition: width 0.25s ease-out;
+  display: block; height: 100%; width: 100%; border-radius: inherit;
+  background: var(--brand); transform-origin: left center;
+  transform: scaleX(var(--onb-progress, 0));
+  transition: transform var(--dur) var(--ease-out);
 }
 .onb-card {
   padding: 1.75rem 1.5rem; box-shadow: var(--shadow);
@@ -652,14 +884,15 @@ input[type="password"]::-ms-clear { display: none; }
   text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted);
 }
 .docs-nav-title:first-child { margin-top: 0; }
+/* Item ativo por peso e fundo, não por tarja lateral colorida (banida). */
 .docs-nav a {
-  display: block; padding: 0.4rem 0.7rem; border-radius: 8px;
-  color: var(--fg-muted); font-size: 0.95rem; border-left: 2px solid transparent;
+  display: block; padding: 0.4rem 0.7rem; border-radius: var(--radius-sm);
+  color: var(--fg-muted); font-size: 0.95rem;
 }
-.docs-nav a:hover { color: var(--brand); background: var(--bg-soft); text-decoration: none; }
+.docs-nav a:hover { color: var(--brand); background: var(--surface); text-decoration: none; }
 .docs-nav a:target,
 .docs-nav a.is-active {
-  color: var(--brand); background: var(--brand-soft); border-left-color: var(--brand);
+  color: var(--brand); background: var(--brand-wash); font-weight: 600;
 }
 .docs-nav-ext { color: var(--brand) !important; font-weight: 500; }
 
@@ -674,7 +907,7 @@ input[type="password"]::-ms-clear { display: none; }
 .docs-content table { margin: 1.25rem 0; font-size: 0.95rem; }
 
 @media (max-width: 860px) {
-  .docs-layout { grid-template-columns: 1fr; gap: 1rem; }
+  .docs-layout { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
   .docs-sidebar {
     position: static; border-bottom: 1px solid var(--border);
     padding-bottom: 1rem; margin-bottom: 1rem;
@@ -697,7 +930,7 @@ input[type="password"]::-ms-clear { display: none; }
     display: none; position: absolute; top: calc(100% + 1px); left: 0; right: 0;
     flex-direction: column; align-items: stretch; gap: 0.15rem;
     padding: 0.75rem 1.25rem 1rem; background: var(--bg);
-    border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 60;
+    border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: var(--z-nav);
   }
   html.js .nav-links.is-open { display: flex; }
   html.js .nav-links a {
@@ -714,7 +947,10 @@ input[type="password"]::-ms-clear { display: none; }
   .section { padding: 2rem 0; }
   .hero { padding: 2.5rem 0 2rem; }
   .lead { font-size: 1.1rem; }
-  .cta-row .btn { width: 100%; }
+  /* Botões empilhados com a mesma largura: larguras diferentes no empilhamento
+     lêem como desalinho, não como hierarquia. */
+  .cta-row .btn, .hero-actions .btn { width: 100%; }
+  .hero-actions { gap: var(--s-2); }
   .page-header { align-items: flex-start; }
 }
 
@@ -933,7 +1169,7 @@ rect.cost-seg-outros, .dot.cost-seg-outros { fill: var(--cost-outros); backgroun
 
 /* Responsivo: sidebar vira barra rolável no topo */
 @media (max-width: 900px) {
-  .dash-shell { grid-template-columns: 1fr; gap: 1.25rem; }
+  .dash-shell { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
   .dash-side { position: static; }
   .dash-nav { flex-direction: row; overflow-x: auto; gap: 0.35rem; padding-bottom: 0.25rem; }
   .dash-nav-item { flex: none; }
@@ -956,36 +1192,33 @@ rect.cost-seg-outros, .dot.cost-seg-outros { fill: var(--cost-outros); backgroun
 /* ---- Celular grande / tablet estreito (≤ 640px) ---- */
 @media (max-width: 640px) {
   /* Ritmo vertical mais próximo, com respiro consistente. */
-  .section { padding: 3rem 0; }
-  h2 { margin: 1.75rem 0 0.75rem; }
+  .section, .band { padding: var(--s-7) 0; }
+  h2 { margin: var(--s-5) 0 var(--s-3); }
 
-  /* Hero: título e lead ancorados; a janela de código empilha abaixo do texto. */
-  .hero { padding: 2.75rem 0 2.25rem; }
-  .hero-grid { gap: 2rem; }
-  .hero .lead { font-size: 1.15rem; }
+  /* Hero: o título domina a dobra; o registro empilha abaixo. */
+  .hero { padding: var(--s-7) 0 var(--s-7); }
+  .hero h1 { max-width: 100%; }
+  .hero-lead { font-size: var(--t-md); }
 
-  /* Janela de código: cabe na largura; rola só dentro de si mesma, nunca a página. */
-  .code-window { font-size: 0.82rem; border-radius: var(--radius); }
-  .code-window pre { padding: 0.9rem 1rem; }
+  /* Registro: cabe na largura e rola dentro de si, nunca a página. */
+  .record pre { padding: var(--s-3); font-size: var(--t-xs); }
 
-  /* Faixa de números: 2×2 equilibrado em vez de auto-fit desalinhado. */
-  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 1rem; padding: 2rem 1.25rem; }
-  .stat strong { font-size: 2rem; }
-
-  /* Cartões da landing: 1 coluna com toque confortável (portal fica intacto). */
-  .uc-card, .step, .sponsor-card { padding: 1.25rem; }
+  /* Cobertura: a barra fica mais alta para os rótulos caberem no toque. */
+  .cov-bar { height: 2.75rem; }
+  .cov-legend { gap: var(--s-2) var(--s-5); }
 
   /* Transparência: painéis coesos e filtros com alvo de toque cheio. */
-  .transparency-board { gap: 1rem; }
+  .transparency-board { gap: var(--s-4); }
   .chart-filter { min-height: 44px; padding: 0.5rem 0.9rem; }
   .chart-data summary { min-height: 44px; }
 }
 
 /* ---- Celular (≤ 480px) ---- */
 @media (max-width: 480px) {
-  .section { padding: 2.5rem 0; }
-  .stat-grid { gap: 1.25rem 0.75rem; }
-  .stat strong { font-size: 1.85rem; }
+  .section, .band { padding: var(--s-6) 0; }
+  /* Nos segmentos estreitos o número não cabe; a legenda abaixo carrega o
+     dado, então some com o rótulo interno em vez de deixá-lo cortado. */
+  .cov-seg { font-size: 0; }
 
   /* Gráficos de transparência: no viewBox 840×260, encolher para ~320px deixaria
      os rótulos dos eixos ilegíveis (~4px). A rolagem horizontal com min-width
@@ -999,12 +1232,39 @@ rect.cost-seg-outros, .dot.cost-seg-outros { fill: var(--cost-outros); backgroun
   .tp-stats { gap: 1rem 1.25rem; }
 
   /* Apoio: botões (Sponsors, repositório, copiar Pix) como alvos cheios. */
-  .sponsor-card .btn, .pix-copy .btn { align-self: stretch; }
+  .support-way .btn, .pix-copy .btn { justify-self: stretch; width: 100%; }
+  .pix-panel { justify-items: stretch; }
 }
 
 /* ---- Celular compacto (≤ 380px) ---- */
 @media (max-width: 380px) {
-  .stat strong { font-size: 1.65rem; }
-  .transparency-panel { padding: 1.1rem; }
-  .code-window { font-size: 0.78rem; }
+  .cov-total { font-size: var(--t-2xl); }
+  .transparency-panel { padding: var(--s-4); }
+  .record pre { font-size: 0.72rem; }
+}
+
+/* =========================================================================
+   Movimento. Uma entrada orquestrada no hero, e nada mais — o reflexo de
+   aplicar o mesmo fade-on-scroll em toda seção é justamente o tell que o
+   skill aponta. O conteúdo já nasce visível: a animação realça um estado
+   padrão legível em vez de destravá-lo, então nada some se o JS não rodar
+   ou se a aba estiver oculta durante a renderização.
+   ========================================================================= */
+/* Só transform, nunca opacidade a partir de zero. Com opacity:0 + delay o
+   conteúdo fica invisível até a animação disparar, e transição não roda em
+   aba oculta nem em renderizador headless — o hero sairia em branco numa
+   captura ou num snapshot de SEO. Assim o texto já nasce legível e o
+   movimento apenas o acomoda. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1, .hero-lead, .hero-actions, .hero-note, .record {
+    animation: settle var(--dur-slow) var(--ease-out-soft) both;
+  }
+  .hero-lead { animation-delay: 0.06s; }
+  .hero-actions { animation-delay: 0.12s; }
+  .hero-note { animation-delay: 0.16s; }
+  .record { animation-delay: 0.09s; }
+}
+@keyframes settle {
+  from { transform: translateY(0.6rem); }
+  to { transform: none; }
 }

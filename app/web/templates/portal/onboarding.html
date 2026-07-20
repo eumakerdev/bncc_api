@@ -10,7 +10,7 @@
     <p class="onb-progress-label" aria-live="polite">Pergunta {{ step }} de {{ total }}</p>
     <div class="onb-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ total }}"
          aria-valuenow="{{ step - 1 }}" aria-label="Progresso do onboarding">
-      <span class="onb-bar-fill" style="width: {{ progress_pct }}%;"></span>
+      <span class="onb-bar-fill" style="--onb-progress: {{ progress_pct / 100 }};"></span>
     </div>
   </div>
 

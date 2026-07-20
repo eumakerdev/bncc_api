@@ -80,6 +80,70 @@ Each section should advance one argument. Build a logical flow down the page.
 - Passive voice constructions?
 - Exclamation points? (remove them)
 - Marketing buzzwords without substance?
+- AI tells? (run the sweep below — always, on every draft)
+
+---
+
+## Avoiding AI Tells
+
+Readers have learned to recognize machine-generated copy, and it destroys trust instantly.
+These rules are **mandatory on every draft**. One instance of any pattern is fine — the tell is
+density and regularity. **For the full catalog with word lists and the final sweep checklist**:
+See [references/ai-writing-signs.md](references/ai-writing-signs.md).
+
+### Banned constructions
+
+1. **Negative parallelisms** — "It's not just X, it's Y," "not only... but also," "It's not
+   about X; it's about Y," "No X, no Y, just Z." State Y directly instead.
+   - AI: "It's not just a dashboard — it's a command center."
+   - Human: "See every deployment, alert, and rollback in one screen."
+2. **The rule of three everywhere** — "faster, simpler, smarter"; three adjectives, three
+   bullets, three of everything. Max one deliberate triad per page; vary list lengths.
+3. **Superficial "-ing" tails** — "...ensuring your team stays aligned," "...empowering users,"
+   "...highlighting our commitment to quality." Cut the clause or make the claim concrete.
+4. **Copula avoidance** — "serves as," "stands as," "represents," "boasts," "features" instead
+   of plain "is" and "has." "The platform serves as a comprehensive solution" → "The platform is..."
+5. **Significance inflation** — "plays a pivotal role," "is a testament to," "marks a turning
+   point," "cementing its position as." Replace every importance claim with the fact that proves it.
+6. **Vague attribution** — "experts agree," "studies show," "industry leaders trust us." Name
+   the source, number, and date — or delete.
+7. **Didactic filler** — "It's important to note," "It's worth mentioning," "In conclusion,"
+   "The future looks bright," section-ending recaps.
+8. **Synonym cycling** — "the platform... the solution... the tool... the system." Repeat the
+   product's name; that's branding, not bad writing.
+
+### AI vocabulary (avoid, or use at most once per page)
+
+delve, leverage, harness, unlock, unleash, elevate, empower, streamline, seamless, robust,
+vibrant, crucial, pivotal, cutting-edge, game-changing, groundbreaking, revolutionize,
+transform, supercharge, boast, showcase, underscore, foster, garner, bolster, meticulous,
+comprehensive, holistic, landscape, tapestry, testament, journey, realm, synergy, ecosystem,
+"valuable insights," "in today's fast-paced world," "ever-evolving," "at its core."
+
+Swap for the concrete alternative: leverage → use; seamless → say what actually happens ("no
+re-login"); robust → say the number; streamline → name the saved step or time.
+
+**Co-occurrence is the fingerprint:** one "vibrant" is a word choice; "vibrant" + "seamless" +
+"elevate" in the same section reads as generated. If two or more appear near each other,
+rewrite the section.
+
+### Formatting tells
+
+- **Em dashes:** max ~1 per paragraph — more becomes a tic. Prefer commas, periods, parentheses.
+- **Bold:** at most one decisive phrase per section, never mechanical **key phrase** bolding.
+- **Bullets:** don't shape every list as "**Label:** explanation." Vary structure and counts.
+- **No emoji** as bullets or heading decoration (🚀 ✨ 💡).
+- **Headings:** consistent case per brand style; don't default to Rigid Title Case Everywhere.
+- **Rhythm:** vary paragraph and sentence lengths. Uniform blocks read as generated.
+
+### Final artifact sweep
+
+Before delivering, search the text for leftover generation debris: `[placeholders]`,
+`{variables}`, markdown leaking into HTML, `utm_` parameters in links, "As an AI," "as of my
+last update," and openings like "Certainly! Here's..."
+
+The goal is not to pass an AI detector — it's copy so specific to this product, this customer,
+and this voice that it couldn't have come from a generic prompt.
 
 ---
 
@@ -126,6 +190,8 @@ Puns and wit make copy memorable — but only if it fits the brand and doesn't u
 **For comprehensive headline formulas**: See [references/copy-frameworks.md](references/copy-frameworks.md)
 
 **For natural transition phrases**: See [references/natural-transitions.md](references/natural-transitions.md)
+
+**For the full AI-tells catalog and sweep checklist**: See [references/ai-writing-signs.md](references/ai-writing-signs.md)
 
 **Subheadline**
 
@@ -265,3 +331,9 @@ For headlines and CTAs, provide 2-3 options:
 
 - Page title (for SEO)
 - Meta description
+
+### AI-Tells Sweep (always)
+
+Before delivering, run the final sweep from
+[references/ai-writing-signs.md](references/ai-writing-signs.md) on the finished copy and fix
+what it catches. Don't report the checklist itself — just deliver copy that passes it.
