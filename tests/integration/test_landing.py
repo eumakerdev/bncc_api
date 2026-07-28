@@ -128,6 +128,25 @@ def test_robots_txt(client):
     assert "sitemap.xml" in body
 
 
+def test_landing_permite_cache_de_cdn(client):
+    """
+    A landing precisa mandar `Cache-Control` público — é o que segura o custo.
+
+    Sem header explícito, o Firebase Hosting marca a resposta como `private` e
+    TODO acesso atravessa até o Cloud Run. Como o serviço roda com
+    `min-instances=0`, isso exporia o cold start a cada visitante e a cada
+    crawler. O `s-maxage` deixa a CDN absorver o tráfego e o
+    `stale-while-revalidate` faz a borda responder na hora enquanto revalida.
+    """
+    response = client.get("/")
+    assert response.status_code == 200
+
+    cache = response.headers.get("cache-control", "")
+    assert "public" in cache, f"landing sem cache público: {cache!r}"
+    assert "s-maxage=" in cache, f"landing sem s-maxage (CDN não reteria): {cache!r}"
+    assert "stale-while-revalidate=" in cache, f"landing sem SWR: {cache!r}"
+
+
 def test_favicon_ico_served(client):
     """Crawlers e navegadores pedem /favicon.ico na raiz — não pode ser 404."""
     response = client.get("/favicon.ico")

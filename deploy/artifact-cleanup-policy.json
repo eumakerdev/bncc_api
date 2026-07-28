@@ -1,0 +1,17 @@
+[
+  {
+    "name": "manter-versoes-recentes",
+    "action": { "type": "Keep" },
+    "mostRecentVersions": {
+      "keepCount": 3
+    }
+  },
+  {
+    "name": "apagar-orfas",
+    "action": { "type": "Delete" },
+    "condition": {
+      "tagState": "untagged",
+      "olderThan": "7d"
+    }
+  }
+]

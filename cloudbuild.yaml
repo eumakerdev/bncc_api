@@ -7,7 +7,7 @@
 #     --substitutions=_REGION=southamerica-east1,_TAG=v1
 #
 # O build gera os embeddings (ChromaDB) dentro da imagem — passo pesado de ML —,
-# por isso uma máquina maior e timeout folgado.
+# por isso o timeout folgado.
 
 substitutions:
   _REGION: southamerica-east1
@@ -16,10 +16,20 @@ substitutions:
   _TAG: latest
 
 options:
-  machineType: E2_HIGHCPU_8
+  # Sem `machineType`: o default (E2_MEDIUM) é o único elegível aos 120 minutos
+  # de build gratuitos por dia. Pedir E2_HIGHCPU_8 renunciava a esse free tier e
+  # fazia todo build ser cobrado, para acelerar um passo que roda poucas vezes por
+  # mês. A imagem também deixou de instalar o torch com CUDA (~2,5 GB) e a stack
+  # de PDF/dev, então o build encolheu bastante — ver Dockerfile.
   logging: CLOUD_LOGGING_ONLY
 
-timeout: 2400s
+# Folga generosa: os builds levavam 9-18 min em 8 vCPU, e a máquina padrão tem 2 —
+# os trechos limitados por CPU (geração de embeddings, compilação de wheels) ficam
+# proporcionalmente mais lentos. A imagem também encolheu bastante (torch CPU-only,
+# sem stack de dev), o que empurra na direção oposta. 80 min cobrem os dois efeitos
+# com margem; o objetivo do teto é falhar alto num build travado, não apertar o
+# caminho normal.
+timeout: 4800s
 
 images:
   - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${_TAG}"

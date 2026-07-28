@@ -46,6 +46,19 @@ google-cloud-bigquery==3.30.0
 # Superfícies visuais (SSR: landing + portal + docs)
 Jinja2==3.1.6
 
+# Resolução do pip — pinos que existem só para EVITAR BACKTRACKING (não são
+# dependências diretas nossas). `chromadb` pede `build>=1.0.3`; a partir de
+# `build==1.4.0` ele exige `packaging>=24.0`, enquanto `langchain-core` 0.1.x
+# (arrastado por `langchain==0.1.0`) exige `packaging<24.0`. Sem estes pinos o pip
+# desce versão a versão de `build`, **re-resolvendo a árvore inteira a cada
+# tentativa** (~175s por iteração medidos) — isso sozinho respondia por vários
+# minutos de TODO build de imagem. `build==1.3.0` é a versão mais nova que ainda
+# aceita `packaging>=19.1`.
+# Remover quando o ecossistema LangChain for atualizado (ver .github/dependabot.yml,
+# que já ignora langchain-community pelo mesmo motivo).
+build==1.3.0
+packaging==23.2
+
 # Vetores / IA (RAG) — camada aumentada e opcional
 chromadb==1.5.9
 langchain==0.1.0
@@ -54,33 +67,19 @@ sentence-transformers==5.6.0  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_d
 openai==2.45.0
 google-generativeai==0.8.6
 
-# Processamento de dados / extração determinística de PDF
-pandas==2.1.4
+# numpy: dependência de RUNTIME (chromadb/sentence-transformers operam sobre
+# ndarray; `vector_store` chama `.tolist()` nos embeddings). O pino <2 é exigido
+# por langchain 0.1.0 e precisa ficar aqui, explícito, senão o resolvedor do pip
+# sobe para numpy>=2 ao satisfazer o chromadb e quebra o langchain.
 numpy==1.24.3
 requests==2.34.2
-beautifulsoup4==4.15.0
-lxml==6.1.1
-pdfplumber==0.11.10
-PyPDF2==3.0.1
-pypdf==6.14.2
-pikepdf==10.10.0
-
-# Testes + cobertura (gate de CI ≥ 80%)
-pytest==9.1.1
-pytest-cov==7.1.0  # >=5 para API de plugin compatível com pytest 9
-pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: FixtureDef.unittest)
-# httpx é dependência de runtime (login social) — declarado na seção de segurança acima.
-
-# Qualidade de código
-ruff==0.15.21
-black==26.5.1
-mypy==2.3.0
-pre-commit==4.6.0
-
-# Documentação
-mkdocs==1.6.1
-mkdocs-material==9.7.6
 
 # Produção
 gunicorn==26.0.0
 python-dotenv==1.2.2
+
+# ---------------------------------------------------------------------------
+# NÃO adicione aqui ferramentas de teste/lint/docs nem a stack de extração de
+# PDF: nada em `app/` as importa, e tudo neste arquivo é instalado na imagem de
+# produção. Elas vivem em `requirements-dev.txt`. Ver o comentário no Dockerfile.
+# ---------------------------------------------------------------------------

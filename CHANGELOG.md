@@ -10,6 +10,52 @@ versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)
 
 ## [Não lançado]
 
+### Alterado — custo de operação (auditoria de 2026-07-28)
+
+Auditoria do faturamento real (billing export → BigQuery, cruzado com o Cloud
+Monitoring) apontou **~R$450/mês para servir ~100 requisições/dia** — R$0,15 por
+requisição. **72% era uma instância ociosa do Cloud Run** (2 vCPU/4 GiB, CPU p99
+medida em **1%**) mantida ligada 24/7 apenas para esconder um cold start de **70s**.
+Nenhuma mudança no contrato público (Princípio I).
+
+- **Camada de IA carregada sob demanda.** `torch`/`SentenceTransformer` deixaram de
+  ser carregados no lifespan e sobem na primeira busca semântica
+  (`vector_store.get_vector_service`, com lock contra carga concorrente). O boot da
+  aplicação caiu de **~70s para ~1,5s** e o núcleo determinístico deixou de pagar
+  ~1,2 GiB de memória pela IA que talvez nunca use — reforço direto do Princípio VII.
+  O readiness passa a sondar o índice em disco em vez de carregar o modelo,
+  **preservando os valores `available`/`unavailable` do contrato**.
+- **Cloud Run redimensionado** para `--min-instances=0 --cpu=1 --memory=2Gi`
+  (era `1`/`2`/`4Gi`), com `--timeout=300` para acomodar a carga do modelo na
+  primeira busca de um container novo. Contrapartida assumida: a primeira
+  requisição após ociosidade paga alguns segundos de cold start.
+- **Landing com `Cache-Control` público** (`s-maxage=600, stale-while-revalidate=3600`,
+  alinhado ao TTL do cache de transparência). Sem header explícito, o Firebase
+  Hosting marcava a página como `private` e todo acesso atravessava até o Cloud Run;
+  agora a CDN absorve o tráfego e visitantes/crawlers não veem o cold start.
+- **Imagem de produção enxuta**: `torch` instalado do índice CPU-only do PyTorch (a
+  wheel padrão do PyPI embute ~2,5 GB de runtime CUDA inútil sem GPU), ferramentas
+  de teste/lint/docs e a stack de extração de PDF movidas para o novo
+  **`requirements-dev.txt`** (nada em `app/` as importa), e o `chown -R` que
+  duplicava a árvore inteira numa camada extra eliminado via `COPY --chown`.
+- **Política de limpeza no Artifact Registry** (`deploy/artifact-cleanup-policy.json`,
+  reaplicada a cada deploy): a tag da imagem é reusada, então cada deploy órfãnava
+  vários GB sem nada para recolhê-los — o repositório havia chegado a 66,8 GB.
+- **Cloud Build** volta à máquina padrão, elegível aos 120 min/dia gratuitos.
+- **Backtracking do pip eliminado** com os pinos `build==1.3.0` e `packaging==23.2`:
+  `chromadb` pede `build>=1.0.3`, mas `build>=1.4.0` exige `packaging>=24.0`
+  enquanto `langchain-core` 0.1.x exige `packaging<24.0`. Sem os pinos, o pip descia
+  versão a versão de `build` **re-resolvendo a árvore inteira a cada tentativa**
+  (~175s por iteração, medidos) — vários minutos desperdiçados em todo build de
+  imagem. Além do custo, o build passa a ser reprodutível (Princípio IV).
+- **Pool de conexões dimensionado** (`pool_size=2, max_overflow=3`): os defaults do
+  SQLAlchemy permitiam até 60 conexões contra um `db-f1-micro` que sustenta ~25.
+  `pool_pre_ping`/`pool_recycle` passam a importar porque o serviço agora escala a
+  zero e recicla instâncias com frequência.
+- Regressão de custo em `tests/integration/test_lazy_ai_startup.py`: um subprocesso
+  limpo garante que o startup não importa `torch`/`sentence_transformers`/`chromadb`.
+  Sem esse teste a regressão seria silenciosa — nada quebra, só volta a custar caro.
+
 ### Segurança
 
 - **Content-Security-Policy** adicionada a todas as respostas (Princípio V —

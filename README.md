@@ -147,7 +147,7 @@ python -m venv venv
 venv\Scripts\activate           # Windows
 # source venv/bin/activate       # Linux/Mac
 
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt   # dev = testes + lint + extração
 cp .env.example .env             # em produção: SECRET_KEY forte + ALLOWED_HOSTS restrito
 
 alembic upgrade head             # cria o banco da plataforma (contas/keys/uso)
