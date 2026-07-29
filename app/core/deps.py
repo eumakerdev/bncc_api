@@ -72,14 +72,23 @@ def get_bncc_service():
 
 
 async def get_vector_service():
-    from app.main import app
+    """
+    Serviço vetorial, carregado sob demanda (ver `vector_store.get_vector_service`).
 
-    if not hasattr(app.state, "vector_service"):
+    A carga do modelo acontece na primeira chamada — o startup do app não paga
+    por ela. Se a stack de IA estiver ausente/quebrada, o serviço volta com
+    `available=False` (nunca levanta) e vira 503 aqui, mantendo os endpoints
+    determinísticos intactos (Princípio VII).
+    """
+    from app.services.vector_store import get_vector_service as _get
+
+    service = await _get()
+    if not getattr(service, "available", False):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Camada de IA indisponível.",
         )
-    return app.state.vector_service
+    return service
 
 
 # --------------------------------------------------------------------------- #

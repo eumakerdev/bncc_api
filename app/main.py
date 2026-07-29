@@ -54,22 +54,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:  # pragma: no cover - defensivo
         logger.error("Falha ao inicializar o banco da plataforma: %s", e)
 
-    # Camada de IA (opcional; degrada graciosamente — Princípio VII).
-    try:
-        from app.services.vector_store import VectorStoreService
-
-        vector_service = VectorStoreService()
-        await vector_service.initialize()
-        app.state.vector_service = vector_service
-        logger.info("Vector store inicializado.")
-    except Exception as e:
-        logger.warning("Camada de IA indisponível no startup (degrada): %s", e)
+    # Camada de IA: deliberadamente NÃO carregada aqui (Princípio VII + custo).
+    # Carregar torch/SentenceTransformer no startup custava ~70s de cold start e
+    # ~1,2 GiB residentes, obrigando `min-instances=1` no Cloud Run — 72% da fatura
+    # para servir ~100 requisições/dia. O modelo agora sobe na primeira busca
+    # semântica, via `app.services.vector_store.get_vector_service()`. O núcleo
+    # determinístico não paga nada por ela: nem tempo de boot, nem memória.
 
     yield
 
-    if hasattr(app.state, "vector_service"):
+    # `peek_` (e não `get_`) de propósito: se a IA nunca foi usada, não faz
+    # sentido carregá-la só para desligá-la.
+    from app.services.vector_store import peek_vector_service
+
+    vector_service = peek_vector_service()
+    if vector_service is not None:
         try:
-            await app.state.vector_service.cleanup()
+            await vector_service.cleanup()
         except Exception:  # pragma: no cover
             pass
 

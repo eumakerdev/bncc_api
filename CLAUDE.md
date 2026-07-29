@@ -26,6 +26,17 @@ confiança acima de conveniência**.
 - **V. Segurança por padrão**: `SECRET_KEY`/`ALLOWED_HOSTS` **sem defaults inseguros** — app falha rápido em produção; input validado/sanitizado; erros sem stack trace
 - **VII. Determinismo sobre IA**: recursos determinísticos independem do LLM (degradação graciosa); saídas de IA validadas, limitadas em custo, nunca expostas como oficiais
 
+## Custo de operação (auditoria 2026-07-28)
+A camada de IA (`torch`/`SentenceTransformer`) é carregada **sob demanda**, na primeira busca
+semântica (`vector_store.get_vector_service`) — **nunca no startup**. Carregá-la no lifespan custava
+70s de cold start e forçava `min-instances=1` no Cloud Run: 72% de uma fatura de ~R$450/mês para
+servir ~100 req/dia. Hoje o boot é ~1,5s e o serviço escala a zero (~R$95/mês).
+**Não mova essa carga para o startup** — `tests/integration/test_lazy_ai_startup.py` falha se isso
+acontecer, porque a regressão é invisível (nada quebra, só volta a custar caro).
+Corolários: `requirements.txt` é só runtime (dev/PDF em `requirements-dev.txt`), o `Dockerfile`
+instala torch do índice **CPU-only** (a wheel padrão traz ~2,5 GB de CUDA inútil), e a landing manda
+`Cache-Control` público para a CDN do Firebase absorver o tráfego. Ver `deploy/README.md`.
+
 ## Feature ativa
 `001-public-api-platform` — ver `specs/001-public-api-platform/` (spec, plan, research, data-model,
 contracts, quickstart). Estado atual do repo: protótipo com ~11 habilidades de amostra; o v1 substitui
@@ -33,6 +44,9 @@ por extração exaustiva das três etapas (EI/EF/EM) e adiciona P2–P5.
 
 ## Comandos
 ```bash
+pip install -r requirements.txt -r requirements-dev.txt   # runtime + testes/lint/extração de PDF
+                                       # ATENÇÃO: requirements.txt é só runtime (vai para a imagem
+                                       # de produção). Teste/lint/docs/PDF vivem em -dev.
 uvicorn app.main:app --reload          # subir API (landing /, docs /guia + /docs, portal /portal)
 pytest --cov=app --cov-report=term-missing   # testes + cobertura (gate ≥ 80%)
 ruff check app/ scripts/ tests/ && black app/ scripts/ tests/   # lint/format
