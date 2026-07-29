@@ -105,10 +105,28 @@ requisição — mudança de template, rastreada como trabalho futuro.
   headers de segurança valem igualmente lá. O custo é outro: tráfego que escapa do
   cache da CDN é servido (e faturado) pela instância, e o host interno fica descoberto
   para quem o conhece.
-- **Já mitigado:** desde 1.4.0 o app não *entrega* mais esse host — o
-  `CanonicalLocationMiddleware` reescreve a `Location` dos redirects auto-referentes
-  para `SITE_URL`, então um cliente com `follow_redirects` não migra para a origem sem
-  perceber (era o vetor real, achado da auditoria de 2026-07-29).
+- **Já mitigado no que a aplicação controla:** desde 1.4.0 o app não *entrega* mais
+  esse host — o `CanonicalLocationMiddleware` reescreve a `Location` dos redirects
+  auto-referentes para `SITE_URL`, então um cliente com `follow_redirects` não migra
+  para a origem sem perceber (era o vetor real, achado da auditoria de 2026-07-29).
+  Confirmado em produção: `GET https://bncc-api-….run.app/api/v1/habilidades/` →
+  `307 Location: https://bncc.api.br/api/v1/habilidades`.
+- **Resíduo: o próprio Firebase Hosting emite um 302 para o `.run.app`.** Descoberto na
+  revalidação pós-deploy de 2026-07-29. Em caminhos que a borda normaliza — o caso
+  observado é `..%2F..%2F` — o Firebase/Fastly responde **sem encaminhar ao container**:
+
+  ```
+  GET https://bncc.api.br/api/v1/habilidades/..%2F..%2Fetc%2Fpasswd
+  -> 302  Location: https://bncc-api-esjlky3g3a-rj.a.run.app/api/etc/passwd
+  ```
+
+  Que a resposta não vem da aplicação é demonstrável pelos headers: ela chega **sem**
+  `Content-Security-Policy` e **sem** `X-Frame-Options`, que o `SecurityHeadersMiddleware`
+  injeta em *toda* resposta. O mesmo caminho direto na origem devolve `404` **com** os
+  headers presentes. Ou seja, o `CanonicalLocationMiddleware` não tem como interceptá-lo
+  — o request nunca chega ao container. **Não há path traversal**: nenhum arquivo local é
+  alcançado por nenhum dos dois caminhos. O impacto é o mesmo deste item (divulgação do
+  host interno), e o único caminho de correção é o da topologia, descrito abaixo.
 - **Por que não fechar de vez:** restringir o ingress a
   `internal-and-cloud-load-balancing` é incompatível com o modo como o Firebase Hosting
   encaminha para o serviço — é justamente por esse caminho que o container recebe o
