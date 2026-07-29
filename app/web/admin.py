@@ -25,6 +25,7 @@ from __future__ import annotations
 import hmac
 import logging
 import secrets
+from datetime import UTC, datetime
 
 import httpx
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
@@ -393,6 +394,9 @@ async def admin_user_detail(request: Request, account_id: str, days: int = 30):
 # Custos de infraestrutura
 # --------------------------------------------------------------------------- #
 
+# A ingestão roda 1x/dia; 2 dias sem gravar já é anomalia (Princípio VI).
+_COST_STALE_AFTER_DAYS = 2
+
 
 @router.get("/costs")
 async def admin_costs(request: Request):
@@ -409,8 +413,18 @@ async def admin_costs(request: Request):
 
     chart = build_cost_chart(summary.series)
 
+    ingest_age_days: int | None = None
+    if summary.last_ingested_at is not None:
+        delta = datetime.now(UTC) - summary.last_ingested_at
+        ingest_age_days = max(0, delta.days)
+
     return templates.TemplateResponse(
         request,
         "admin/costs.html",
-        {"summary": summary, "chart": chart},
+        {
+            "summary": summary,
+            "chart": chart,
+            "ingest_age_days": ingest_age_days,
+            "ingest_stale": ingest_age_days is None or ingest_age_days > _COST_STALE_AFTER_DAYS,
+        },
     )

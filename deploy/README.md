@@ -175,13 +175,36 @@ Setup:
    faturamento → BigQuery* → escolher/criar um dataset (ex.: `billing_export`). O export leva
    ~24h para começar a popular. A tabela criada tem nome tipo
    `gcp_billing_export_v1_XXXXXX_XXXXXX_XXXXXX`.
-2. **Provisionar Job + agendamento + IAM:** rode `deploy/cloudrun.ps1` passando
+2. **Provisionar Job + agendamento + IAM + alerta:** rode `deploy/cloudrun.ps1` passando
    `-BillingDataset <dataset> -BillingTable <tabela>` (opcional `-CostCron "0 6 * * *"`). O script
    concede à service account do Cloud Run `roles/bigquery.dataViewer` + `roles/bigquery.jobUser`
-   (IAM mínima), cria o Cloud Run Job `bncc-api-cost-ingest`, o dispara uma vez e agenda a execução
-   diária via Cloud Scheduler. Sem esses parâmetros o bloco é ignorado (deploy inalterado).
-3. **Backfill/manual:** `python scripts/ingest_costs.py --since 2026-01` (ou `--dry-run` para só
+   (IAM mínima), cria o Cloud Run Job `bncc-api-cost-ingest`, o dispara uma vez, agenda a execução
+   diária via Cloud Scheduler e provisiona a alert policy de falha
+   (`deploy/monitoring/cost-ingest-failure.json`) notificando `-AlertEmail`. Sem esses parâmetros o
+   bloco é ignorado (deploy inalterado).
+3. **Verificar o e-mail do alerta (manual, uma vez):** o Cloud Monitoring envia um link de
+   confirmação para o endereço de `-AlertEmail`; enquanto não for clicado, o canal existe mas não
+   entrega. O provisionamento fala com a **API REST do Monitoring** (`gcloud auth print-access-token`
+   + `Invoke-RestMethod`) porque `gcloud alpha monitoring` exigiria instalar um componente extra do
+   SDK. Se falhar, o deploy apenas avisa — crie a policy uma vez pelo console
+   (*Monitoring → Alerting → Create policy*) a partir do mesmo JSON.
+4. **Backfill/manual:** `python scripts/ingest_costs.py --since 2026-01` (ou `--dry-run` para só
    inspecionar). Config via `GCP_PROJECT`/`GCP_BILLING_DATASET`/`GCP_BILLING_TABLE`.
+
+### `-CostSince`: backfill pontual, nunca agendamento fixo
+`-CostSince YYYY-MM` fixa o primeiro mês que o job lê. Ele existe para **backfill**; o agendamento
+diário correto roda **sem** `--since` (o padrão de ~13 meses reescreve o mês corrente todo dia).
+Um mês inicial no futuro nunca retorna linhas: o job sai != 0 **todo dia** e a landing congela no
+último valor gravado — foi o que aconteceu de 07 a 29/07/2026 com o job fixado em `--since 2026-08`
+(20 execuções falhas seguidas). Hoje isso é bloqueado nas duas pontas: `cloudrun.ps1` recusa um
+`-CostSince` futuro ou malformado antes de provisionar qualquer coisa, e `ingest_costs.py` sai com
+código 6 apontando a causa em vez do sintoma.
+
+Códigos de saída de `scripts/ingest_costs.py`: `0` ok · `2` config ausente · `3` lib ausente ·
+`4` falha no BigQuery · `5` zero linhas retornadas · `6` `--since` no futuro/malformado.
+
+O frescor da ingestão é visível em **`/admin/costs`** ("Última ingestão: … · há N dias", em
+destaque quando passa de 2 dias).
 
 A conta de faturamento brasileira fatura em **BRL** (usado direto). Se por acaso o export vier em
 outra moeda, defina `USD_BRL_RATE` para converter.

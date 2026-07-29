@@ -13,6 +13,13 @@ Uso:
     python scripts/ingest_costs.py                 # últimos ~13 meses
     python scripts/ingest_costs.py --since 2026-01 # a partir de jan/2026
     python scripts/ingest_costs.py --dry-run       # só agrega e imprime; não grava
+
+``--since`` serve a backfill pontual, NUNCA a um agendamento fixo: um mês inicial
+no futuro nunca tem custo, então o job falharia todo dia (código 6). O agendamento
+diário roda sem ``--since``.
+
+Códigos de saída: 0 ok · 2 config ausente · 3 lib ausente · 4 falha no BigQuery ·
+5 zero linhas retornadas · 6 ``--since`` no futuro.
 """
 
 from __future__ import annotations
@@ -20,6 +27,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import re
 import sys
 from collections.abc import Iterable, Mapping
 from datetime import UTC, date, datetime
@@ -36,6 +44,8 @@ logger = logging.getLogger("ingest_costs")
 from app.db.tables import CostService  # noqa: E402  (após ajuste do sys.path)
 
 _CENTS = Decimal("0.01")
+# Mês inicial normalizado ('YYYY-MM' vira 'YYYYMM' antes da validação).
+_SINCE_RE = re.compile(r"\d{4}(0[1-9]|1[0-2])")
 
 
 # --------------------------------------------------------------------------- #
@@ -230,6 +240,25 @@ def _default_since(months: int) -> str:
     return f"{year:04d}{month + 1:02d}"
 
 
+def check_since(since_ym: str) -> str | None:
+    """Valida o mês inicial; devolve mensagem de erro acionável ou ``None`` se ok.
+
+    Um ``--since`` no futuro não é "export vazio": é configuração errada, e sem esta
+    checagem o job falha em silêncio todo dia (aconteceu de 07 a 29/07/2026, fixado em
+    ``--since 2026-08``). Falhar aqui aponta a causa em vez do sintoma.
+    """
+    if not _SINCE_RE.fullmatch(since_ym):
+        return f"--since inválido ({since_ym}): use o formato YYYY-MM (ex.: 2026-01)."
+    current = _default_since(1)
+    if since_ym > current:
+        return (
+            f"--since {since_ym[:4]}-{since_ym[4:]} é um mês futuro "
+            f"(mês corrente: {current[:4]}-{current[4:]}). Nenhum custo pode existir ainda. "
+            "Remova o --since (o padrão cobre os últimos 13 meses) ou use um mês <= o corrente."
+        )
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Ingesta custos do BigQuery billing export para cost_records."
@@ -242,6 +271,10 @@ def main() -> int:
     args = parser.parse_args()
 
     since_ym = args.since.replace("-", "") if args.since else _default_since(args.months)
+    problem = check_since(since_ym)
+    if problem:
+        logger.error("%s", problem)
+        return 6
     return asyncio.run(_run(since_ym, args.dry_run))
 
 

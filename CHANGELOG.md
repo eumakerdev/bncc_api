@@ -10,6 +10,31 @@ versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)
 
 ## [Não lançado]
 
+### Corrigido — a transparência de custos voltou a se atualizar sozinha
+
+A seção pública publicava **R$ 103,78** desde 12/07 — um valor semeado à mão, enquanto o
+custo real de julho já era **R$ 285,36**. A automação existia e rodava todo dia, mas o
+Cloud Run Job `bncc-api-cost-ingest` estava fixado em `--since 2026-08` (um mês futuro):
+zero linhas → `exit(5)` → **20 execuções falhas consecutivas** (07 a 29/07), sem nenhum
+alerta. O número público envelheceu em silêncio; nada "quebrou".
+
+- **Pin removido em produção.** O job roda sem `--since` (padrão de ~13 meses reescreve o
+  mês corrente todo dia). Julho passou a R$ 285,36, conferido contra o billing export.
+- **A causa não pode se repetir em silêncio.** `scripts/ingest_costs.py` valida o mês
+  inicial e sai com o novo **código 6** ("mês futuro/malformado") sem tocar o BigQuery —
+  a mensagem aponta a configuração errada em vez do sintoma ("export não populado").
+  `deploy/cloudrun.ps1` recusa um `-CostSince` futuro antes de provisionar qualquer coisa.
+- **Alerta de falha.** Alert policy versionada em
+  `deploy/monitoring/cost-ingest-failure.json` (métrica de execução falha do Cloud Run
+  Job, runbook embutido), provisionada pelo deploy via API REST do Monitoring e
+  notificando `-AlertEmail`.
+- **Selo de frescor.** `/admin/costs` mostra "Última ingestão: … · há N dias", em
+  destaque a partir de 2 dias. `CostSummary` ganhou `last_ingested_at` (campo opcional;
+  `/api/v1` intacto — Princípio I).
+- **Ressalva na landing.** A legenda registra que a série começa em 09/07/2026, quando o
+  billing export foi ligado: os primeiros 8 dias de julho não existem no BigQuery e nunca
+  existirão (Princípio IV — não apresentar recorte parcial como total).
+
 ## [1.4.0] - 2026-07-29
 
 ### Corrigido — contrato de erro alinhado ao comportamento (auditoria de produção)

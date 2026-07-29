@@ -6,6 +6,17 @@
 <div class="admin-head">
   <h1>Custos de Infraestrutura</h1>
   <p>Faturamento real do Google Cloud (BigQuery billing export), líquido de créditos.</p>
+  {# Frescor: o job roda 1x/dia. Sem este selo, uma ingestão parada só aparece como
+     um número público congelado — foi assim por 20 dias em jul/2026. #}
+  <p style="font-size:0.85rem;margin-top:0.35rem;{% if ingest_stale %}color:#b45309;font-weight:600{% else %}color:var(--text-muted,#64748b){% endif %}">
+    {%- if summary.last_ingested_at %}
+      Última ingestão: {{ summary.last_ingested_at.strftime('%d/%m/%Y %H:%M') }} UTC ·
+      {% if ingest_age_days == 0 %}hoje{% elif ingest_age_days == 1 %}há 1 dia{% else %}há {{ ingest_age_days }} dias{% endif %}
+      {%- if ingest_stale %} — ingestão atrasada, veja os logs do job <code>bncc-api-cost-ingest</code>{% endif %}
+    {%- else %}
+      Nenhuma ingestão registrada ainda.
+    {%- endif %}
+  </p>
 </div>
 
 {% if summary.has_data %}

@@ -66,3 +66,29 @@ def test_run_returns_error_when_bigquery_empty(monkeypatch):
     monkeypatch.setattr(ingest_costs, "_fetch_rows", lambda since: [])
     code = asyncio.run(ingest_costs._run("202601", dry_run=False))
     assert code == 5
+
+
+def test_check_since_accepts_current_and_past_months():
+    current = ingest_costs._default_since(1)
+    assert ingest_costs.check_since(current) is None
+    assert ingest_costs.check_since(ingest_costs._default_since(13)) is None
+
+
+def test_check_since_rejects_future_and_malformed():
+    # Regressão do incidente de jul/2026: o job ficou fixado em --since 2026-08 (mês
+    # futuro) e falhou 20 dias seguidos com a mensagem errada ("export não populado").
+    future = f"{int(ingest_costs._default_since(1)[:4]) + 1}01"
+    problem = ingest_costs.check_since(future)
+    assert problem is not None and "futuro" in problem
+    assert ingest_costs.check_since("2026-01") is not None  # não normalizado
+    assert ingest_costs.check_since("202613") is not None  # mês inexistente
+
+
+def test_main_rejects_future_since_without_touching_bigquery(monkeypatch):
+    calls: list[str] = []
+    monkeypatch.setattr(ingest_costs, "_config_ok", lambda: calls.append("config") or True)
+    monkeypatch.setattr(ingest_costs, "_fetch_rows", lambda since: calls.append("bq") or [])
+    year = int(ingest_costs._default_since(1)[:4]) + 1
+    monkeypatch.setattr("sys.argv", ["ingest_costs.py", "--since", f"{year}-01"])
+    assert ingest_costs.main() == 6
+    assert calls == []

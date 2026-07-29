@@ -54,7 +54,8 @@ param(
   [string]$BillingDataset = "",  # dataset do BigQuery billing export (habilita "Transparencia de custos")
   [string]$BillingTable   = "",  # tabela do export (ex.: gcp_billing_export_v1_XXXXXX_XXXXXX_XXXXXX)
   [string]$CostCron       = "0 6 * * *",  # agendamento do ingestor de custos (cron, UTC)
-  [string]$CostSince      = "",  # fixa o 1o mes que o ingestor le do BigQuery (YYYY-MM); vazio = padrao de ~13 meses. Use quando meses anteriores foram semeados a mao (scripts/seed_cost_history.py) para o job nao sobrescreve-los.
+  [string]$CostSince      = "",  # BACKFILL PONTUAL (YYYY-MM). Vazio = padrao de ~13 meses, que e o modo correto do agendamento diario. Um mes futuro faz o job falhar todo dia (ver validacao abaixo).
+  [string]$AlertEmail     = "fabio@expertia.dev.br",  # destino do alerta de falha da ingestao de custos
   [switch]$SkipBuild             # reaproveita a imagem ja publicada (nao rebuilda)
 )
 
@@ -70,6 +71,19 @@ function Exists([scriptblock]$Cmd) {
 function Exec([scriptblock]$Cmd) {
   & $Cmd
   if ($LASTEXITCODE -ne 0) { throw "Comando gcloud falhou (exit $LASTEXITCODE): $Cmd" }
+}
+
+# Validacao de -CostSince ANTES de provisionar qualquer coisa. Um mes futuro nunca tem
+# custo: o job sai != 0 todos os dias e a landing congela no ultimo valor gravado. Foi
+# exatamente o que aconteceu de 07 a 29/07/2026 com o job fixado em --since 2026-08 -
+# 20 execucoes falhas seguidas, sem ninguem perceber.
+if ($CostSince) {
+  if ($CostSince -notmatch '^\d{4}-(0[1-9]|1[0-2])$') {
+    throw "-CostSince invalido ('$CostSince'): use YYYY-MM (ex.: 2026-01)."
+  }
+  if ($CostSince -gt (Get-Date).ToUniversalTime().ToString("yyyy-MM")) {
+    throw "-CostSince '$CostSince' e um mes futuro: o ingestor falharia todo dia. Omita o parametro (o padrao cobre ~13 meses) ou use um mes <= o corrente."
+  }
 }
 
 $ImageUri = "$Region-docker.pkg.dev/$Project/$Repo/${Image}:$Tag"
@@ -300,7 +314,8 @@ Remove-Item $envFileJob -Force
 # no console (Billing > Billing export). O app web NUNCA le o BigQuery (Principio VII).
 if ($BillingDataset -and $BillingTable) {
   Info "Transparencia de custos: Job de ingestao + agendamento diario"
-  Exec { gcloud services enable bigquery.googleapis.com cloudscheduler.googleapis.com }
+  Exec { gcloud services enable bigquery.googleapis.com cloudscheduler.googleapis.com `
+    monitoring.googleapis.com }
 
   # IAM minima e escopada: ler o dataset de export e rodar queries (Principio V).
   Exec { gcloud projects add-iam-policy-binding $Project `
@@ -317,8 +332,9 @@ if ($BillingDataset -and $BillingTable) {
   $costEnv["GCP_BILLING_TABLE"]   = $BillingTable
   $costVerb = if (Exists { gcloud run jobs describe $costJob --region=$Region }) { "update" } else { "create" }
   $envFileCost = Write-EnvFile $costEnv
-  # Args do ingestor: fixa --since quando $CostSince e informado (nao sobrescreve
-  # meses historicos semeados a mao; ver scripts/seed_cost_history.py).
+  # Args do ingestor. O modo normal e SEM --since: o padrao de ~13 meses reescreve o
+  # mes corrente todo dia e mantem a landing viva sozinha. -CostSince existe so para
+  # backfill pontual (ja validado la em cima como <= mes corrente).
   $costArgs = if ($CostSince) { "scripts/ingest_costs.py,--since,$CostSince" } else { "scripts/ingest_costs.py" }
   Exec { gcloud run jobs $costVerb $costJob `
     --image=$ImageUri --region=$Region `
@@ -338,6 +354,49 @@ if ($BillingDataset -and $BillingTable) {
     --location=$Region --schedule="$CostCron" --time-zone="Etc/UTC" `
     --uri="$runUri" --http-method=POST `
     --oauth-service-account-email="$sa" }
+
+  # Alerta de falha: sem isso, o job pode falhar por semanas e o unico sintoma e um
+  # numero publico congelado (aconteceu por 20 dias em jul/2026). Falamos com a API
+  # REST do Monitoring em vez de `gcloud alpha monitoring` porque a superficie alpha
+  # exige instalar um componente extra do SDK - o deploy nao pode depender disso.
+  # NAO aborta o deploy em caso de erro: o alerta e rede de seguranca, nao pre-requisito.
+  $policyFile = Join-Path $PSScriptRoot "monitoring\cost-ingest-failure.json"
+  if ($AlertEmail -and (Test-Path $policyFile)) {
+    Info "Alerta de falha da ingestao de custos ($AlertEmail)"
+    try {
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+      $hdr  = @{ Authorization = "Bearer $((gcloud auth print-access-token).Trim())" }
+      $base = "https://monitoring.googleapis.com/v3/projects/$Project"
+
+      # Canal de e-mail (idempotente pelo endereco).
+      $chan = (Invoke-RestMethod -Method Get -Uri "$base/notificationChannels" -Headers $hdr).notificationChannels |
+        Where-Object { $_.labels.email_address -eq $AlertEmail } | Select-Object -First 1
+      if (-not $chan) {
+        $chanBody = @{ type = "email"; displayName = "BNCC API alertas"; enabled = $true
+                       labels = @{ email_address = $AlertEmail } } | ConvertTo-Json -Depth 5
+        $chan = Invoke-RestMethod -Method Post -Uri "$base/notificationChannels" -Headers $hdr `
+          -ContentType "application/json" -Body $chanBody
+        Info "Canal criado: confirme o e-mail de verificacao enviado para $AlertEmail"
+      }
+
+      # Policy (idempotente pelo displayName do arquivo versionado).
+      $policy = Get-Content $policyFile -Raw -Encoding UTF8 | ConvertFrom-Json
+      $policy | Add-Member -NotePropertyName notificationChannels -NotePropertyValue @($chan.name) -Force
+      $policyBody = $policy | ConvertTo-Json -Depth 20
+      $existing = (Invoke-RestMethod -Method Get -Uri "$base/alertPolicies" -Headers $hdr).alertPolicies |
+        Where-Object { $_.displayName -eq $policy.displayName } | Select-Object -First 1
+      if ($existing) {
+        $mask = "displayName,documentation,conditions,combiner,enabled,alertStrategy,notificationChannels"
+        Invoke-RestMethod -Method Patch -Uri "https://monitoring.googleapis.com/v3/$($existing.name)?updateMask=$mask" `
+          -Headers $hdr -ContentType "application/json" -Body $policyBody | Out-Null
+      } else {
+        Invoke-RestMethod -Method Post -Uri "$base/alertPolicies" -Headers $hdr `
+          -ContentType "application/json" -Body $policyBody | Out-Null
+      }
+    } catch {
+      Write-Host "AVISO: nao foi possivel provisionar o alerta ($_). Crie a policy uma vez pelo console (Monitoring > Alerting > Create policy) usando deploy/monitoring/cost-ingest-failure.json." -ForegroundColor Yellow
+    }
+  }
 }
 
 # 7) Deploy do servico ----------------------------------------------------------

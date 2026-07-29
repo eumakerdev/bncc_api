@@ -66,3 +66,22 @@ async def test_current_month_total_and_last_point(db_session):
     # O último ponto da série é sempre o mês corrente.
     assert summary.series[-1].month == current
     assert summary.series[-1].total == pytest.approx(33.0)
+
+
+async def test_last_ingested_at_is_none_without_records(db_session):
+    summary = await cost_service.public_cost_summary(db_session)
+    assert summary.last_ingested_at is None
+
+
+async def test_last_ingested_at_is_most_recent_update(db_session):
+    # Sinal de frescor: uma ingestão parada precisa ser visível no /admin/costs, em vez
+    # de se manifestar só como um número público congelado.
+    await _seed(db_session, 2026, 1, CostService.banco, 50)
+    await _seed(db_session, 2026, 2, CostService.servidor, 90)
+    await db_session.commit()
+
+    summary = await cost_service.public_cost_summary(db_session)
+    assert summary.last_ingested_at is not None
+    assert summary.last_ingested_at.tzinfo is not None
+    # Gravado agora: a diferença para o relógio é de segundos, não de dias.
+    assert abs((_now() - summary.last_ingested_at).total_seconds()) < 300

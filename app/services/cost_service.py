@@ -49,6 +49,13 @@ def _as_date(value: datetime | date) -> date:
     return value.date() if isinstance(value, datetime) else value
 
 
+def _as_utc(value: datetime | None) -> datetime | None:
+    """Normaliza ``updated_at`` (naive no SQLite, aware no Postgres) para UTC aware."""
+    if value is None:
+        return None
+    return value if value.tzinfo else value.replace(tzinfo=UTC)
+
+
 def _breakdown(amounts: dict[CostService, float]) -> list[CostServiceAmount]:
     """Breakdown por serviço na ordem canônica (zeros preenchidos)."""
     return [
@@ -66,6 +73,10 @@ async def public_cost_summary(
     total até aqui". ``period_start`` é o mês mais antigo registrado, para rotular
     honestamente "desde <mês>". Sem registros, ``has_data`` é ``False`` e a seção
     não é exibida.
+
+    ``last_ingested_at`` é o ``updated_at`` mais recente da tabela — o sinal de frescor
+    exibido no ``/admin/costs``. Sem ele, uma ingestão parada só se manifesta como um
+    número público congelado (o job diário já falhou 20 dias seguidos em jul/2026).
     """
     months = max(1, months)
     current_month = _month_start(_now().date())
@@ -77,6 +88,7 @@ async def public_cost_summary(
                 CostRecord.period_month,
                 CostRecord.service,
                 func.sum(CostRecord.amount),
+                func.max(CostRecord.updated_at),
             ).group_by(CostRecord.period_month, CostRecord.service)
         )
     ).all()
@@ -84,7 +96,8 @@ async def public_cost_summary(
     per_month: dict[date, dict[CostService, float]] = {}
     to_date: dict[CostService, float] = dict.fromkeys(SERVICE_ORDER, 0.0)
     earliest: date | None = None
-    for period_month, service, amount in rows:
+    last_ingested_at: datetime | None = None
+    for period_month, service, amount, updated_at in rows:
         month = _month_start(_as_date(period_month))
         amt = float(amount or 0)
         bucket = per_month.setdefault(month, {})
@@ -92,6 +105,9 @@ async def public_cost_summary(
         to_date[service] = to_date.get(service, 0.0) + amt
         if earliest is None or month < earliest:
             earliest = month
+        touched = _as_utc(updated_at)
+        if touched is not None and (last_ingested_at is None or touched > last_ingested_at):
+            last_ingested_at = touched
 
     series: list[CostMonthPoint] = []
     for i in range(months):
@@ -112,4 +128,5 @@ async def public_cost_summary(
         total_month=total_month,
         total_to_date=total_to_date,
         by_service_to_date=_breakdown(to_date),
+        last_ingested_at=last_ingested_at,
     )

@@ -10,7 +10,7 @@ infraestrutura — nunca confundida com o conteúdo oficial.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -66,4 +66,7 @@ class CostSummary(BaseModel):
     )
     by_service_to_date: list[CostServiceAmount] = Field(
         default_factory=list, description="Custo acumulado por serviço (todos os meses)"
+    )
+    last_ingested_at: datetime | None = Field(
+        None, description="Instante (UTC) da ingestão mais recente — sinal de frescor dos dados"
     )

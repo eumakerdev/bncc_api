@@ -350,6 +350,16 @@ async def test_admin_costs_returns_200(async_client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_admin_costs_shows_ingestion_freshness(async_client, monkeypatch):
+    # Sem o selo de frescor, uma ingestão parada é invisível no painel (foi assim por
+    # 20 dias em jul/2026). Sem registros, o selo diz explicitamente que não houve.
+    cookies = await _login(async_client, monkeypatch)
+    r = await async_client.get("/admin/costs", cookies=cookies)
+    assert r.status_code == 200
+    assert "Nenhuma ingestão registrada ainda." in r.text
+
+
+@pytest.mark.asyncio
 async def test_admin_costs_without_session_redirects(async_client, monkeypatch):
     _set_admin_env(monkeypatch)
     r = await async_client.get("/admin/costs", follow_redirects=False)
