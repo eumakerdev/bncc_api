@@ -16,6 +16,9 @@ em favor de schemas Pydantic tipados — o código é a fonte, estes docs são a
 - **Erros** (FR-024): corpo `ErrorResponse { detail, error_code?, timestamp? }`; nunca stack trace,
   paths internos ou detalhes de infra. Status usados: `400` (validação), `401` (auth), `404` (não
   encontrado), `429` (limite), `503` (dependência indisponível — ex.: IA/health).
+- **Erros de validação**: corpo `ValidationErrorResponse` — o `ErrorResponse` acrescido de
+  `errors: [{ campo, msg }]`. O status é sempre `400`, **nunca `422`**: o handler global normaliza
+  toda `RequestValidationError`, e o OpenAPI declara exatamente isso (`app/api/openapi.py`).
 - **Paginação**: `PaginatedResponse { items, total, page, size, pages }`.
 - **Idioma**: conteúdo em pt-BR (coerente com a BNCC).
 

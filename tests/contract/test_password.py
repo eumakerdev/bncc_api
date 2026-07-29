@@ -59,7 +59,7 @@ async def test_change_password_wrong_current_400(async_client, verified_account)
 
 
 @pytest.mark.asyncio
-async def test_change_password_weak_new_422(async_client, verified_account):
+async def test_change_password_weak_new_400(async_client, verified_account):
     r = await async_client.post(
         "/api/v1/auth/change-password",
         headers=_session(verified_account.id),

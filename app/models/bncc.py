@@ -391,7 +391,39 @@ class ErrorResponse(BaseModel):
 
     detail: str = Field(..., description="Descrição do erro")
     error_code: str | None = Field(None, description="Código interno do erro")
-    timestamp: str | None = Field(None, description="Timestamp do erro")
+    timestamp: str | None = Field(None, description="Timestamp do erro (ISO-8601, UTC)")
+
+
+class ValidationErrorItem(BaseModel):
+    """Um campo rejeitado na validação da requisição."""
+
+    campo: str = Field(
+        ...,
+        description="Caminho do campo inválido, na origem em que foi lido (ex.: `query.page`)",
+        examples=["query.page"],
+    )
+    msg: str | None = Field(
+        None,
+        description="Motivo da rejeição",
+        examples=["Input should be greater than or equal to 1"],
+    )
+
+
+class ValidationErrorResponse(ErrorResponse):
+    """Resposta de erro `400` — inclui o detalhamento por campo quando houver.
+
+    Estende :class:`ErrorResponse` de forma aditiva: descreve tanto o corpo do
+    handler global de validação (com ``errors``) quanto os ``400`` levantados
+    diretamente por um endpoint (sem ``errors``).
+    """
+
+    errors: list[ValidationErrorItem] | None = Field(
+        None,
+        description=(
+            "Campos rejeitados na validação. Ausente em erros `400` que não têm "
+            "detalhamento por campo (ex.: código de habilidade malformado)."
+        ),
+    )
 
 
 class PaginatedResponse(BaseModel):

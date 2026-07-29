@@ -732,7 +732,7 @@
                 "type": "null"
               }
             ],
-            "description": "Timestamp do erro",
+            "description": "Timestamp do erro (ISO-8601, UTC)",
             "title": "Timestamp"
           }
         },
@@ -1221,6 +1221,93 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "ValidationErrorItem": {
+        "description": "Um campo rejeitado na validação da requisição.",
+        "properties": {
+          "campo": {
+            "description": "Caminho do campo inválido, na origem em que foi lido (ex.: `query.page`)",
+            "examples": [
+              "query.page"
+            ],
+            "title": "Campo",
+            "type": "string"
+          },
+          "msg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Motivo da rejeição",
+            "examples": [
+              "Input should be greater than or equal to 1"
+            ],
+            "title": "Msg"
+          }
+        },
+        "required": [
+          "campo"
+        ],
+        "title": "ValidationErrorItem",
+        "type": "object"
+      },
+      "ValidationErrorResponse": {
+        "description": "Resposta de erro `400` — inclui o detalhamento por campo quando houver.\n\nEstende :class:`ErrorResponse` de forma aditiva: descreve tanto o corpo do\nhandler global de validação (com ``errors``) quanto os ``400`` levantados\ndiretamente por um endpoint (sem ``errors``).",
+        "properties": {
+          "detail": {
+            "description": "Descrição do erro",
+            "title": "Detail",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Código interno do erro",
+            "title": "Error Code"
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationErrorItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Campos rejeitados na validação. Ausente em erros `400` que não têm detalhamento por campo (ex.: código de habilidade malformado).",
+            "title": "Errors"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Timestamp do erro (ISO-8601, UTC)",
+            "title": "Timestamp"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ValidationErrorResponse",
+        "type": "object"
+      },
       "VerifyEmailRequest": {
         "properties": {
           "token": {
@@ -1271,7 +1358,7 @@
       "url": "https://github.com/eumakerdev/bncc_api/blob/main/LICENSE"
     },
     "title": "BNCC API",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "x-logo": {
       "altText": "BNCC API",
       "url": "/static/logo.svg"
@@ -1317,7 +1404,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             },
@@ -1332,16 +1419,6 @@
               }
             },
             "description": "Sessão ausente, inválida ou expirada."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "security": [
@@ -1388,15 +1465,15 @@
             },
             "description": "Resposta neutra: sempre a mesma, exista ou não a conta."
           },
-          "422": {
+          "400": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
           },
           "429": {
             "content": {
@@ -1449,6 +1526,16 @@
             },
             "description": "Token de sessão (JWT); também é definido como cookie httponly."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+          },
           "401": {
             "content": {
               "application/json": {
@@ -1458,16 +1545,6 @@
               }
             },
             "description": "Credenciais inválidas ou e-mail não verificado."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -1561,7 +1638,7 @@
                   "summary": "Redefinição",
                   "value": {
                     "new_password": "NovaSenha456",
-                    "token": "a1b2c3d4e5f6"
+                    "token": "token-recebido-por-email"
                   }
                 }
               },
@@ -1587,7 +1664,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             },
@@ -1602,16 +1679,6 @@
               }
             },
             "description": "Token expirado ou já utilizado."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "summary": "Redefinir a senha com o token do e-mail",
@@ -1658,7 +1725,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             },
@@ -1673,16 +1740,6 @@
               }
             },
             "description": "Não foi possível concluir o cadastro (e-mail já em uso)."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -1738,7 +1795,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             },
@@ -1753,16 +1810,6 @@
               }
             },
             "description": "Token de verificação expirado ou já utilizado."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -1807,20 +1854,17 @@
             "description": "Resposta gerada por IA (nao-oficial) com fontes oficiais rastreaveis, ou aviso de ausencia de correspondencia confiavel."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
             "description": "Query invalida (vazia/curta/longa) ou payload invalido."
           },
           "401": {
             "description": "API key ausente, invalida ou revogada."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "description": "Cota de IA excedida (bucket ai: 20/min ou 500/dia)."
@@ -1915,6 +1959,16 @@
             },
             "description": "Competências específicas que casam com os filtros informados."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+          },
           "401": {
             "content": {
               "application/json": {
@@ -1924,16 +1978,6 @@
               }
             },
             "description": "API key ausente, inválida ou revogada."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -2042,6 +2086,16 @@
             },
             "description": "Dados completos da competência geral."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+          },
           "401": {
             "content": {
               "application/json": {
@@ -2061,16 +2115,6 @@
               }
             },
             "description": "Número fora de 1-10 ou competência inexistente."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -2248,6 +2292,16 @@
             },
             "description": "Página de habilidades que casam com os filtros informados."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+          },
           "401": {
             "content": {
               "application/json": {
@@ -2257,16 +2311,6 @@
               }
             },
             "description": "API key ausente, inválida ou revogada."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -2328,7 +2372,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             },
@@ -2353,16 +2397,6 @@
               }
             },
             "description": "Habilidade inexistente no snapshot."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -2426,7 +2460,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
                 }
               }
             },
@@ -2451,16 +2485,6 @@
               }
             },
             "description": "Habilidade inexistente no snapshot."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           },
           "429": {
             "content": {
@@ -2556,6 +2580,16 @@
             },
             "description": "Key criada; o segredo completo (`key`) só aparece nesta resposta."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+          },
           "401": {
             "content": {
               "application/json": {
@@ -2575,16 +2609,6 @@
               }
             },
             "description": "E-mail não verificado — verifique o e-mail antes de criar keys."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "security": [
@@ -2619,6 +2643,16 @@
           "204": {
             "description": "Key revogada com sucesso (sem corpo)."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+          },
           "401": {
             "content": {
               "application/json": {
@@ -2638,16 +2672,6 @@
               }
             },
             "description": "API key inexistente ou pertencente a outra conta."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "security": [
@@ -2689,6 +2713,16 @@
             },
             "description": "Contadores de uso e limites por bucket (determinístico e IA) da key."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            },
+            "description": "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+          },
           "401": {
             "content": {
               "application/json": {
@@ -2708,16 +2742,6 @@
               }
             },
             "description": "API key inexistente ou pertencente a outra conta."
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
         "security": [

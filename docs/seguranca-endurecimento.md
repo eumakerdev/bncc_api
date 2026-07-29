@@ -13,7 +13,8 @@ caminho seguro de resolução.
 | Fail-fast de config insegura em produção (`SECRET_KEY`, `ALLOWED_HOSTS=*`, OAuth pela metade) | `app/core/config.py::_enforce_production_security` |
 | Senhas com Argon2; API keys hasheadas (SHA-256 sobre 256 bits); tokens de e-mail/reset hasheados | `app/core/security.py` |
 | JWT com algoritmo fixo (`HS256`) — sem alg-confusion | `app/core/security.py::decode_access_token` |
-| Headers de segurança: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, HSTS (prod), **CSP (Report-Only por padrão)** | `app/main.py::SecurityHeadersMiddleware` |
+| Headers de segurança: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, HSTS (prod), **CSP bloqueante por padrão** | `app/main.py::SecurityHeadersMiddleware` |
+| `Location` de redirect canonicalizada para `SITE_URL` (não vaza o host interno do Cloud Run) | `app/main.py::CanonicalLocationMiddleware` |
 | `TrustedHostMiddleware` + CORS restrito por config (não pode ser `*` em prod) | `app/main.py`, `app/core/config.py` |
 | Erros sem stack trace / paths internos ao cliente | `app/core/errors.py` |
 | Rate limiting por API key (determinístico + IA) e por IP (login/signup/verify/forgot/oauth/admin) | `app/core/deps.py` |
@@ -22,21 +23,44 @@ caminho seguro de resolução.
 | Scan de segredos no gate local de pre-commit (`detect-secrets` v1.5.0 + baseline) | `.pre-commit-config.yaml`, `.secrets.baseline` |
 | Dependências pinadas com CVEs anotadas; Dependabot ativo | `requirements.txt`, `.github/dependabot.yml` |
 
-### Content-Security-Policy — rollout seguro
+### Content-Security-Policy — bloqueante desde 1.4.0
 
-A CSP é emitida em modo **`Content-Security-Policy-Report-Only`** por padrão: ela
-**não bloqueia nada**, apenas reporta violações ao console do navegador. Isso evita
-qualquer risco de quebrar a referência interativa Scalar (`/docs`, bundle de
-terceiros com scripts inline e `eval`) e as páginas SSR (landing/portal).
+A CSP é emitida em **`Content-Security-Policy`** (bloqueante) por padrão. Até 1.3.0 ela
+saía em `Report-Only`: sem `report-uri` configurado, as violações eram apenas escritas
+no console do navegador do visitante e não chegavam a ninguém — na prática a política
+não oferecia proteção alguma (achado da auditoria de produção de 2026-07-29).
 
-**Para ativar o modo bloqueante** (`CSP_ENFORCE=true`):
+O enforcing é seguro porque **todo asset das superfícies visuais é same-origin** — o
+bundle da referência Scalar é auto-hospedado em `/static/vendor/scalar.standalone.js`
+(sem CDN), e os `https://` nos templates são apenas navegação (`<a href>`), nunca `src`.
+Validado em navegador sob enforcing: `/`, `/guia`, `/docs` (incluindo o fetch do
+`openapi.json` sob `connect-src 'self'`), `/portal/login` e `/portal/signup`, sem
+violações no console.
 
-1. Suba a app com `CSP_ENFORCE=true` num ambiente de staging.
-2. Abra num navegador real e exercite: `/`, `/guia`, `/docs` (expanda endpoints e
-   use o "Test Request" do Scalar), `/portal` (login, signup, dashboard) e `/admin`.
-3. Confirme que o console **não** acusa violação de CSP. Se acusar, ajuste
-   `_CSP_POLICY` em `app/main.py` para a diretiva faltante e repita.
-4. Só então defina `CSP_ENFORCE=true` em produção.
+**Ao mexer em `_CSP_POLICY`** (`app/main.py`), repita o rollout:
+
+1. Suba a app com `CSP_ENFORCE=false` (Report-Only) e exercite num navegador real:
+   `/`, `/guia`, `/docs` (expanda endpoints e use o "Test Request" do Scalar),
+   `/portal` (login, signup, dashboard) e `/admin`.
+2. Confirme que o console **não** acusa violação. Se acusar, ajuste a diretiva faltante
+   e repita.
+3. Só então volte a `CSP_ENFORCE=true`.
+
+> **Nota sobre o "Test Request" do Scalar.** Ele faz `fetch` para o *server* selecionado,
+> sujeito a `connect-src 'self'`. Em produção o primeiro `server` do OpenAPI é
+> `https://bncc.api.br` (derivado de `EMAIL_VERIFICATION_BASE_URL`), a mesma origem que
+> serve `/docs` — funciona. Selecionar o server "Desenvolvimento local" a partir de
+> produção é bloqueado pela política, o que é o comportamento desejado.
+
+### Ganho residual e limite conhecido
+
+`script-src` carrega `'unsafe-inline'`/`'unsafe-eval'` (exigidos pelo Scalar e pelos
+scripts inline das páginas SSR), então o enforcing **não** fecha a porta de XSS inline.
+O que ele passa a bloquear de fato: `<script src=host-externo>`, `<object>`/`<embed>`,
+sequestro de `<base>`, exfiltração via `connect-src` para terceiros e enquadramento em
+iframe (este último já coberto por `X-Frame-Options: DENY`). Endurecer além disso exige
+substituir os inline handlers por handlers registrados em JS e adotar nonce por
+requisição — mudança de template, rastreada como trabalho futuro.
 
 ## Dívida rastreada (resolução requer coordenação — não mexer às cegas)
 
@@ -73,6 +97,26 @@ terceiros com scripts inline e `eval`) e as páginas SSR (landing/portal).
 - **Caminho seguro:** manter essa suposição de topologia documentada em
   `app/core/deps.py::_client_ip`; se um dia houver exposição direta, validar o número
   de proxies confiáveis em vez de confiar cegamente no primeiro item.
+
+### 3a. A origem `*.run.app` responde diretamente (fora da CDN)
+
+- **Risco:** o URL interno do Cloud Run atende requisições sem passar pelo Firebase/
+  Fastly. **Não há bypass de controle de acesso** — autenticação, rate limiting e
+  headers de segurança valem igualmente lá. O custo é outro: tráfego que escapa do
+  cache da CDN é servido (e faturado) pela instância, e o host interno fica descoberto
+  para quem o conhece.
+- **Já mitigado:** desde 1.4.0 o app não *entrega* mais esse host — o
+  `CanonicalLocationMiddleware` reescreve a `Location` dos redirects auto-referentes
+  para `SITE_URL`, então um cliente com `follow_redirects` não migra para a origem sem
+  perceber (era o vetor real, achado da auditoria de 2026-07-29).
+- **Por que não fechar de vez:** restringir o ingress a
+  `internal-and-cloud-load-balancing` é incompatível com o modo como o Firebase Hosting
+  encaminha para o serviço — é justamente por esse caminho que o container recebe o
+  `Host` `.run.app`. Fechar exigiria trocar o Firebase Hosting por um LB HTTPS externo
+  com Cloud CDN, mudança de topologia com impacto em custo e em DNS.
+- **Caminho seguro:** se a exposição direta virar problema mensurável, migrar para
+  LB + Cloud CDN e só então restringir o ingress — revalidando o §V do modelo de custo
+  (`CLAUDE.md`, "Custo de operação") antes e depois.
 
 ### 4. Scan de segredos no CI (baseline não-portável)
 

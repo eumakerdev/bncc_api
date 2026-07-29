@@ -74,7 +74,8 @@ if (-not $SkipService) {
     "DATABASE_URL=$dbUrl",
     "OAUTH_REDIRECT_BASE_URL=$AdminBase",
     "SITE_URL=$AdminBase",
-    "ALLOWED_HOSTS=$AdminDomain"
+    "ALLOWED_HOSTS=$AdminDomain",
+    "CSP_ENFORCE=true"
   ) -join ","
   $adminSecrets = "SECRET_KEY=SECRET_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest," +
     "GOOGLE_OAUTH_CLIENT_ID=GOOGLE_OAUTH_CLIENT_ID:latest," +

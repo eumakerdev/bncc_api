@@ -19,6 +19,7 @@ from app.models.bncc import (
     Habilidade,
     HabilidadeFiltros,
     PaginatedResponse,
+    ValidationErrorResponse,
     is_valid_codigo,
 )
 from app.services.bncc_service import BNCCDataService
@@ -93,7 +94,7 @@ async def list_habilidades(
     ),
     responses={
         400: {
-            "model": ErrorResponse,
+            "model": ValidationErrorResponse,
             "description": "Código malformado (não casa com nenhum formato oficial EI/EF/EM).",
         },
         404: {"model": ErrorResponse, "description": "Habilidade inexistente no snapshot."},
@@ -144,7 +145,7 @@ async def get_habilidade(
         "curriculares (FR-005). Requer API key e consome a cota determinística."
     ),
     responses={
-        400: {"model": ErrorResponse, "description": "Código malformado."},
+        400: {"model": ValidationErrorResponse, "description": "Código malformado."},
         404: {"model": ErrorResponse, "description": "Habilidade inexistente no snapshot."},
         **_AUTH_RESPONSES,
     },

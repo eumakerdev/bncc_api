@@ -96,7 +96,9 @@ async def test_admin_login_wrong_password_returns_401(async_client, monkeypatch)
 async def test_admin_login_correct_password_redirects(async_client, monkeypatch):
     r = await _csrf_login(async_client, monkeypatch)
     assert r.status_code == 303
-    assert r.headers["location"] in ("/admin/", "http://test/admin/")
+    # `Location` relativa: é o que mantém o redirect imune ao Host interno do Cloud
+    # Run (ver CanonicalLocationMiddleware em app/main.py).
+    assert r.headers["location"] == "/admin/"
 
 
 @pytest.mark.asyncio
@@ -211,7 +213,9 @@ async def test_admin_login_page_redirects_when_already_logged_in(async_client, m
     cookies = await _login(async_client, monkeypatch)
     r = await async_client.get("/admin/login", cookies=cookies, follow_redirects=False)
     assert r.status_code == 303
-    assert r.headers["location"] in ("/admin/", "http://test/admin/")
+    # `Location` relativa: é o que mantém o redirect imune ao Host interno do Cloud
+    # Run (ver CanonicalLocationMiddleware em app/main.py).
+    assert r.headers["location"] == "/admin/"
 
 
 # ---------------------------------------------------------------------------
@@ -483,7 +487,9 @@ async def test_admin_google_callback_allows_listed_email(async_client, monkeypat
         f"/admin/auth/google/callback?code=abc&state={state}", follow_redirects=False
     )
     assert r.status_code == 303
-    assert r.headers["location"] in ("/admin/", "http://test/admin/")
+    # `Location` relativa: é o que mantém o redirect imune ao Host interno do Cloud
+    # Run (ver CanonicalLocationMiddleware em app/main.py).
+    assert r.headers["location"] == "/admin/"
     assert "__admin_session" in r.cookies
 
 
