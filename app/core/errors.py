@@ -2,12 +2,15 @@
 Handlers de erro globais (FR-024 / Princípio VI).
 
 Respostas de erro NUNCA vazam stack trace, paths internos ou detalhes de
-implementação. O corpo segue o schema estável { detail, error_code }.
+implementação. O corpo segue o schema estável ``ErrorResponse``
+{ detail, error_code, timestamp } — e, na validação de requisição,
+``ValidationErrorResponse``, que acrescenta ``errors`` (campo a campo).
 """
 
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -17,8 +20,13 @@ from starlette.exceptions import HTTPException
 logger = logging.getLogger("bncc.errors")
 
 
+def _now() -> str:
+    """Instante do erro em ISO-8601 UTC — o ``timestamp`` que o contrato declara."""
+    return datetime.now(UTC).isoformat()
+
+
 def _error_body(detail: str, error_code: str) -> dict[str, str]:
-    return {"detail": detail, "error_code": error_code}
+    return {"detail": detail, "error_code": error_code, "timestamp": _now()}
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
@@ -46,11 +54,13 @@ async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     # Mensagem clara, sem vazar internos (US1/AS4). Detalhes de campo são seguros.
+    # O status é 400 — e não o 422 que o FastAPI injetaria: é o que a v1 publicada
+    # sempre devolveu, e mudá-lo quebraria consumidores (Princípio I). O contrato
+    # OpenAPI é alinhado a este comportamento em `app/api/openapi.py`.
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={
-            "detail": "Requisição inválida.",
-            "error_code": "validation_error",
+            **_error_body("Requisição inválida.", "validation_error"),
             "errors": [
                 {"campo": ".".join(str(p) for p in e.get("loc", [])), "msg": e.get("msg")}
                 for e in exc.errors()

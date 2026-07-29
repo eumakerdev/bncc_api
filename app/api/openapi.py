@@ -136,6 +136,60 @@ def _decorate_info(schema: dict[str, Any]) -> None:
     info["x-logo"] = {"url": "/static/logo.svg", "altText": "BNCC API"}
 
 
+_HTTP_METHODS = frozenset({"get", "put", "post", "delete", "options", "head", "patch", "trace"})
+
+_VALIDATION_REF = "#/components/schemas/ValidationErrorResponse"
+_VALIDATION_DESCRIPTION = "Requisição inválida — parâmetros ou corpo rejeitados na validação."
+
+
+def _align_validation_responses(schema: dict[str, Any]) -> None:
+    """Documenta o ``400`` que a API realmente devolve na validação (Princípio I).
+
+    O FastAPI injeta automaticamente um ``422`` em toda operação com parâmetros ou
+    corpo, mas ``app/core/errors.py::validation_exception_handler`` converte **toda**
+    ``RequestValidationError`` em ``400``. O ``422`` documentado era inalcançável — um
+    cliente gerado a partir do schema caía no ramo genérico de erro. Alinhamos a
+    documentação ao comportamento (e não o contrário: mudar o handler para 422
+    quebraria quem já trata 400, vedado pelo Princípio I dentro da v1).
+
+    ``HTTPValidationError``/``ValidationError`` continuam em ``components.schemas``
+    mesmo ficando órfãos: eram alcançáveis pelo contrato publicado e removê-los seria
+    lido como quebra por ``tests/contract/test_openapi_contract.py``.
+    """
+    for operations in schema.get("paths", {}).values():
+        if not isinstance(operations, dict):
+            continue
+        for method, operation in operations.items():
+            if method.lower() not in _HTTP_METHODS or not isinstance(operation, dict):
+                continue
+            responses = operation.get("responses")
+            if not isinstance(responses, dict) or "422" not in responses:
+                continue
+            responses.pop("422")
+            # Um 400 já declarado no roteador (ex.: código de habilidade malformado)
+            # mantém sua descrição; só o schema é ampliado para o de validação.
+            existing = responses.get("400")
+            description = (
+                existing.get("description", _VALIDATION_DESCRIPTION)
+                if isinstance(existing, dict)
+                else _VALIDATION_DESCRIPTION
+            )
+            responses["400"] = {
+                "description": description,
+                "content": {"application/json": {"schema": {"$ref": _VALIDATION_REF}}},
+            }
+
+
+def _postprocess(schema: dict[str, Any], prefix: str) -> dict[str, Any]:
+    """Enriquecimento comum a toda versão: ``info``, recorte de superfície e erros."""
+    _decorate_info(schema)
+    # Mantém no contrato apenas a superfície pública da versão (fora dela ficam as
+    # rotas SSR do portal/landing: são páginas HTML, não contrato de terceiros).
+    schema["paths"] = {p: v for p, v in schema.get("paths", {}).items() if p.startswith(prefix)}
+    _align_validation_responses(schema)
+    return schema
+
+
 def build_public_openapi(app: FastAPI) -> dict[str, Any]:
     """OpenAPI enriquecido e restrito ao contrato público ``/api/v1``.
 
@@ -155,10 +209,7 @@ def build_public_openapi(app: FastAPI) -> dict[str, Any]:
         tags=PUBLIC_TAGS,
         servers=public_servers(),
     )
-    _decorate_info(schema)
-
-    # Mantém no contrato apenas a superfície pública da API v1.
-    schema["paths"] = {p: v for p, v in schema.get("paths", {}).items() if p.startswith("/api/v1")}
+    _postprocess(schema, "/api/v1")
 
     app.openapi_schema = schema
     return schema
@@ -187,11 +238,7 @@ def openapi_for_version(app: FastAPI, slug: str) -> dict[str, Any]:
         tags=PUBLIC_TAGS,
         servers=[{"url": version.prefix, "description": version.title}],
     )
-    _decorate_info(schema)
-    schema["paths"] = {
-        p: v for p, v in schema.get("paths", {}).items() if p.startswith(version.prefix)
-    }
-    return schema
+    return _postprocess(schema, version.prefix)
 
 
 # --------------------------------------------------------------------------- #

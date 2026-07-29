@@ -29,7 +29,7 @@ from scripts.freeze_openapi import freeze
 
 from tests.contract.test_openapi_contract import find_breaking_changes
 
-CURRENT_RELEASE = "1.3.0"
+CURRENT_RELEASE = "1.4.0"
 V1_SNAPSHOT = DOCS_OPENAPI_DIR / "v1" / f"{CURRENT_RELEASE}.json"
 API_PREFIX = "/api/v1"
 

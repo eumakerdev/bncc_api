@@ -64,7 +64,7 @@ class APIVersion:
 API_VERSIONS: tuple[APIVersion, ...] = (
     APIVersion(
         slug="v1",
-        release="1.3.0",
+        release="1.4.0",
         status="current",
         title="BNCC API v1",
         summary="Primeira versão pública estável do contrato /api/v1.",

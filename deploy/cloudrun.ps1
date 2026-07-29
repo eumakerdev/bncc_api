@@ -264,6 +264,8 @@ $envBase = [ordered]@{
   BNCC_DATA_PATH = "/app/data/bncc_v1.json"
   CHROMADB_PATH  = "/app/data/chromadb"
   EMAIL_BACKEND  = "console"
+  CSP_ENFORCE    = "true"   # CSP bloqueante (o default do app ja e true; explicito aqui
+                            # porque --env-vars-file SUBSTITUI o conjunto de variaveis)
   ALLOWED_HOSTS  = '["https://placeholder.invalid"]'
   SITE_URL       = "https://$CustomDomain"   # URL canonica p/ SEO/e-mail (dominio primario)
   OAUTH_REDIRECT_BASE_URL = "https://$CustomDomain"  # base do redirect_uri do callback OAuth

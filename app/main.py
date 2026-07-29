@@ -12,10 +12,12 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.datastructures import MutableHeaders
+from starlette.datastructures import Headers, MutableHeaders
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -82,7 +84,7 @@ app = FastAPI(
         "dados determinísticos das três etapas, acesso self-service por API keys, "
         "documentação automática e busca semântica com IA (não-oficial)."
     ),
-    version="1.3.0",
+    version="1.4.0",
     docs_url=None,
     redoc_url=None,
     openapi_url="/api/v1/openapi.json",
@@ -119,9 +121,10 @@ async def redoc_html():  # pragma: no cover - HTML estático do FastAPI
 register_error_handlers(app)
 
 # Ordem importa: o Starlette aplica o middleware registrado por último como o mais
-# externo. Registramos CORS e TrustedHost primeiro (mais internos) e os headers de
-# segurança por último, para que eles cheguem em toda resposta — inclusive as
-# rejeitadas por Host inválido ou CORS.
+# externo. Registramos CORS e TrustedHost primeiro (mais internos) e os que precisam
+# ver *toda* resposta por último — headers de segurança (inclusive nas rejeitadas por
+# Host inválido ou CORS) e a canonicalização de `Location`. O gzip fica entre eles:
+# comprime o corpo antes que os headers de segurança sejam anexados.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_HOSTS,
@@ -131,6 +134,13 @@ app.add_middleware(
 )
 
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.TRUSTED_HOSTS)
+
+# Compressão (Padrões Técnicos — desempenho e custo). A auditoria de produção de
+# 2026-07-29 mediu 67 KB não comprimidos em `/api/v1/taxonomia` (~440ms só de
+# transferência) e 51 KB na landing. Egress do Cloud Run é faturado por byte e a
+# Fastly já anuncia `vary: accept-encoding` — faltava a origem comprimir. Abaixo de
+# `minimum_size` o overhead do gzip não compensa.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 # Content-Security-Policy (Princípio V — defesa em profundidade). Deliberadamente
@@ -193,6 +203,68 @@ class SecurityHeadersMiddleware:
 
 
 app.add_middleware(SecurityHeadersMiddleware)
+
+
+def _canonical_location(location: str, request_host: str) -> str | None:
+    """A ``Location`` reescrita para o host público, ou ``None`` se não há o que fazer.
+
+    Devolve ``None`` (deixa passar) quando: ``SITE_URL`` não está configurado (dev),
+    a ``Location`` é relativa — já imune ao host —, ou aponta para **outro** host,
+    caso das URLs de autorização do Google/GitHub no fluxo OAuth.
+    """
+    if not settings.SITE_URL:
+        return None
+    parts = urlsplit(location)
+    if not parts.netloc or parts.netloc != request_host:
+        return None
+    canonical = urlsplit(settings.SITE_URL)
+    if not canonical.netloc or (parts.scheme, parts.netloc) == (
+        canonical.scheme,
+        canonical.netloc,
+    ):
+        return None
+    return urlunsplit((canonical.scheme, canonical.netloc, parts.path, parts.query, parts.fragment))
+
+
+class CanonicalLocationMiddleware:
+    """Reescreve ``Location`` absoluta auto-referente para o host público (Princípio V).
+
+    Atrás do Firebase Hosting o container recebe o ``Host`` interno do Cloud Run
+    (``*.run.app``) — o mesmo motivo pelo qual ``SITE_URL`` existe. Os redirects que o
+    Starlette monta sozinho (barra final) herdam esse host, com dois efeitos: divulgam
+    a identidade interna do serviço e, pior, um cliente com ``follow_redirects`` passa a
+    falar direto com a origem, saindo da CDN que o modelo de custo pressupõe.
+
+    Só toca redirects **auto-referentes**: ``Location`` relativa passa intacta e URLs
+    absolutas para outro host (autorização OAuth do Google/GitHub) nunca são reescritas.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request_host = Headers(scope=scope).get("host", "")
+
+        async def send_wrapper(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                location = headers.get("location")
+                # A esmagadora maioria das respostas não redireciona: só aí pagamos
+                # o parse da URL (e `settings` é lido por requisição, como na CSP).
+                if location:
+                    rewritten = _canonical_location(location, request_host)
+                    if rewritten is not None:
+                        headers["location"] = rewritten
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
+app.add_middleware(CanonicalLocationMiddleware)
 
 
 class UsageOutcomeMiddleware:

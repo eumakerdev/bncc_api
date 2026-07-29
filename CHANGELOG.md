@@ -10,6 +10,84 @@ versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)
 
 ## [Não lançado]
 
+## [1.4.0] - 2026-07-29
+
+### Corrigido — contrato de erro alinhado ao comportamento (auditoria de produção)
+
+Uma suíte black-box de 118 verificações contra `https://bncc.api.br`, cada uma ancorada
+num princípio da Constituição, passou 111/118 **sem nenhuma falha funcional** — os dados
+servidos são byte a byte idênticos ao snapshot versionado (1717 habilidades conferidas
+uma a uma). Os achados restantes eram de conformidade, e todos foram fechados aqui.
+**Nenhuma quebra de contrato `/api/v1`** (Princípio I): tudo é aditivo ou documental.
+
+- **`400` documentado onde a API responde `400`.** 15 das 25 operações publicadas
+  declaravam `422 Validation Error` no OpenAPI, mas o handler global
+  (`app/core/errors.py`) converte **toda** `RequestValidationError` em `400` — o `422`
+  era inalcançável e um cliente gerado a partir do schema caía no ramo genérico de erro.
+  O alinhamento foi feito na documentação, não no handler: mudar o status para `422`
+  quebraria quem já trata `400`, vedado pelo Princípio I dentro da v1. A conversão vive
+  em `app/api/openapi.py::_align_validation_responses`, aplicada a toda versão
+  registrada — rotas novas herdam o comportamento sem drift.
+- **`errors[]` passou a existir no contrato.** Novo schema `ValidationErrorResponse`
+  (`ErrorResponse` + `errors: [{ campo, msg }]`), referenciado pelos `400`. O campo que
+  carrega a informação acionável era invisível para quem lia o contrato.
+- **`timestamp` passou a ser enviado.** Era documentado no `ErrorResponse` e nunca vinha
+  em resposta alguma — agora todo corpo de erro traz o instante em ISO-8601 UTC.
+- `HTTPValidationError`/`ValidationError` seguem publicados, ainda que órfãos: eram
+  alcançáveis pelo contrato já publicado e removê-los seria quebra.
+
+### Corrigido — redirects deixam de expor o host interno do Cloud Run
+
+Qualquer redirect gerado pelo app devolvia um `Location` absoluto montado com o `Host`
+**interno** (`https://bncc-api-…-rj.a.run.app/…`), porque atrás do Firebase Hosting é
+esse o Host que chega ao container. Dois efeitos: divulgação de infraestrutura (vedada
+pelo Princípio V) e, pior, um SDK com `follow_redirects` que tropeçasse numa barra final
+passava a falar direto com a origem, anulando o cache da CDN que o modelo de custo
+pressupõe. Novo `CanonicalLocationMiddleware` reescreve para o host de `SITE_URL` apenas
+os redirects **auto-referentes** — `Location` relativa e destinos externos (autorização
+OAuth do Google/GitHub) passam intactos.
+
+### Adicionado — compressão das respostas
+
+`GZipMiddleware(minimum_size=1000)`: nenhuma resposta era comprimida, mesmo com
+`Accept-Encoding: gzip` explícito. `/api/v1/taxonomia` trafegava 67 KB (dos ~750 ms
+ponta a ponta, a maior parte era transferência) e a landing 51 KB → ~12 KB medidos.
+A Fastly já anunciava `vary: accept-encoding`; faltava a origem produzir a variante.
+Além da latência percebida, egress do Cloud Run é faturado por byte.
+
+### Segurança — CSP em modo bloqueante
+
+`CSP_ENFORCE` passa a `True` por padrão (e explícito em `deploy/cloudrun.ps1` e
+`deploy/admin/deploy-admin.ps1`, porque `--env-vars-file` substitui o conjunto de
+variáveis). Em `Report-Only` — e sem `report-uri` configurado — o navegador só relatava
+violações que não iam a lugar nenhum: a política não oferecia proteção alguma. A política
+em si não mudou; `/`, `/guia`, `/docs` (Scalar), `/portal/login` e `/portal/signup` foram
+validados em navegador sob enforcing, sem violações.
+
+### Adicionado — cobertura dos portões que faltavam (Princípio III)
+
+Não havia **nenhum** teste cobrindo headers de segurança, CSP ou compressão — as
+regressões eram invisíveis. Novos: `tests/contract/test_error_contract.py`,
+`tests/integration/test_compression.py`, `tests/integration/test_security_headers.py` e
+`tests/integration/test_redirect_canonical.py`.
+
+### Alterado
+
+- `version` do app FastAPI e release de `v1`: `1.3.0` → `1.4.0`. O congelado
+  `docs/openapi/v1/1.3.0.json` permanece intacto como registro histórico do Eixo 2;
+  `docs/openapi/v1/1.4.0.json` é a release corrente.
+
+### Removido
+
+- `sdks/openapi.json` — dump órfão da versão `1.1.0` (20 paths contra os 25 atuais,
+  ainda com os `422`), sem nenhum script, doc ou teste que o referenciasse. O eixo de
+  snapshots versionados vive em `docs/openapi/{slug}/{release}.json`, escrito por
+  `scripts/freeze_openapi.py` e coberto por teste de contrato.
+
+> **Compatível com versões anteriores.** Nenhum path, método, campo ou tipo foi removido
+> ou alterado em `/api/v1`. A mudança de contrato é documental (`422` inalcançável some,
+> `400` real aparece) e aditiva (`ValidationErrorResponse`, `timestamp`).
+
 ### Alterado — emenda constitucional v1.1.0 (LangChain fora da stack canônica)
 
 A stack canônica de RAG passa de `sentence-transformers/LangChain` para
