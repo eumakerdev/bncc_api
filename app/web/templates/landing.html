@@ -2,12 +2,12 @@
 
 {% block title %}BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita{% endblock %}
 
-{% block description %}1.703 habilidades da BNCC — Educação Infantil, Fundamental e Médio, com o Complemento de
+{% block description %}1.717 habilidades da BNCC — Educação Infantil, Fundamental e Médio, com o Complemento de
 Computação — em uma API REST gratuita. Códigos e textos oficiais preservados, busca semântica com IA e
 API keys self-service.{% endblock %}
 
 {% block og_title %}BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita{% endblock %}
-{% block og_description %}1.703 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.{% endblock %}
+{% block og_description %}1.717 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.{% endblock %}
 
 {% block head_extra %}
 <script type="application/ld+json">
@@ -65,7 +65,7 @@ API keys self-service.{% endblock %}
       "name": "A base de habilidades está completa?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Sim: 1.703 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo as 140 do Complemento de Computação. O snapshot é versionado e a extração é determinística, reproduzível e auditada."
+        "text": "Sim: 1.717 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo as 141 do Complemento de Computação. O snapshot é versionado e a extração é determinística, reproduzível e auditada."
       }
     },
     {
@@ -82,27 +82,29 @@ API keys self-service.{% endblock %}
 {% endblock %}
 
 {% block content %}
-<!-- ============================== HERO ============================== -->
-<section class="hero container" aria-labelledby="hero-heading">
-  <div class="hero-grid">
+<!-- ============================== HERO ==============================
+     Banda drenched na cor da marca. Uma ideia por dobra: a afirmação e a
+     resposta real que a sustenta. -->
+<section class="band band-brand hero" aria-labelledby="hero-heading">
+  <div class="container hero-inner">
     <div>
-      <p class="eyebrow">Grátis · Open-source · Fiel ao documento oficial</p>
-      <h1 id="hero-heading">A BNCC inteira, em uma API.</h1>
-      <p class="lead">
-        1.703 habilidades das três etapas, com os códigos e textos oficiais
-        preservados. Crie a conta, gere a chave e faça a primeira chamada hoje.
+      <h1 id="hero-heading">A BNCC inteira, <em>palavra por palavra</em>.</h1>
+      <p class="hero-lead">
+        1.717 habilidades das três etapas, com o código e o texto do documento
+        oficial. Grátis, aberta e com as contas na mesa.
       </p>
-      <p class="cta-row">
+      <p class="hero-actions">
         <a class="btn btn-lg" href="/portal/signup">Criar minha chave grátis</a>
-        <a class="btn btn-secondary btn-lg" href="/guia">Ver a documentação</a>
+        <a class="btn btn-secondary btn-lg" href="/guia">Ler o guia</a>
       </p>
-      <p class="hero-note">Sem cartão. Sem fila de aprovação. A chave sai na hora.</p>
+      <p class="hero-note">Sem cartão e sem fila de aprovação. A chave sai na hora.</p>
     </div>
-    <div class="code-window" aria-label="Exemplo de resposta da API">
-      <div class="code-window-bar">
-        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <span class="code-window-title">GET /api/v1/habilidades/EF05MA07</span>
-      </div>
+
+    <figure class="record" aria-label="Exemplo de resposta da API">
+      <figcaption class="record-head">
+        <span><span class="record-verb">GET</span> /api/v1/habilidades/EF05MA07</span>
+        <span>200</span>
+      </figcaption>
       <pre><code>{
   <span class="tk">"codigo"</span>: <span class="tv">"EF05MA07"</span>,
   <span class="tk">"descricao"</span>: <span class="tv">"Resolver e elaborar problemas
@@ -113,451 +115,420 @@ API keys self-service.{% endblock %}
   <span class="tk">"componente"</span>: <span class="tv">"matematica"</span>,
   <span class="tk">"unidade_tematica"</span>: <span class="tv">"Números"</span>
 }</code></pre>
-    </div>
+    </figure>
   </div>
 </section>
 
-<!-- ========================= PROVA SOCIAL ========================== -->
-<section class="stat-strip" aria-label="Números do projeto">
-  <div class="container stat-grid">
-    <div class="stat"><strong>1.703</strong><span>habilidades oficiais</span></div>
-    <div class="stat"><strong>3</strong><span>etapas: EI · EF · EM</span></div>
-    <div class="stat"><strong>140</strong><span>habilidades de Computação</span></div>
-    <div class="stat"><strong>MIT</strong><span>open-source e gratuita</span></div>
+<!-- ========================= COBERTURA DA BASE =========================
+     Substitui a antiga faixa de quatro números soltos. As três etapas em
+     proporção real: "a base inteira" vira uma coisa que se vê. -->
+<section class="section container" aria-labelledby="cobertura-heading">
+  <h2 id="cobertura-heading">A base inteira, da creche ao terceiro ano</h2>
+  <div class="cov-head">
+    <p class="cov-total">1.717</p>
+    <p class="cov-total-label">habilidades catalogadas, nas três etapas</p>
   </div>
-</section>
 
-<!-- =========================== PROBLEMA ============================ -->
-<section class="section container section-narrow" aria-labelledby="problema-heading">
-  <h2 id="problema-heading">Seu produto fala de educação. Ele fala BNCC?</h2>
-  <p class="lead">
-    Modelos de IA inventam códigos de habilidade. PDFs oficiais não foram feitos para
-    máquinas. Planilhas montadas à mão envelhecem sozinhas. A BNCC API entrega a camada
-    de dados pronta — você cuida do produto.
+  <div class="cov-bar" role="img"
+       aria-label="Distribuição das 1.717 habilidades: Educação Infantil 104, Ensino Fundamental 1.408, Ensino Médio 205.">
+    <span class="cov-seg cov-seg-ei" style="flex: 104"></span>
+    <span class="cov-seg cov-seg-ef" style="flex: 1408">1.408</span>
+    <span class="cov-seg cov-seg-em" style="flex: 205">205</span>
+  </div>
+
+  <ul class="cov-legend">
+    <li><span class="swatch cov-seg-ei"></span><b>104</b> <span>Educação Infantil</span></li>
+    <li><span class="swatch cov-seg-ef"></span><b>1.408</b> <span>Ensino Fundamental</span></li>
+    <li><span class="swatch cov-seg-em"></span><b>205</b> <span>Ensino Médio</span></li>
+  </ul>
+
+  <p class="cov-note">
+    Inclui as 141 habilidades do Complemento de Computação, que passa a ser
+    obrigatório em 2026, com os eixos de Educação Infantil e Fundamental já
+    estruturados. Os números vêm do snapshot versionado: quando a base muda,
+    este parágrafo muda junto.
   </p>
 </section>
 
-<!-- ========================= CASOS DE USO ========================== -->
-<section class="section container" id="casos-de-uso" aria-labelledby="casos-heading">
-  <h2 id="casos-heading">O que dá para construir</h2>
-  <p class="lead">Cinco usos ancorados em problemas reais das escolas e redes do Brasil.</p>
-  <div class="grid uc-grid">
-
-    <article class="card uc-card">
-      <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path
-            d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-          <path d="m9 12 2 2 4-4" />
-        </svg>
-      </span>
-      <h3>Planos de aula com IA que não erra o código</h3>
-      <p class="muted">
-        Modelos genéricos alucinam códigos BNCC. Valide cada um de forma determinística e
-        ancore a geração em fontes oficiais rastreáveis.
+<!-- ====================== FIDELIDADE / COMO SE PROVA ======================
+     O argumento mais forte do projeto, que na versão anterior estava
+     escondido dentro de um cartão chamado "Determinística e versionada". -->
+<section class="section band-surface" aria-labelledby="fidelidade-heading">
+  <div class="container proof-grid">
+    <div>
+      <h2 id="fidelidade-heading">Como você sabe que o texto está certo</h2>
+      <p class="lead">
+        Porque dá para conferir. Modelos de linguagem inventam código de
+        habilidade com uma confiança desconfortável, e planilha montada à mão
+        envelhece sozinha. A extração aqui é auditada, e a auditoria é pública.
       </p>
-      <p><code class="endpoint">GET /habilidades/{codigo}</code> <code class="endpoint">POST /busca-semantica</code></p>
-    </article>
+    </div>
 
-    <article class="card uc-card">
-      <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <circle cx="6" cy="19" r="3" />
-          <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
-          <circle cx="18" cy="5" r="3" />
-        </svg>
-      </span>
-      <h3>Trilhas de recomposição de aprendizagens</h3>
-      <p class="muted">
-        Navegue as relações entre habilidades e monte trilhas por ano e componente.
-        Progressão por turma guiada pelo dado, não pela intuição.
-      </p>
-      <p><code class="endpoint">GET /habilidades/{codigo}/relacoes</code></p>
-    </article>
-
-    <article class="card uc-card">
-      <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <rect x="4" y="4" width="16" height="16" rx="2" />
-          <rect x="9" y="9" width="6" height="6" />
-          <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3" />
-        </svg>
-      </span>
-      <h3>Adequação à BNCC Computação</h3>
-      <p class="muted">
-        O Complemento de Computação passa a ser obrigatório em 2026. As 140 habilidades,
-        com eixos estruturados, prontas para cruzar com o currículo da sua rede.
-      </p>
-      <p><code class="endpoint">GET /habilidades?componente=computacao&amp;eixo=…</code></p>
-    </article>
-
-    <article class="card uc-card">
-      <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M3 3v16a2 2 0 0 0 2 2h16" />
-          <rect x="7" y="8" width="3" height="8" />
-          <rect x="12" y="5" width="3" height="11" />
-          <rect x="17" y="11" width="3" height="5" />
-        </svg>
-      </span>
-      <h3>Cobertura curricular à vista do gestor</h3>
-      <p class="muted">
-        Lacunas de currículo costumam aparecer só no SAEB, tarde demais. Cruze os
-        planejamentos com a taxonomia oficial e veja a cobertura por ano, componente e
-        bimestre — a tempo de agir.
-      </p>
-      <p><code class="endpoint">GET /taxonomia</code> <code class="endpoint">POST /busca-semantica</code></p>
-    </article>
-
-    <article class="card uc-card">
-      <span class="uc-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path
-            d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
-          <circle cx="7.5" cy="7.5" r="1" />
-        </svg>
-      </span>
-      <h3>Conteúdo etiquetado por habilidade</h3>
-      <p class="muted">
-        Catalogar milhares de vídeos e atividades à mão não escala. A busca semântica
-        sugere os códigos e o especialista só confirma.
-      </p>
-      <p><code class="endpoint">POST /busca-semantica</code></p>
-    </article>
-
-    <article class="card uc-card uc-card-cta">
-      <h3>Outro caso em mente?</h3>
-      <p class="muted">
-        A API é gratuita e o contrato é estável e versionado. Comece pelo guia e construa
-        sobre dados confiáveis.
-      </p>
-      <p><a class="btn btn-secondary" href="/guia">Ler o guia de início rápido</a></p>
-    </article>
+    <ul class="proof-list">
+      <li>
+        <dfn>Extração determinística</dfn>
+        <p>
+          O snapshot sai dos PDFs oficiais por script versionado. Rodar de novo
+          produz exatamente o mesmo arquivo.
+        </p>
+      </li>
+      <li>
+        <dfn>Conferido contra duas testemunhas independentes</dfn>
+        <p>
+          As descrições foram cruzadas com o documento oficial completo e com um
+          dataset independente da versão homologada. Isso corrigiu
+          <span class="proof-figure">59</span> descrições que a extração havia
+          embaralhado entre colunas do PDF, e recuperou uma habilidade que
+          faltava, a EF05CO11.
+        </p>
+      </li>
+      <li>
+        <dfn>Auditoria no portão de teste</dfn>
+        <p>
+          Um script versionado procura truncamento, contaminação entre células e
+          fusão de texto a cada mudança. Hoje ele fecha com
+          <span class="proof-figure">0</span> achados de erro, e o teste quebra
+          se isso deixar de ser verdade.
+        </p>
+      </li>
+      <li>
+        <dfn>O que a IA escreve vem etiquetado</dfn>
+        <p>
+          A busca semântica devolve as fontes oficiais junto com a resposta, e
+          todo texto gerado sai marcado como não-oficial. Se a camada de IA cair,
+          consulta por código, filtros, relações e taxonomia seguem de pé.
+        </p>
+      </li>
+    </ul>
   </div>
 </section>
 
-<!-- ========================= COMO FUNCIONA ========================= -->
+<!-- ========================= DA CONTA À CHAMADA ========================= -->
 <section class="section container" aria-labelledby="como-heading">
-  <h2 id="como-heading">Da conta à primeira chamada em 3 passos</h2>
-  <div class="grid steps-grid">
-    <article class="card step">
-      <span class="step-num" aria-hidden="true">1</span>
+  <h2 id="como-heading">Da conta à primeira chamada</h2>
+  <ol class="steps">
+    <li class="step">
       <h3>Crie a conta</h3>
-      <p class="muted">E-mail e senha, verificação e pronto. Sem aprovação manual, sem cartão.</p>
-    </article>
-    <article class="card step">
-      <span class="step-num" aria-hidden="true">2</span>
+      <p>E-mail e senha, verificação, pronto. Sem aprovação manual e sem cartão.</p>
+    </li>
+    <li class="step">
       <h3>Gere a chave</h3>
-      <p class="muted">Crie e revogue API keys quando quiser, direto no portal, e acompanhe o uso.</p>
-    </article>
-    <article class="card step">
-      <span class="step-num" aria-hidden="true">3</span>
+      <p>Crie e revogue API keys quando quiser, no portal, acompanhando o uso.</p>
+    </li>
+    <li class="step">
       <h3>Chame a API</h3>
-      <p class="muted">Endpoints REST sob <code>/api/v1</code>, documentados no OpenAPI.</p>
-    </article>
-  </div>
+      <p>Endpoints REST sob <code>/api/v1</code>, documentados no OpenAPI.</p>
+    </li>
+  </ol>
   <pre class="curl-block"><code>curl -H <span class="tv">"Authorization: Bearer SUA_API_KEY"</span> \
   "{{ (request.base_url|string).rstrip('/') }}/api/v1/habilidades?etapa=ensino_fundamental&amp;ano=5"</code></pre>
 </section>
 
-<!-- =========================== RECURSOS ============================ -->
-<section class="section container" aria-labelledby="recursos-heading">
-  <h2 id="recursos-heading">Feita para levar dado educacional a sério</h2>
-  <div class="grid">
-    <article class="card">
-      <h3>Determinística e versionada</h3>
-      <p class="muted">
-        As três etapas extraídas das fontes oficiais de forma reproduzível, com relações
-        navegáveis entre habilidades, competências e objetos de conhecimento. O contrato
-        é versionado: nada quebra dentro do <code>/api/v1</code>.
+<!-- ============================ CASOS DE USO ============================
+     Lista com hierarquia em vez de grid de cartões idênticos. O endpoint é
+     a âncora visual de cada item. -->
+<section class="section container" id="casos-de-uso" aria-labelledby="casos-heading">
+  <h2 id="casos-heading">O que dá para construir</h2>
+  <p class="lead">Cinco usos ancorados em problemas reais das escolas e redes do Brasil.</p>
+
+  <ul class="uc-list">
+    <li class="uc-item uc-lead">
+      <p class="uc-endpoints">
+        <code class="endpoint">GET /habilidades/{codigo}</code>
+        <code class="endpoint">POST /busca-semantica</code>
       </p>
-    </article>
-    <article class="card">
-      <h3>Self-service de verdade</h3>
-      <p class="muted">
-        Você cria e revoga as chaves no portal e acompanha o consumo em um painel. Cota
-        clara: 60 requisições por minuto nos endpoints determinísticos.
+      <div class="uc-body">
+        <h3>Planos de aula com IA que não erra o código</h3>
+        <p>
+          Um modelo genérico alucina códigos da BNCC e o professor só descobre
+          depois. Valide cada código de forma determinística e ancore a geração
+          em fontes oficiais rastreáveis.
+        </p>
+      </div>
+    </li>
+
+    <li class="uc-item">
+      <p class="uc-endpoints"><code class="endpoint">GET /habilidades/{codigo}/relacoes</code></p>
+      <div class="uc-body">
+        <h3>Trilhas de recomposição de aprendizagens</h3>
+        <p>
+          Navegue as relações entre habilidades e monte trilhas por ano e
+          componente, com a progressão da turma guiada pelo dado.
+        </p>
+      </div>
+    </li>
+
+    <li class="uc-item">
+      <p class="uc-endpoints"><code class="endpoint">GET /habilidades?componente=computacao</code></p>
+      <div class="uc-body">
+        <h3>Adequação à BNCC Computação</h3>
+        <p>
+          O Complemento de Computação passa a valer em 2026. As 141 habilidades,
+          com eixos estruturados, prontas para cruzar com o currículo da sua rede.
+        </p>
+      </div>
+    </li>
+
+    <li class="uc-item">
+      <p class="uc-endpoints">
+        <code class="endpoint">GET /taxonomia</code>
+        <code class="endpoint">POST /busca-semantica</code>
       </p>
-    </article>
-    <article class="card">
-      <h3>Documentação sempre em dia</h3>
-      <p class="muted">
-        Docs geradas do contrato OpenAPI: schemas, exemplos e teste autenticado no
-        navegador, sincronizados com o código.
-      </p>
-    </article>
-    <article class="card">
-      <h3>Busca semântica com IA <span class="badge badge-muted">não-oficial</span></h3>
-      <p class="muted">
-        Pergunte em linguagem natural e receba respostas com fontes oficiais rastreáveis.
-        Todo conteúdo gerado é marcado como não-oficial; os dados determinísticos seguem
-        sendo a fonte da verdade, mesmo se a IA cair.
-      </p>
-    </article>
-  </div>
+      <div class="uc-body">
+        <h3>Cobertura curricular à vista do gestor</h3>
+        <p>
+          Lacuna de currículo costuma aparecer no SAEB, tarde demais. Cruze os
+          planejamentos com a taxonomia oficial e veja a cobertura por ano,
+          componente e bimestre a tempo de agir.
+        </p>
+      </div>
+    </li>
+
+    <li class="uc-item">
+      <p class="uc-endpoints"><code class="endpoint">POST /busca-semantica</code></p>
+      <div class="uc-body">
+        <h3>Conteúdo etiquetado por habilidade</h3>
+        <p>
+          Catalogar milhares de vídeos e atividades à mão não escala. A busca
+          semântica sugere os códigos e o especialista confirma.
+        </p>
+      </div>
+    </li>
+  </ul>
 </section>
 
-<!-- ======================== APOIE O PROJETO ======================== -->
-<section class="section sponsor-section" id="apoie" aria-labelledby="apoie-heading">
+<!-- =========================== AS CONTAS ABERTAS ===========================
+     Transparência e apoio na mesma seção: separados, viravam dois argumentos
+     pela metade. Juntos sustentam "é grátis de verdade" e "não vai sumir". -->
+<section class="section band-surface" id="apoie" aria-labelledby="contas-heading">
   <div class="container">
-    <h2 id="apoie-heading">Grátis hoje. Sustentada por quem usa.</h2>
-    <p class="lead">
-      A API roda em infraestrutura real (Cloud Run + Postgres) e é mantida nas horas
-      livres. Se ela poupou seu tempo ou entrou no que você construiu, considere apoiar —
-      qualquer valor mantém tudo no ar.
+    <h2 id="contas-heading">As contas abertas</h2>
+
+  {% if (usage_summary and usage_summary.has_data) or (cost_chart and cost_chart.has_data) %}
+    <p class="lead transparency-lead">
+      Quanto a plataforma é usada e quanto custa mantê-la no ar. Números
+      agregados, sem login, atualizados a cada 10 minutos.
     </p>
-    <div class="grid sponsor-grid">
-      <article class="card sponsor-card">
-        <span class="uc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path
-              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z" />
-          </svg>
-        </span>
-        <h3>GitHub Sponsors</h3>
-        <p class="muted">Apoio avulso ou mensal no cartão internacional, sem taxa de plataforma.</p>
-        <p><a class="btn" href="https://github.com/sponsors/eumakerdev" rel="noopener">Apoiar no GitHub Sponsors</a></p>
-      </article>
-      <article class="card sponsor-card">
-        <span class="uc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <path d="M14 14h3v3h-3zM18 18h3v3h-3z" />
-          </svg>
-        </span>
-        <h3>Pix</h3>
-        <p class="muted">Aponte a câmera para o QR Code ou copie o código e cole em Pix › Copia e Cola. Você escolhe o
-          valor.</p>
-        <img class="pix-qr" src="/static/pix-qrcode.png" alt="QR Code Pix para apoiar o projeto" width="140"
-          height="140" loading="lazy">
-        <div class="pix-copy">
-          <code
-            id="pix-code">00020126360014BR.GOV.BCB.PIX0114+55719990084435204000053039865802BR5913FABIO SANTANA6006BRASIL62110507BNCCAPI63040E12</code>
-          <button type="button" class="btn btn-secondary btn-sm" id="pix-copy-btn" aria-label="Copiar código Pix">Copiar
-            código Pix</button>
+    <div class="transparency-board" id="transparencia">
+
+    {% if usage_summary and usage_summary.has_data %}
+      <article class="transparency-panel usage-block">
+        <header class="tp-head">
+          <p class="tp-overline">Uso da plataforma</p>
+          <p class="tp-hero">
+            <span class="tp-value">{{ usage_summary.total_to_date|milhar }}</span>
+            <span class="tp-unit">requisições atendidas</span>
+          </p>
+          <p class="tp-since">
+            {% if usage_summary.period_start %}desde {{ usage_summary.period_start.strftime('%m/%Y') }} · {% endif %}só o total — nada por usuário, chave ou IP
+          </p>
+        </header>
+
+        <dl class="tp-stats">
+          <div class="tp-stat">
+            <dt>Desenvolvedores</dt>
+            <dd>{{ usage_summary.developers|milhar }}</dd>
+          </div>
+          <div class="tp-stat">
+            <dt>Chaves ativas</dt>
+            <dd>{{ usage_summary.active_keys|milhar }}</dd>
+          </div>
+        </dl>
+
+        <div class="tp-chart">
+          <div class="tp-chart-head">
+            <p class="tp-chart-title">Requisições por dia</p>
+            <div class="chart-filters" role="group" aria-label="Período do gráfico">
+              {% for w in usage_summary.windows %}
+              <button type="button" class="chart-filter{% if w.days == usage_summary.default_window %} is-active{% endif %}"
+                      data-window-btn="{{ w.days }}"
+                      aria-pressed="{{ 'true' if w.days == usage_summary.default_window else 'false' }}">
+                {{ w.days }}d
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          {% for w in usage_summary.windows %}
+          {% set chart = usage_charts[w.days] %}
+          <div class="usage-window" data-window="{{ w.days }}"{% if w.days != usage_summary.default_window %} hidden{% endif %}>
+            <div class="chart-scroll">
+            <svg class="usage-chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
+                 role="img" preserveAspectRatio="none"
+                 aria-label="Requisições por dia nos últimos {{ w.days }} dias. Total de {{ w.total_requests|milhar }} requisições, média de {{ w.daily_average|milhar }} por dia.">
+              {% for t in chart.y_ticks %}
+              <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}"/>
+              <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
+              {% endfor %}
+              <path class="chart-area chart-area-total" d="{{ chart.area }}"/>
+              <polyline class="chart-line chart-line-total" points="{{ chart.line }}"/>
+              {% for t in chart.x_ticks %}
+              <text class="chart-axis" x="{{ t.pos }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
+              {% endfor %}
+            </svg>
+            </div>
+            <p class="tp-chart-foot">
+              <strong>{{ w.total_requests|milhar }}</strong> em {{ w.days }} dias · <strong>{{ w.daily_average|milhar }}</strong>/dia em média
+            </p>
+          </div>
+          {% endfor %}
+
+          {% set dw = usage_summary.windows | selectattr('days', 'equalto', usage_summary.default_window) | first %}
+          {% if dw %}
+          <details class="chart-data">
+            <summary>Ver dados em tabela ({{ dw.days }} dias)</summary>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th scope="col">Dia</th><th scope="col">Requisições</th></tr></thead>
+                <tbody>
+                  {% for p in dw.series %}
+                  <tr><td data-label="Dia">{{ p.date.strftime('%d/%m') }}</td><td data-label="Requisições">{{ p.total|milhar }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </details>
+          {% endif %}
         </div>
       </article>
-      <article class="card sponsor-card">
-        <span class="uc-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path
-              d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.12 2.12 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.12 2.12 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.12 2.12 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.12 2.12 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.12 2.12 0 0 0 1.597-1.16z" />
+    {% endif %}
+
+    {% if cost_chart and cost_chart.has_data %}
+      <article class="transparency-panel cost-block">
+        <header class="tp-head">
+          <p class="tp-overline">Custo de infraestrutura</p>
+          <p class="tp-hero">
+            <span class="tp-value">{{ cost_summary.total_to_date|brl }}</span>
+            <span class="tp-unit">até agora</span>
+          </p>
+          <p class="tp-since">
+            {% if cost_summary and cost_summary.period_start %}desde {{ cost_summary.period_start.strftime('%m/%Y') }} · {% endif %}{{ cost_summary.total_month|brl }} neste mês
+          </p>
+        </header>
+
+        <dl class="tp-stats tp-breakdown">
+          {% for item in cost_summary.by_service_to_date %}
+          {% if item.amount > 0 %}
+          <div class="tp-stat">
+            <dt><span class="dot cost-seg-{{ item.service.value }}"></span>{{ item.label }}</dt>
+            <dd>{{ item.amount|brl }}</dd>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </dl>
+
+        <div class="tp-chart">
+          <div class="tp-chart-head">
+            <p class="tp-chart-title">Custo por mês</p>
+            <p class="tp-chart-caption muted">por serviço, em R$</p>
+          </div>
+
+          <div class="chart-scroll">
+          <svg class="usage-chart cost-chart" viewBox="0 0 {{ cost_chart.width }} {{ cost_chart.height }}"
+               role="img" preserveAspectRatio="none"
+               aria-label="Custo mensal de infraestrutura por serviço, em reais. Total acumulado de {{ cost_summary.total_to_date|brl }}.">
+            {% for t in cost_chart.y_ticks %}
+            <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ cost_chart.width - 12 }}" y2="{{ t.pos }}"/>
+            <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
+            {% endfor %}
+            {% for bar in cost_chart.bars %}
+              {% for seg in bar.segments %}
+              <rect class="cost-bar {{ seg.color_class }}" x="{{ seg.x }}" y="{{ seg.y }}"
+                    width="{{ seg.width }}" height="{{ seg.height }}"><title>{{ seg.title }}</title></rect>
+              {% endfor %}
+            {% endfor %}
+            {% for t in cost_chart.x_ticks %}
+            <text class="chart-axis" x="{{ t.pos }}" y="{{ cost_chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
+            {% endfor %}
           </svg>
-        </span>
-        <h3>Uma estrela no GitHub</h3>
-        <p class="muted">Não custa nada e ajuda o projeto a chegar a mais gente que constrói educação no Brasil.
+          </div>
+
+          <details class="chart-data">
+            <summary>Ver dados em tabela</summary>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th scope="col">Mês</th><th scope="col">Total</th></tr></thead>
+                <tbody>
+                  {% for bar in cost_chart.bars %}
+                  <tr><td data-label="Mês">{{ bar.label }}</td><td data-label="Total">{{ bar.total|brl }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+
+        <p class="tp-source">
+          Faturamento real do Google Cloud, líquido de créditos. Custo de
+          <strong>infraestrutura</strong> — não é dado da BNCC.
         </p>
-        <p><a class="btn btn-secondary" href="https://github.com/eumakerdev/bncc_api" rel="noopener">Ver o
-            repositório</a></p>
       </article>
+    {% endif %}
+
+      <article class="transparency-panel funding-block">
+        <header class="tp-head">
+          <p class="tp-overline">Apoio financeiro recebido</p>
+          <p class="tp-hero">
+            <span class="tp-value">R$ 0</span>
+            <span class="tp-unit">até agora</span>
+          </p>
+          <p class="tp-since">nenhum patrocínio, edital ou doação registrado até hoje</p>
+        </header>
+        <p class="funding-note">
+          A infraestrutura que mantém a BNCC API no ar sai do bolso de quem cuida
+          do projeto. Quando chegar o primeiro apoio, esta seção passa a mostrar
+          quanto foi, de onde veio e no que foi aplicado, com a mesma auditoria
+          pública que já vale para os custos.
+        </p>
+      </article>
+
+    </div>
+  {% endif %}
+
+    <!-- ---------------------------- Apoie ---------------------------- -->
+    <div class="support-grid">
+      <div class="support-ways">
+        <h3 class="support-title">Se ela te poupou tempo, ajude a manter</h3>
+        <div class="support-way">
+          <h4>GitHub Sponsors</h4>
+          <p>Apoio avulso ou mensal no cartão internacional, sem taxa de plataforma.</p>
+          <a class="btn" href="https://github.com/sponsors/eumakerdev" rel="noopener">Apoiar no GitHub Sponsors</a>
+        </div>
+        <div class="support-way">
+          <h4>Uma estrela no repositório</h4>
+          <p>
+            Não custa nada e ajuda o projeto a chegar a mais gente que constrói
+            educação no Brasil.
+          </p>
+          <a class="btn btn-secondary" href="https://github.com/eumakerdev/bncc_api" rel="noopener">Ver o repositório</a>
+        </div>
+      </div>
+
+      <div class="pix-panel">
+        <h4>Pix</h4>
+        <p class="muted">
+          Aponte a câmera para o QR Code ou copie o código e cole em Pix ›
+          Copia e Cola. Você escolhe o valor.
+        </p>
+        <img class="pix-qr" src="/static/pix-qrcode.png" alt="QR Code Pix para apoiar o projeto"
+             width="140" height="140" loading="lazy">
+        <div class="pix-copy">
+          <code id="pix-code">00020126360014BR.GOV.BCB.PIX0114+55719990084435204000053039865802BR5913FABIO SANTANA6006BRASIL62110507BNCCAPI63040E12</code>
+          <button type="button" class="btn btn-secondary btn-sm" id="pix-copy-btn">Copiar código Pix</button>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ========================== TRANSPARÊNCIA ========================= -->
-{% if (usage_summary and usage_summary.has_data) or (cost_chart and cost_chart.has_data) %}
-<section class="section container" id="transparencia" aria-labelledby="transparencia-title">
-  <h2 id="transparencia-title">Transparência</h2>
-  <p class="lead transparency-lead">
-    O uso real da plataforma e quanto custa mantê-la no ar. Números agregados,
-    sem login, atualizados a cada 10 minutos.
-  </p>
-
-  <div class="transparency-board">
-
-  {% if usage_summary and usage_summary.has_data %}
-    <article class="transparency-panel usage-block">
-      <header class="tp-head">
-        <p class="tp-overline">Uso da plataforma</p>
-        <p class="tp-hero">
-          <span class="tp-value">{{ usage_summary.total_to_date|milhar }}</span>
-          <span class="tp-unit">requisições atendidas</span>
-        </p>
-        <p class="tp-since">
-          {% if usage_summary.period_start %}desde {{ usage_summary.period_start.strftime('%m/%Y') }} · {% endif %}só o total — nada por usuário, chave ou IP
-        </p>
-      </header>
-
-      <dl class="tp-stats">
-        <div class="tp-stat">
-          <dt>Desenvolvedores</dt>
-          <dd>{{ usage_summary.developers|milhar }}</dd>
-        </div>
-        <div class="tp-stat">
-          <dt>Chaves ativas</dt>
-          <dd>{{ usage_summary.active_keys|milhar }}</dd>
-        </div>
-      </dl>
-
-      <div class="tp-chart">
-        <div class="tp-chart-head">
-          <p class="tp-chart-title">Requisições por dia</p>
-          <div class="chart-filters" role="group" aria-label="Período do gráfico">
-            {% for w in usage_summary.windows %}
-            <button type="button" class="chart-filter{% if w.days == usage_summary.default_window %} is-active{% endif %}"
-                    data-window-btn="{{ w.days }}"
-                    aria-pressed="{{ 'true' if w.days == usage_summary.default_window else 'false' }}">
-              {{ w.days }}d
-            </button>
-            {% endfor %}
-          </div>
-        </div>
-
-        {% for w in usage_summary.windows %}
-        {% set chart = usage_charts[w.days] %}
-        <div class="usage-window" data-window="{{ w.days }}"{% if w.days != usage_summary.default_window %} hidden{% endif %}>
-          <div class="chart-scroll">
-          <svg class="usage-chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
-               role="img" preserveAspectRatio="none"
-               aria-label="Requisições por dia nos últimos {{ w.days }} dias. Total de {{ w.total_requests|milhar }} requisições, média de {{ w.daily_average|milhar }} por dia.">
-            {% for t in chart.y_ticks %}
-            <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}"/>
-            <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
-            {% endfor %}
-            <path class="chart-area chart-area-total" d="{{ chart.area }}"/>
-            <polyline class="chart-line chart-line-total" points="{{ chart.line }}"/>
-            {% for t in chart.x_ticks %}
-            <text class="chart-axis" x="{{ t.pos }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
-            {% endfor %}
-          </svg>
-          </div>
-          <p class="tp-chart-foot">
-            <strong>{{ w.total_requests|milhar }}</strong> em {{ w.days }} dias · <strong>{{ w.daily_average|milhar }}</strong>/dia em média
-          </p>
-        </div>
-        {% endfor %}
-
-        {% set dw = usage_summary.windows | selectattr('days', 'equalto', usage_summary.default_window) | first %}
-        {% if dw %}
-        <details class="chart-data">
-          <summary>Ver dados em tabela ({{ dw.days }} dias)</summary>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th scope="col">Dia</th><th scope="col">Requisições</th></tr></thead>
-              <tbody>
-                {% for p in dw.series %}
-                <tr><td data-label="Dia">{{ p.date.strftime('%d/%m') }}</td><td data-label="Requisições">{{ p.total|milhar }}</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </details>
-        {% endif %}
-      </div>
-    </article>
-  {% endif %}
-
-  {% if cost_chart and cost_chart.has_data %}
-    <article class="transparency-panel cost-block">
-      <header class="tp-head">
-        <p class="tp-overline">Custo de infraestrutura</p>
-        <p class="tp-hero">
-          <span class="tp-value">{{ cost_summary.total_to_date|brl }}</span>
-          <span class="tp-unit">até agora</span>
-        </p>
-        <p class="tp-since">
-          {% if cost_summary and cost_summary.period_start %}desde {{ cost_summary.period_start.strftime('%m/%Y') }} · {% endif %}{{ cost_summary.total_month|brl }} neste mês
-        </p>
-      </header>
-
-      <dl class="tp-stats tp-breakdown">
-        {% for item in cost_summary.by_service_to_date %}
-        {% if item.amount > 0 %}
-        <div class="tp-stat">
-          <dt><span class="dot cost-seg-{{ item.service.value }}"></span>{{ item.label }}</dt>
-          <dd>{{ item.amount|brl }}</dd>
-        </div>
-        {% endif %}
-        {% endfor %}
-      </dl>
-
-      <div class="tp-chart">
-        <div class="tp-chart-head">
-          <p class="tp-chart-title">Custo por mês</p>
-          <p class="tp-chart-caption muted">por serviço, em R$</p>
-        </div>
-
-        <div class="chart-scroll">
-        <svg class="usage-chart cost-chart" viewBox="0 0 {{ cost_chart.width }} {{ cost_chart.height }}"
-             role="img" preserveAspectRatio="none"
-             aria-label="Custo mensal de infraestrutura por serviço, em reais. Total acumulado de {{ cost_summary.total_to_date|brl }}.">
-          {% for t in cost_chart.y_ticks %}
-          <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ cost_chart.width - 12 }}" y2="{{ t.pos }}"/>
-          <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
-          {% endfor %}
-          {% for bar in cost_chart.bars %}
-            {% for seg in bar.segments %}
-            <rect class="cost-bar {{ seg.color_class }}" x="{{ seg.x }}" y="{{ seg.y }}"
-                  width="{{ seg.width }}" height="{{ seg.height }}"><title>{{ seg.title }}</title></rect>
-            {% endfor %}
-          {% endfor %}
-          {% for t in cost_chart.x_ticks %}
-          <text class="chart-axis" x="{{ t.pos }}" y="{{ cost_chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
-          {% endfor %}
-        </svg>
-        </div>
-
-        <details class="chart-data">
-          <summary>Ver dados em tabela</summary>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th scope="col">Mês</th><th scope="col">Total</th></tr></thead>
-              <tbody>
-                {% for bar in cost_chart.bars %}
-                <tr><td data-label="Mês">{{ bar.label }}</td><td data-label="Total">{{ bar.total|brl }}</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </details>
-      </div>
-
-      <p class="tp-source">
-        Faturamento real do Google Cloud, líquido de créditos. Custo de
-        <strong>infraestrutura</strong> — não é dado da BNCC.
-      </p>
-    </article>
-  {% endif %}
-
-    <article class="transparency-panel funding-block">
-      <header class="tp-head">
-        <p class="tp-overline">Apoio financeiro recebido</p>
-        <p class="tp-hero">
-          <span class="tp-value">R$ 0</span>
-          <span class="tp-unit">até agora</span>
-        </p>
-        <p class="tp-since">nenhum patrocínio, edital ou doação registrado até hoje</p>
-      </header>
-      <p class="funding-note">
-        A infraestrutura que mantém a BNCC API no ar sai do bolso de quem cuida do
-        projeto. Quando chegar o primeiro apoio, esta seção passa a mostrar quanto
-        foi, de onde veio e no que foi aplicado — a mesma auditoria pública que já
-        fazemos com os custos. Prestação de contas do gasto e da receita, no mesmo lugar.
-      </p>
-    </article>
-
-  </div>
-</section>
-{% endif %}
-
-<!-- ========================== FOUNDED BY =========================== -->
+<!-- ============================== QUEM MANTÉM ============================== -->
 <section class="section container section-narrow" aria-labelledby="founders-heading">
-  <h2 id="founders-heading">Uma iniciativa Expertia × EuMaker</h2>
+  <h2 id="founders-heading">Quem mantém</h2>
   <p class="lead">
     A BNCC API é criada e mantida pela <a href="https://expertia.dev.br" rel="noopener">Expertia</a>
     e pela <a href="https://eumaker.dev" rel="noopener">EuMaker</a>, de
     <a href="https://github.com/eumakerdev" rel="noopener">Fábio Santana</a> — no Brasil,
-    para quem constrói educação no Brasil. Código aberto (MIT), contribuições bem-vindas.
+    para quem constrói educação no Brasil. Código aberto sob licença MIT, contribuições bem-vindas.
   </p>
   <p class="notice">
     Iniciativa <strong>independente e não-oficial</strong>, sem vínculo com o MEC. Os textos de
@@ -566,7 +537,7 @@ API keys self-service.{% endblock %}
   </p>
 </section>
 
-<!-- ============================== FAQ ============================== -->
+<!-- ================================= FAQ ================================= -->
 <section class="section container" id="perguntas-frequentes" aria-labelledby="faq-heading">
   <h2 id="faq-heading">Perguntas frequentes</h2>
   <div class="faq-list">
@@ -596,8 +567,8 @@ API keys self-service.{% endblock %}
     <details class="faq-item">
       <summary>A base de habilidades está completa?</summary>
       <p>
-        Sim: 1.703 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino
-        Médio, incluindo as 140 do Complemento de Computação. O snapshot é versionado e a
+        Sim: 1.717 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino
+        Médio, incluindo as 141 do Complemento de Computação. O snapshot é versionado e a
         extração é determinística, reproduzível e auditada.
       </p>
     </details>
@@ -609,17 +580,25 @@ API keys self-service.{% endblock %}
         com elegância.
       </p>
     </details>
+    <details class="faq-item">
+      <summary>Qual a cota e o que acontece se eu estourar?</summary>
+      <p>
+        São 60 requisições por minuto nos endpoints determinísticos. Ao estourar, a API
+        responde 429 com o cabeçalho de espera; nada é bloqueado em definitivo. Se o seu
+        caso precisa de mais, abra uma issue no repositório e conversamos.
+      </p>
+    </details>
   </div>
 </section>
 
-<!-- =========================== CTA FINAL =========================== -->
-<section class="section container cta-final" aria-labelledby="cta-heading">
-  <div class="cta-final-inner">
+<!-- ============================== CTA FINAL ============================== -->
+<section class="band band-brand cta-final" aria-labelledby="cta-heading">
+  <div class="container">
     <h2 id="cta-heading">Sua primeira chamada sai em minutos</h2>
     <p class="lead">Conta gratuita, chave na hora e toda a BNCC à disposição do seu produto.</p>
     <p class="cta-row">
       <a class="btn btn-lg" href="/portal/signup">Criar minha chave grátis</a>
-      <a class="btn btn-secondary btn-lg" href="/guia">Ler o guia de início rápido</a>
+      <a class="btn btn-secondary btn-lg" href="/guia">Ler o guia</a>
     </p>
   </div>
 </section>

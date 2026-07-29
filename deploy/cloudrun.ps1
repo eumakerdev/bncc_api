@@ -90,6 +90,19 @@ if (-not (Exists { gcloud artifacts repositories describe $Repo --location=$Regi
     --location=$Region --description="BNCC API images" }
 }
 
+# Politica de limpeza (idempotente, reaplicada a cada deploy).
+# A tag `$Tag` e reusada a cada build, entao TODO deploy orfanava a imagem anterior
+# (varios GB) sem nada para recolhe-la: o repositorio chegou a 66,8 GB / R$38 por mes
+# guardando 17 imagens sem tag.
+# NAO passar --dry-run aqui: nesse comando ele nao e "simular", e sim COLOCAR o
+# repositorio em modo dry-run permanente, onde as politicas rodam mas nunca apagam.
+$cleanupPolicy = Join-Path $PSScriptRoot "artifact-cleanup-policy.json"
+if (Test-Path $cleanupPolicy) {
+  Info "Politica de limpeza do Artifact Registry"
+  Exec { gcloud artifacts repositories set-cleanup-policies $Repo --location=$Region `
+    --policy=$cleanupPolicy }
+}
+
 # 3) Cloud SQL Postgres ---------------------------------------------------------
 Info "Cloud SQL Postgres ($SqlInstance) - pode levar alguns minutos na 1a vez"
 if (-not (Exists { gcloud sql instances describe $SqlInstance })) {
@@ -342,11 +355,28 @@ if ($useSmtp) {
 if ($useGoogleOAuth) { $svcSecrets += ",GOOGLE_OAUTH_CLIENT_ID=GOOGLE_OAUTH_CLIENT_ID:latest,GOOGLE_OAUTH_CLIENT_SECRET=GOOGLE_OAUTH_CLIENT_SECRET:latest" }  # pragma: allowlist secret
 if ($useGithubOAuth) { $svcSecrets += ",GITHUB_OAUTH_CLIENT_ID=GITHUB_OAUTH_CLIENT_ID:latest,GITHUB_OAUTH_CLIENT_SECRET=GITHUB_OAUTH_CLIENT_SECRET:latest" }  # pragma: allowlist secret
 Info "Deploy do servico Cloud Run ($Service)"
+# Dimensionamento (auditoria de custos, 2026-07-28) ------------------------------
+# Medido em producao: CPU p99 = 1% de 2 vCPU, memoria p99 = 39% de 4 GiB, ~100
+# requisicoes/dia. 99% da fatura do Cloud Run era a instancia ociosa mantida por
+# `min-instances=1`, cuja unica razao era esconder um cold start de 70s causado
+# por carregar torch/SentenceTransformer no startup.
+#
+# Com a camada de IA carregada sob demanda (app/services/vector_store.py), o boot
+# caiu para ~1,5s e a instancia sempre-ligada deixou de se justificar:
+#   min-instances 1 -> 0   escala a zero de verdade
+#   cpu 2 -> 1             1% de uso medido
+#   memoria 4Gi -> 2Gi     1,56 GiB medidos com o modelo residente
+#
+# --timeout=300 (era 120): a PRIMEIRA busca semantica de um container novo paga o
+# carregamento do modelo (~15s local, mais em 1 vCPU) ANTES do LLM. 120s era
+# apertado demais para essa soma; timeout nao gera custo, so teto.
+# --concurrency=80: volta ao padrao, coerente com 1 vCPU (estava em 160).
 $envFileSvc = Write-EnvFile $envBase
 Exec { gcloud run deploy $Service `
   --image=$ImageUri --region=$Region --platform=managed --allow-unauthenticated `
   --add-cloudsql-instances=$Csql `
-  --memory=4Gi --cpu=2 --min-instances=1 --max-instances=4 --timeout=120 `
+  --memory=2Gi --cpu=1 --min-instances=0 --max-instances=4 --timeout=300 `
+  --concurrency=80 `
   --env-vars-file=$envFileSvc `
   --set-secrets="$svcSecrets" }
 Remove-Item $envFileSvc -Force

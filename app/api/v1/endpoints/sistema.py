@@ -105,14 +105,19 @@ async def readiness() -> dict:
     # indisponibilidade é reportada mas NÃO torna o serviço "not_ready", pois os
     # endpoints determinísticos permanecem 100% funcionais (T064 distingue
     # "IA indisponível" de "serviço fora"; SC-009).
+    #
+    # A sonda é DELIBERADAMENTE barata: o modelo de embeddings é carregado sob
+    # demanda (ver `vector_store.get_vector_service`), e disparar essa carga aqui
+    # anularia o ganho de cold start — um health check periódico manteria 1,2 GiB
+    # de torch residentes de graça. Então: se o serviço já foi carregado, reporta
+    # o estado real; senão, sonda o índice em disco sem importar torch/chromadb.
+    # Os dois valores do contrato (`available`/`unavailable`) são preservados.
     try:
-        from app.main import app as _app
+        from app.services.vector_store import index_is_populated, peek_vector_service
 
-        vector = getattr(_app.state, "vector_service", None)
-        if vector is not None and getattr(vector, "available", False):
-            components["ai"] = "available"
-        else:
-            components["ai"] = "unavailable"  # degrada graciosamente
+        loaded = peek_vector_service()
+        usable = bool(loaded.available) if loaded is not None else index_is_populated()
+        components["ai"] = "available" if usable else "unavailable"
     except Exception:  # pragma: no cover
         components["ai"] = "unavailable"
 

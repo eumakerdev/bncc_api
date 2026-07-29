@@ -13,6 +13,7 @@ vive apenas no snapshot versionado `data/bncc_v1.json`.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from pathlib import Path
@@ -41,9 +42,10 @@ class VectorStoreService:
     """
     Recuperacao semantica sobre o snapshot da BNCC.
 
-    Ciclo de vida (chamado pelo lifespan em `app/main.py`):
-        service = VectorStoreService()
-        await service.initialize()   # nunca levanta; seta self.available
+    Ciclo de vida: NAO e instanciado no startup. Use `get_vector_service()`, que
+    carrega o modelo sob demanda na primeira busca semantica (ver a nota sobre
+    cold start no rodape deste modulo).
+        service = await get_vector_service()   # nunca levanta; seta .available
         ...
         await service.cleanup()
     """
@@ -295,15 +297,83 @@ class VectorStoreService:
 
 
 # --------------------------------------------------------------------------- #
-# Singleton de modulo (compat.: app.main usa VectorStoreService() diretamente)
+# Singleton de modulo — carga PREGUICOSA (custo/cold start)
 # --------------------------------------------------------------------------- #
+# O modelo de embeddings (torch + SentenceTransformer) leva ~70s para carregar e
+# ocupa ~1,2 GiB residentes. Carrega-lo no lifespan obrigava o Cloud Run a manter
+# uma instancia sempre quente (min-instances=1) so para esconder esse cold start,
+# o que respondia por 72% da fatura mensal servindo ~100 requisicoes/dia.
+#
+# Adiar a carga para a PRIMEIRA busca semantica deixa o startup em poucos segundos
+# e permite escalar a zero. Tambem e mais fiel ao Principio VII: o nucleo
+# deterministico nao paga nada pela camada de IA — nem em tempo, nem em memoria.
 _vector_service: VectorStoreService | None = None
+_vector_lock: asyncio.Lock | None = None
+
+
+def _get_lock() -> asyncio.Lock:
+    """
+    Lock criado sob demanda, ligado ao event loop corrente.
+
+    Instanciar `asyncio.Lock()` no import prende o lock ao loop daquele momento;
+    a suite de testes cria um loop por teste, o que quebraria o reuso.
+    """
+    global _vector_lock
+    if _vector_lock is None:
+        _vector_lock = asyncio.Lock()
+    return _vector_lock
 
 
 async def get_vector_service() -> VectorStoreService:
-    """Devolve (criando/iniciando sob demanda) a instancia global do servico."""
+    """
+    Devolve a instancia global, carregando o modelo na primeira chamada.
+
+    O lock evita que uma rajada simultanea dispare N carregamentos concorrentes
+    do modelo (N x 1,2 GiB estouraria a memoria do container). O padrao e
+    double-checked: quem chegou depois encontra a instancia pronta e nao recarrega.
+    """
     global _vector_service
-    if _vector_service is None:
-        _vector_service = VectorStoreService()
-        await _vector_service.initialize()
+    if _vector_service is not None:
+        return _vector_service
+
+    async with _get_lock():
+        if _vector_service is None:  # re-checa: outro coroutine pode ter criado
+            service = VectorStoreService()
+            await service.initialize()  # nunca levanta; seta service.available
+            _vector_service = service
     return _vector_service
+
+
+def peek_vector_service() -> VectorStoreService | None:
+    """
+    Devolve o servico SE ja carregado, senao None — nunca dispara a carga.
+
+    Para quem precisa saber o estado da IA sem paga-lo: readiness e o teardown do
+    lifespan. Usar `get_vector_service()` nesses pontos carregaria o modelo.
+    """
+    return _vector_service
+
+
+def reset_vector_service() -> None:
+    """Descarta o singleton (usado pelos testes para isolar o estado)."""
+    global _vector_service, _vector_lock
+    _vector_service = None
+    _vector_lock = None
+
+
+def index_is_populated() -> bool:
+    """
+    Sonda BARATA de disponibilidade da IA, sem carregar o modelo.
+
+    Usada pelo readiness: importar torch/chromadb ali anularia todo o ganho de
+    cold start. Verifica apenas se o indice ChromaDB assado na imagem existe e
+    nao esta vazio — o que basta para dizer que a busca semantica e servivel.
+    """
+    try:
+        data_dir = Path(settings.CHROMADB_PATH)
+        if not data_dir.is_dir():
+            return False
+        # O PersistentClient do ChromaDB grava um sqlite3 + diretorios de segmento.
+        return any(data_dir.iterdir())
+    except Exception:  # noqa: BLE001 - sonda best-effort, nunca derruba readiness
+        return False

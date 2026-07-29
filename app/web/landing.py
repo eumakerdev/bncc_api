@@ -29,6 +29,22 @@ logger = logging.getLogger("bncc.landing")
 _CACHE_1H = "public, max-age=3600"
 _CACHE_1D = "public, max-age=86400"
 
+# Cache do HTML da landing na CDN. Sem header explícito o Firebase Hosting marca a
+# resposta como `private` e TODO acesso atravessa até o Cloud Run — o que, com
+# `min-instances=0`, exporia o cold start a cada visitante e ao crawler.
+#
+# `max-age=0` mantém o navegador sempre revalidando (o usuário nunca vê HTML velho
+# em cache local), enquanto `s-maxage` deixa a CDN absorver o tráfego. O
+# `stale-while-revalidate` é o que efetivamente esconde o cold start: a borda serve
+# a cópia anterior na hora e revalida em background.
+#
+# O `s-maxage` acompanha `_TRANSPARENCY_TTL_SECONDS` de propósito — não adianta a
+# CDN reter mais tempo do que o dado de transparência leva para mudar.
+#
+# Seguro por ser público: `landing.html` não renderiza nada de sessão, então não há
+# variação por usuário para vazar entre visitantes.
+_CACHE_LANDING = "public, max-age=0, s-maxage=600, stale-while-revalidate=3600"
+
 _FAVICON_ICO = Path(__file__).parent / "static" / "favicon.ico"
 
 
@@ -129,7 +145,12 @@ async def _transparency_context() -> dict:
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def landing(request: Request) -> Response:
     """Landing page: proposta de valor, recursos, público-alvo e CTA (SC-008)."""
-    return templates.TemplateResponse(request, "landing.html", await _transparency_context())
+    return templates.TemplateResponse(
+        request,
+        "landing.html",
+        await _transparency_context(),
+        headers={"Cache-Control": _CACHE_LANDING},
+    )
 
 
 @router.get("/favicon.ico", include_in_schema=False)

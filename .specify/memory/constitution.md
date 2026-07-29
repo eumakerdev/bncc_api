@@ -27,6 +27,7 @@ Templates requiring updates:
   ✅ .github/dependabot.yml                 (ignores de langchain/bigquery removidos)
   ✅ .github/workflows/ci.yml               (comentário sobre stack de IA legada atualizado)
   ✅ docs/seguranca-endurecimento.md        (dívida da stack de IA atualizada)
+  ✅ CHANGELOG.md                           (emenda registrada em [Não lançado])
   ⚠ specs/001-public-api-platform/{plan.md,tasks.md} — mencionam LangChain como registro
     histórico da feature entregue; não editados deliberadamente (snapshot do plano aprovado).
 

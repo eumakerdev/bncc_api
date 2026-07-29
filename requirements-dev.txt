@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# Dependências de DESENVOLVIMENTO — deliberadamente fora da imagem de produção.
+#
+# Nada aqui é importado por `app/`: são ferramentas de teste/lint/docs e a stack
+# de extração determinística da BNCC, usada só pelos `scripts/` que (re)geram o
+# snapshot `data/bncc_v1.json` offline. Manter isso fora do runtime encolhe a
+# imagem, o cold start do Cloud Run e a conta do Artifact Registry.
+#
+# Uso:  pip install -r requirements.txt -r requirements-dev.txt
+# ---------------------------------------------------------------------------
+
+# Runtime da aplicação (as deps de dev abaixo assumem a app instalável)
+-r requirements.txt
+
+# Extração determinística da BNCC a partir dos PDFs oficiais (scripts/).
+# Ver CLAUDE.md: pdfplumber isola colunas; pikepdf normaliza o page tree
+# comprimido do documento completo da Educação Infantil.
+pandas==2.1.4
+beautifulsoup4==4.15.0
+lxml==6.1.1
+pdfplumber==0.11.10
+PyPDF2==3.0.1
+pypdf==6.14.2
+pikepdf==10.10.0
+
+# Testes + cobertura (gate de CI ≥ 80%)
+pytest==9.1.1
+pytest-cov==7.1.0  # >=5 para API de plugin compatível com pytest 9
+pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: FixtureDef.unittest)
+# httpx é dependência de runtime (login social) — declarado em requirements.txt.
+
+# Qualidade de código
+ruff==0.15.21
+black==26.5.1
+mypy==2.3.0
+pre-commit==4.6.0
+
+# Documentação
+mkdocs==1.6.1
+mkdocs-material==9.7.6

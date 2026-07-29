@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, status
 
 from app.core.deps import AiRateLimited
 from app.models.search import BuscaSemanticaRequest, BuscaSemanticaResponse
@@ -52,12 +52,16 @@ logger = logging.getLogger("bncc.busca")
 async def busca_semantica(
     payload: BuscaSemanticaRequest,
     _api_key: AiRateLimited,
-    request: Request,
 ) -> BuscaSemanticaResponse:
     # Import preguicoso: mantem o app importavel mesmo sem libs de IA.
     from app.services.ai_service import AIUnavailableError, responder
+    from app.services.vector_store import get_vector_service
 
-    vector_service = getattr(request.app.state, "vector_service", None)
+    # Carga sob demanda: a PRIMEIRA chamada apos o cold start paga o
+    # carregamento do modelo (~70s); as seguintes reusam a instancia do
+    # processo. `get_vector_service` nunca levanta — se a stack de IA estiver
+    # ausente o servico volta com `available=False` e `responder` devolve 503.
+    vector_service = await get_vector_service()
 
     try:
         return await responder(

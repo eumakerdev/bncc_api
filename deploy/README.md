@@ -130,10 +130,38 @@ são publicados na **mesma zona do Registro.br** — sem eles o e-mail de verifi
   novo build (novo `-Tag`) e redeploy.
 
 ## Custo (ordem de grandeza)
-Cloud SQL `db-f1-micro` roda continuamente (~US$ 8–10/mês). Cloud Run com `--min-instances=1`
-(escolhido para evitar cold start pesado de ML) mantém 1 instância ativa e também gera custo
-contínuo — baixe para `0` se puder tolerar cold start, ou suba o `min` conforme a carga.
-E-mail via **Brevo** é gratuito no free tier (300/dia) — sem custo adicional nesta fase.
+Medido no billing export em jul/2026: **~R$450/mês**, dos quais **72% era a instância ociosa do
+Cloud Run** — `min-instances=1` com 2 vCPU/4 GiB ligada 24/7 para servir ~100 requisições/dia (CPU
+p99 medida: 1%). O `min-instances=1` existia só para esconder um cold start de 70s causado por
+carregar torch/SentenceTransformer no startup.
+
+Depois da auditoria (2026-07-28) a camada de IA passou a carregar **sob demanda**
+(`app/services/vector_store.get_vector_service`), o boot caiu para ~1,5s e o serviço roda em
+`--min-instances=0 --cpu=1 --memory=2Gi`. Alvo: **~R$95/mês**.
+
+Composição atual esperada:
+- **Cloud SQL `db-f1-micro`** (~R$81/mês) — passa a ser o maior item e é o piso do Postgres
+  gerenciado no GCP em São Paulo. **Não há poda de `usage_records`, e isso é deliberado:** o disco
+  está em **0,07 GiB de 9,7 GiB** e ficou plano durante toda a janela medida. A tabela cresce
+  ~2 linhas por API key por dia (uma por bucket), de ~100 bytes — décadas abaixo de qualquer
+  limite. Uma poda economizaria R$0 e colocaria em risco três números **publicados** na seção de
+  transparência (`total_to_date`, `period_start`, `developers` em `usage_service`), que agregam a
+  tabela inteira desde sempre. Se um dia valer a pena, ela precisa **consolidar as linhas podadas
+  num agregado antes de apagar** — nunca só deletar (Princípio IV).
+  Gatilho para reavaliar: `cloudsql.googleapis.com/database/disk/bytes_used` acima de ~5 GiB.
+- **Cloud Run** (~R$10/mês) — só billing por requisição; sem instância ociosa.
+- **Artifact Registry** (~R$2/mês) — mantido baixo pela política de limpeza do repositório
+  (`deploy/artifact-cleanup-policy.json`). Sem ela, cada deploy órfãnava uma imagem de vários GB.
+- **Cloud Build** — na máquina padrão, elegível aos 120 min/dia gratuitos.
+- **E-mail via Brevo** — free tier (300/dia), sem custo.
+
+**Contrapartida aceita:** a primeira requisição após um período ocioso paga o cold start (poucos
+segundos), e a primeira busca semântica de um container novo também carrega o modelo. A landing
+manda `Cache-Control` público (`s-maxage` + `stale-while-revalidate`), então a CDN do Firebase
+absorve o tráfego do site e visitantes/crawlers praticamente não veem cold start.
+
+Se a carga crescer a ponto de o cold start incomodar, o caminho é voltar `--min-instances=1`
+**mantendo** 1 vCPU/2 GiB (~R$160/mês) — não é preciso reverter o carregamento sob demanda.
 
 ## Transparência de custos (seção pública da landing)
 A landing tem uma seção **"Transparência de custos"** que mostra o custo real de infraestrutura
