@@ -371,6 +371,7 @@ Info "Deploy do servico Cloud Run ($Service)"
 # carregamento do modelo (~15s local, mais em 1 vCPU) ANTES do LLM. 120s era
 # apertado demais para essa soma; timeout nao gera custo, so teto.
 # --concurrency=80: volta ao padrao, coerente com 1 vCPU (estava em 160).
+$envFileSvc = Write-EnvFile $envBase
 Exec { gcloud run deploy $Service `
   --image=$ImageUri --region=$Region --platform=managed --allow-unauthenticated `
   --add-cloudsql-instances=$Csql `
