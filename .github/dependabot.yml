@@ -2,9 +2,9 @@
 # Dependabot — automação de atualização de dependências
 # -----------------------------------------------------------------------------
 # Racional (Princípio V da Constituição — Segurança por padrão):
-#   O CI executa `pip-audit` em modo informativo (continue-on-error) porque a
-#   stack de IA legada (chromadb, langchain e transitivos) carrega CVEs conhecidas
-#   cujo upgrade exige coordenação maior. O Dependabot ataca essa dívida na raiz:
+#   O CI executa `pip-audit` em modo informativo (continue-on-error) porque
+#   transitivos da stack de IA podem carregar CVEs sem fix publicado.
+#   O Dependabot ataca essa dívida na raiz:
 #   abre PRs de atualização de forma contínua e rastreável, em vez de deixar as
 #   versões pinadas apodrecerem em requirements.txt.
 #
@@ -24,19 +24,9 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
-    # langchain/langchain-community são travados juntos: langchain==0.1.0 exige
-    # langchain-community>=0.0.9,<0.1. Bumps piecemeal (ex.: community 0.4.2)
-    # quebram a resolução do pip. O ecossistema LangChain deve subir de forma
-    # coordenada, não via grupo minor/patch — por isso é ignorado aqui.
-    ignore:
-      - dependency-name: "langchain"
-      - dependency-name: "langchain-community"
-      # google-cloud-bigquery >=3.31 exige packaging>=24.2, mas langchain-core
-      # 0.1.x (arrastado por langchain==0.1.0) pina packaging<24 — o pip não
-      # resolve (visto no PR #29). Destravado só com o upgrade coordenado do
-      # ecossistema LangChain acima.
-      - dependency-name: "google-cloud-bigquery"
-        versions: [">3.30.0"]
+    # (Histórico: langchain/langchain-community e o teto de google-cloud-bigquery
+    # eram ignorados aqui por conflitos de resolução do pip. O LangChain foi
+    # removido da stack canônica — Constituição v1.1.0 — e os ignores caíram.)
     groups:
       # Agrupa patch/minor de todas as libs num só PR para reduzir ruído.
       python-minor-e-patch:

@@ -36,41 +36,31 @@ slowapi==0.1.10
 
 # Transparência de custos — leitura do BigQuery billing export (só no job de
 # ingestão `scripts/ingest_costs.py`; import lazy, o app web nunca o carrega).
-# Cliente CORE (sem extras pandas/bqstorage) → não puxa numpy>=2 (mantém o pino
-# numpy<2 exigido por langchain 0.1.0).
-# TETO 3.30.0: >=3.31 exige packaging>=24.2, mas langchain-core 0.1.x (arrastado
-# por langchain==0.1.0) pina packaging<24 → ResolutionImpossible no pip. Subir
-# além exige upgrade coordenado do ecossistema LangChain (ignore no dependabot.yml).
-google-cloud-bigquery==3.30.0
+# Cliente CORE (sem extras pandas/bqstorage): superfície mínima de dependências.
+google-cloud-bigquery==3.42.2
 
 # Superfícies visuais (SSR: landing + portal + docs)
 Jinja2==3.1.6
 
-# Resolução do pip — pinos que existem só para EVITAR BACKTRACKING (não são
-# dependências diretas nossas). `chromadb` pede `build>=1.0.3`; a partir de
-# `build==1.4.0` ele exige `packaging>=24.0`, enquanto `langchain-core` 0.1.x
-# (arrastado por `langchain==0.1.0`) exige `packaging<24.0`. Sem estes pinos o pip
-# desce versão a versão de `build`, **re-resolvendo a árvore inteira a cada
-# tentativa** (~175s por iteração medidos) — isso sozinho respondia por vários
-# minutos de TODO build de imagem. `build==1.3.0` é a versão mais nova que ainda
-# aceita `packaging>=19.1`.
-# Remover quando o ecossistema LangChain for atualizado (ver .github/dependabot.yml,
-# que já ignora langchain-community pelo mesmo motivo).
-build==1.3.0
-packaging==23.2
-
-# Vetores / IA (RAG) — camada aumentada e opcional
+# Vetores / IA (RAG) — camada aumentada e opcional. LangChain foi REMOVIDO da
+# stack canônica (Constituição v1.1.0): nunca foi importado no código e seus pinos
+# legados travavam numpy<2 e packaging<24 na resolução de dependências.
+#
+# Com o LangChain fora, os pinos anti-backtracking `build==1.3.0`/`packaging==23.2`
+# deixaram de ser necessários: eles só existiam porque `langchain-core` 0.1.x exigia
+# `packaging<24.0` enquanto `chromadb` puxava `build>=1.4.0` (que exige
+# `packaging>=24.0`) — o pip descia versão a versão de `build`, re-resolvendo a
+# árvore inteira a cada tentativa (~175s por iteração). Sem o conflito, a resolução
+# converge direto e o pip escolhe as versões mais novas.
 chromadb==1.5.9
-langchain==0.1.0
-langchain-community==0.0.10  # travado por langchain==0.1.0 (exige >=0.0.9,<0.1); Dependabot ignora este pacote
 sentence-transformers==5.6.0  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_download removido)
 openai==2.45.0
 google-generativeai==0.8.6
 
 # numpy: dependência de RUNTIME (chromadb/sentence-transformers operam sobre
-# ndarray; `vector_store` chama `.tolist()` nos embeddings). O pino <2 é exigido
-# por langchain 0.1.0 e precisa ficar aqui, explícito, senão o resolvedor do pip
-# sobe para numpy>=2 ao satisfazer o chromadb e quebra o langchain.
+# ndarray; `vector_store` chama `.tolist()` nos embeddings). O teto `<2` vinha do
+# langchain 0.1.0; com ele fora da stack o pino 1.x é apenas conservador — o bump
+# para numpy 2.x fica liberado para o Dependabot propor, validado pelos portões de CI.
 numpy==1.24.3
 requests==2.34.2
 
