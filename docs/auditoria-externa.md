@@ -2,7 +2,7 @@
 
 Fluxo **repetível, externo, agêntico e incremental** para auditar a fidelidade das
 descrições servidas pela API contra **fontes independentes** — cobrindo o corpus
-(~1.717 habilidades) **aos poucos**, ao longo do tempo. Governado pela Constituição
+(~1.721 habilidades) **aos poucos**, ao longo do tempo. Governado pela Constituição
 (`.specify/memory/constitution.md`, Princípio IV — *Fidelidade dos dados* — e
 Princípio VII — *IA como camada não confiável, nunca dado oficial*).
 

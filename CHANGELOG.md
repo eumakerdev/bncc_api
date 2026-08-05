@@ -41,7 +41,7 @@ alerta. O número público envelheceu em silêncio; nada "quebrou".
 
 Uma suíte black-box de 118 verificações contra `https://bncc.api.br`, cada uma ancorada
 num princípio da Constituição, passou 111/118 **sem nenhuma falha funcional** — os dados
-servidos são byte a byte idênticos ao snapshot versionado (1717 habilidades conferidas
+servidos são byte a byte idênticos ao snapshot versionado (1721 habilidades conferidas
 uma a uma). Os achados restantes eram de conformidade, e todos foram fechados aqui.
 **Nenhuma quebra de contrato `/api/v1`** (Princípio I): tudo é aditivo ou documental.
 

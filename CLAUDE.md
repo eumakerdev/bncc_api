@@ -81,7 +81,7 @@ publicada — mudança incompatível exige nova versão de caminho** (Princípio
 > `data/BNCCComputaoCompletodiagramado (1).pdf` via `scripts/extract_bncc_computacao.py` (chamado por
 > `extract_bncc_data.py`): recupera espaços posicionais com `x_tolerance`, isola a coluna HABILIDADE
 > e lê o **eixo** (horizontal na EI; rotacionado 90° no EF). Contagens atuais do snapshot: EI 104,
-> EF 1408, EM 205 — inclui **141 habilidades de Computação** (`componente=computacao`), com eixos
+> EF 1408, EM 209 — inclui **141 habilidades de Computação** (`componente=computacao`), com eixos
 > em EI/EF (`missing_sources: []`). Ver `specs/002-bncc-computacao/`. Os PDFs são grandes e ficam
 > fora do versionamento (`data/` no .gitignore); apenas `data/bncc_v1.json` é versionado.
 >

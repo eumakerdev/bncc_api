@@ -2,12 +2,13 @@
 
 {% block title %}BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita{% endblock %}
 
-{% block description %}1.717 habilidades da BNCC — Educação Infantil, Fundamental e Médio, com o Complemento de
+{% block description %}1.721 habilidades da BNCC — Educação Infantil, Fundamental e Médio, com o Complemento de
 Computação — em uma API REST gratuita. Códigos e textos oficiais preservados, busca semântica com IA e
 API keys self-service.{% endblock %}
 
 {% block og_title %}BNCC API — toda a Base Nacional Comum Curricular em uma API gratuita{% endblock %}
-{% block og_description %}1.717 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca semântica com IA e API keys self-service. Grátis e open-source.{% endblock %}
+{% block og_description %}1.721 habilidades da BNCC (EI/EF/EM + Computação) com códigos oficiais preservados, busca
+semântica com IA e API keys self-service. Grátis e open-source.{% endblock %}
 
 {% block head_extra %}
 <script type="application/ld+json">
@@ -65,7 +66,7 @@ API keys self-service.{% endblock %}
       "name": "A base de habilidades está completa?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Sim: 1.717 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo as 141 do Complemento de Computação. O snapshot é versionado e a extração é determinística, reproduzível e auditada."
+        "text": "Sim: 1.721 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo as 141 do Complemento de Computação. O snapshot é versionado e a extração é determinística, reproduzível e auditada."
       }
     },
     {
@@ -90,7 +91,7 @@ API keys self-service.{% endblock %}
     <div>
       <h1 id="hero-heading">A BNCC inteira, <em>palavra por palavra</em>.</h1>
       <p class="hero-lead">
-        1.717 habilidades das três etapas, com o código e o texto do documento
+        1.721 habilidades das três etapas, com o código e o texto do documento
         oficial. Grátis, aberta e com as contas na mesa.
       </p>
       <p class="hero-actions">
@@ -125,21 +126,21 @@ API keys self-service.{% endblock %}
 <section class="section container" aria-labelledby="cobertura-heading">
   <h2 id="cobertura-heading">A base inteira, da creche ao terceiro ano</h2>
   <div class="cov-head">
-    <p class="cov-total">1.717</p>
+    <p class="cov-total">1.721</p>
     <p class="cov-total-label">habilidades catalogadas, nas três etapas</p>
   </div>
 
   <div class="cov-bar" role="img"
-       aria-label="Distribuição das 1.717 habilidades: Educação Infantil 104, Ensino Fundamental 1.408, Ensino Médio 205.">
+    aria-label="Distribuição das 1.721 habilidades: Educação Infantil 104, Ensino Fundamental 1.408, Ensino Médio 209.">
     <span class="cov-seg cov-seg-ei" style="flex: 104"></span>
     <span class="cov-seg cov-seg-ef" style="flex: 1408">1.408</span>
-    <span class="cov-seg cov-seg-em" style="flex: 205">205</span>
+    <span class="cov-seg cov-seg-em" style="flex: 209">209</span>
   </div>
 
   <ul class="cov-legend">
     <li><span class="swatch cov-seg-ei"></span><b>104</b> <span>Educação Infantil</span></li>
     <li><span class="swatch cov-seg-ef"></span><b>1.408</b> <span>Ensino Fundamental</span></li>
-    <li><span class="swatch cov-seg-em"></span><b>205</b> <span>Ensino Médio</span></li>
+    <li><span class="swatch cov-seg-em"></span><b>209</b> <span>Ensino Médio</span></li>
   </ul>
 
   <p class="cov-note">
@@ -304,14 +305,14 @@ API keys self-service.{% endblock %}
   <div class="container">
     <h2 id="contas-heading">As contas abertas</h2>
 
-  {% if (usage_summary and usage_summary.has_data) or (cost_chart and cost_chart.has_data) %}
+    {% if (usage_summary and usage_summary.has_data) or (cost_chart and cost_chart.has_data) %}
     <p class="lead transparency-lead">
       Quanto a plataforma é usada e quanto custa mantê-la no ar. Números
       agregados, sem login, atualizados a cada 10 minutos.
     </p>
     <div class="transparency-board" id="transparencia">
 
-    {% if usage_summary and usage_summary.has_data %}
+      {% if usage_summary and usage_summary.has_data %}
       <article class="transparency-panel usage-block">
         <header class="tp-head">
           <p class="tp-overline">Uso da plataforma</p>
@@ -320,7 +321,8 @@ API keys self-service.{% endblock %}
             <span class="tp-unit">requisições atendidas</span>
           </p>
           <p class="tp-since">
-            {% if usage_summary.period_start %}desde {{ usage_summary.period_start.strftime('%m/%Y') }} · {% endif %}só o total — nada por usuário, chave ou IP
+            {% if usage_summary.period_start %}desde {{ usage_summary.period_start.strftime('%m/%Y') }} · {% endif %}só
+            o total — nada por usuário, chave ou IP
           </p>
         </header>
 
@@ -340,9 +342,10 @@ API keys self-service.{% endblock %}
             <p class="tp-chart-title">Requisições por dia</p>
             <div class="chart-filters" role="group" aria-label="Período do gráfico">
               {% for w in usage_summary.windows %}
-              <button type="button" class="chart-filter{% if w.days == usage_summary.default_window %} is-active{% endif %}"
-                      data-window-btn="{{ w.days }}"
-                      aria-pressed="{{ 'true' if w.days == usage_summary.default_window else 'false' }}">
+              <button type="button"
+                class="chart-filter{% if w.days == usage_summary.default_window %} is-active{% endif %}"
+                data-window-btn="{{ w.days }}"
+                aria-pressed="{{ 'true' if w.days == usage_summary.default_window else 'false' }}">
                 {{ w.days }}d
               </button>
               {% endfor %}
@@ -351,24 +354,27 @@ API keys self-service.{% endblock %}
 
           {% for w in usage_summary.windows %}
           {% set chart = usage_charts[w.days] %}
-          <div class="usage-window" data-window="{{ w.days }}"{% if w.days != usage_summary.default_window %} hidden{% endif %}>
+          <div class="usage-window" data-window="{{ w.days }}" {% if w.days !=usage_summary.default_window %} hidden{%
+            endif %}>
             <div class="chart-scroll">
-            <svg class="usage-chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}"
-                 role="img" preserveAspectRatio="none"
-                 aria-label="Requisições por dia nos últimos {{ w.days }} dias. Total de {{ w.total_requests|milhar }} requisições, média de {{ w.daily_average|milhar }} por dia.">
-              {% for t in chart.y_ticks %}
-              <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}"/>
-              <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
-              {% endfor %}
-              <path class="chart-area chart-area-total" d="{{ chart.area }}"/>
-              <polyline class="chart-line chart-line-total" points="{{ chart.line }}"/>
-              {% for t in chart.x_ticks %}
-              <text class="chart-axis" x="{{ t.pos }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
-              {% endfor %}
-            </svg>
+              <svg class="usage-chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img"
+                preserveAspectRatio="none"
+                aria-label="Requisições por dia nos últimos {{ w.days }} dias. Total de {{ w.total_requests|milhar }} requisições, média de {{ w.daily_average|milhar }} por dia.">
+                {% for t in chart.y_ticks %}
+                <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}" />
+                <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
+                {% endfor %}
+                <path class="chart-area chart-area-total" d="{{ chart.area }}" />
+                <polyline class="chart-line chart-line-total" points="{{ chart.line }}" />
+                {% for t in chart.x_ticks %}
+                <text class="chart-axis" x="{{ t.pos }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ t.label
+                  }}</text>
+                {% endfor %}
+              </svg>
             </div>
             <p class="tp-chart-foot">
-              <strong>{{ w.total_requests|milhar }}</strong> em {{ w.days }} dias · <strong>{{ w.daily_average|milhar }}</strong>/dia em média
+              <strong>{{ w.total_requests|milhar }}</strong> em {{ w.days }} dias · <strong>{{ w.daily_average|milhar
+                }}</strong>/dia em média
             </p>
           </div>
           {% endfor %}
@@ -379,10 +385,18 @@ API keys self-service.{% endblock %}
             <summary>Ver dados em tabela ({{ dw.days }} dias)</summary>
             <div class="table-wrap">
               <table>
-                <thead><tr><th scope="col">Dia</th><th scope="col">Requisições</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th scope="col">Dia</th>
+                    <th scope="col">Requisições</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {% for p in dw.series %}
-                  <tr><td data-label="Dia">{{ p.date.strftime('%d/%m') }}</td><td data-label="Requisições">{{ p.total|milhar }}</td></tr>
+                  <tr>
+                    <td data-label="Dia">{{ p.date.strftime('%d/%m') }}</td>
+                    <td data-label="Requisições">{{ p.total|milhar }}</td>
+                  </tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -391,9 +405,9 @@ API keys self-service.{% endblock %}
           {% endif %}
         </div>
       </article>
-    {% endif %}
+      {% endif %}
 
-    {% if cost_chart and cost_chart.has_data %}
+      {% if cost_chart and cost_chart.has_data %}
       <article class="transparency-panel cost-block">
         <header class="tp-head">
           <p class="tp-overline">Custo de infraestrutura</p>
@@ -402,7 +416,8 @@ API keys self-service.{% endblock %}
             <span class="tp-unit">até agora</span>
           </p>
           <p class="tp-since">
-            {% if cost_summary and cost_summary.period_start %}desde {{ cost_summary.period_start.strftime('%m/%Y') }} · {% endif %}{{ cost_summary.total_month|brl }} neste mês
+            {% if cost_summary and cost_summary.period_start %}desde {{ cost_summary.period_start.strftime('%m/%Y') }} ·
+            {% endif %}{{ cost_summary.total_month|brl }} neste mês
           </p>
         </header>
 
@@ -424,33 +439,44 @@ API keys self-service.{% endblock %}
           </div>
 
           <div class="chart-scroll">
-          <svg class="usage-chart cost-chart" viewBox="0 0 {{ cost_chart.width }} {{ cost_chart.height }}"
-               role="img" preserveAspectRatio="none"
-               aria-label="Custo mensal de infraestrutura por serviço, em reais. Total acumulado de {{ cost_summary.total_to_date|brl }}.">
-            {% for t in cost_chart.y_ticks %}
-            <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ cost_chart.width - 12 }}" y2="{{ t.pos }}"/>
-            <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
-            {% endfor %}
-            {% for bar in cost_chart.bars %}
-              {% for seg in bar.segments %}
-              <rect class="cost-bar {{ seg.color_class }}" x="{{ seg.x }}" y="{{ seg.y }}"
-                    width="{{ seg.width }}" height="{{ seg.height }}"><title>{{ seg.title }}</title></rect>
+            <svg class="usage-chart cost-chart" viewBox="0 0 {{ cost_chart.width }} {{ cost_chart.height }}" role="img"
+              preserveAspectRatio="none"
+              aria-label="Custo mensal de infraestrutura por serviço, em reais. Total acumulado de {{ cost_summary.total_to_date|brl }}.">
+              {% for t in cost_chart.y_ticks %}
+              <line class="chart-grid" x1="44" y1="{{ t.pos }}" x2="{{ cost_chart.width - 12 }}" y2="{{ t.pos }}" />
+              <text class="chart-axis" x="38" y="{{ t.pos + 4 }}" text-anchor="end">{{ t.label }}</text>
               {% endfor %}
-            {% endfor %}
-            {% for t in cost_chart.x_ticks %}
-            <text class="chart-axis" x="{{ t.pos }}" y="{{ cost_chart.height - 8 }}" text-anchor="middle">{{ t.label }}</text>
-            {% endfor %}
-          </svg>
+              {% for bar in cost_chart.bars %}
+              {% for seg in bar.segments %}
+              <rect class="cost-bar {{ seg.color_class }}" x="{{ seg.x }}" y="{{ seg.y }}" width="{{ seg.width }}"
+                height="{{ seg.height }}">
+                <title>{{ seg.title }}</title>
+              </rect>
+              {% endfor %}
+              {% endfor %}
+              {% for t in cost_chart.x_ticks %}
+              <text class="chart-axis" x="{{ t.pos }}" y="{{ cost_chart.height - 8 }}" text-anchor="middle">{{ t.label
+                }}</text>
+              {% endfor %}
+            </svg>
           </div>
 
           <details class="chart-data">
             <summary>Ver dados em tabela</summary>
             <div class="table-wrap">
               <table>
-                <thead><tr><th scope="col">Mês</th><th scope="col">Total</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th scope="col">Mês</th>
+                    <th scope="col">Total</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {% for bar in cost_chart.bars %}
-                  <tr><td data-label="Mês">{{ bar.label }}</td><td data-label="Total">{{ bar.total|brl }}</td></tr>
+                  <tr>
+                    <td data-label="Mês">{{ bar.label }}</td>
+                    <td data-label="Total">{{ bar.total|brl }}</td>
+                  </tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -464,7 +490,7 @@ API keys self-service.{% endblock %}
           <strong>infraestrutura</strong> — não é dado da BNCC.
         </p>
       </article>
-    {% endif %}
+      {% endif %}
 
       <article class="transparency-panel funding-block">
         <header class="tp-head">
@@ -484,7 +510,7 @@ API keys self-service.{% endblock %}
       </article>
 
     </div>
-  {% endif %}
+    {% endif %}
 
     <!-- ---------------------------- Apoie ---------------------------- -->
     <div class="support-grid">
@@ -501,7 +527,8 @@ API keys self-service.{% endblock %}
             Não custa nada e ajuda o projeto a chegar a mais gente que constrói
             educação no Brasil.
           </p>
-          <a class="btn btn-secondary" href="https://github.com/eumakerdev/bncc_api" rel="noopener">Ver o repositório</a>
+          <a class="btn btn-secondary" href="https://github.com/eumakerdev/bncc_api" rel="noopener">Ver o
+            repositório</a>
         </div>
       </div>
 
@@ -511,10 +538,11 @@ API keys self-service.{% endblock %}
           Aponte a câmera para o QR Code ou copie o código e cole em Pix ›
           Copia e Cola. Você escolhe o valor.
         </p>
-        <img class="pix-qr" src="/static/pix-qrcode.png" alt="QR Code Pix para apoiar o projeto"
-             width="140" height="140" loading="lazy">
+        <img class="pix-qr" src="/static/pix-qrcode.png" alt="QR Code Pix para apoiar o projeto" width="140"
+          height="140" loading="lazy">
         <div class="pix-copy">
-          <code id="pix-code">00020126360014BR.GOV.BCB.PIX0114+55719990084435204000053039865802BR5913FABIO SANTANA6006BRASIL62110507BNCCAPI63040E12</code>
+          <code
+            id="pix-code">00020126360014BR.GOV.BCB.PIX0114+55719990084435204000053039865802BR5913FABIO SANTANA6006BRASIL62110507BNCCAPI63040E12</code>
           <button type="button" class="btn btn-secondary btn-sm" id="pix-copy-btn">Copiar código Pix</button>
         </div>
       </div>
@@ -568,7 +596,7 @@ API keys self-service.{% endblock %}
     <details class="faq-item">
       <summary>A base de habilidades está completa?</summary>
       <p>
-        Sim: 1.717 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino
+        Sim: 1.721 habilidades cobrindo Educação Infantil, Ensino Fundamental e Ensino
         Médio, incluindo as 141 do Complemento de Computação. O snapshot é versionado e a
         extração é determinística, reproduzível e auditada.
       </p>

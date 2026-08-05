@@ -5,7 +5,7 @@ NÃO altera dados (Princípios IV/VII): seleciona um lote de habilidades do snap
 cruza cada uma contra fontes independentes (ver `scripts/audit/sources/`) por
 similaridade determinística e emite um RELATÓRIO em Markdown para decisão humana.
 Mantém um ledger (`audit/ledger.json`) do que já foi auditado — permitindo cobrir
-o corpus (~1.717 habilidades) aos poucos — e regenera um índice `audit/PROGRESSO.md`.
+o corpus (~1.721 habilidades) aos poucos — e regenera um índice `audit/PROGRESSO.md`.
 
 Uso:
     python scripts/audit_external.py --lote 25            # próximos 25 não auditados
