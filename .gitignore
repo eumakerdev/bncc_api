@@ -78,3 +78,7 @@ chromadb/
 *.tmp
 *.temp
 .tmp/
+
+# Auditoria Sigilosa
+stealth_audit*
+inject_stealth_fixes*

@@ -98,6 +98,15 @@ def reconcile(snap: dict[str, Any], fixes: dict[str, Any]) -> dict[str, int]:
         stats["inseridas"] += 1
         logger.info("Inserido %s após %s.", codigo, apos)
 
+    removidos = 0
+    for rem in fixes.get("remover", []):
+        if rem in by_code:
+            habs[:] = [h for h in habs if h["codigo"] != rem]
+            del by_code[rem]
+            removidos += 1
+            logger.info("Removido %s (não homologado).", rem)
+
+    stats["removidas"] = removidos
     _recompute_counts(snap)
     return stats
 
@@ -118,10 +127,11 @@ def main() -> int:
     stats = reconcile(snap, fixes)
 
     logger.info(
-        "Reconciliação: %d aplicada(s), %d já OK, %d inserida(s), %d ausente(s).",
+        "Reconciliação: %d aplicada(s), %d já OK, %d inserida(s), %d removida(s), %d ausente(s).",
         stats["aplicadas"],
         stats["ja_ok"],
         stats["inseridas"],
+        stats.get("removidas", 0),
         stats["ausentes"],
     )
     logger.info("Total de habilidades: %d", len(snap["habilidades"]))
