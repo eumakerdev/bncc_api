@@ -20,8 +20,8 @@ beautifulsoup4==4.15.0
 lxml==6.1.1
 pdfplumber==0.11.10
 PyPDF2==3.0.1
-pypdf==6.14.2
-pikepdf==10.10.0
+pypdf==6.15.0
+pikepdf==10.11.0
 
 # Testes + cobertura (gate de CI ≥ 80%)
 pytest==9.1.1
@@ -30,7 +30,7 @@ pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: Fixt
 # httpx é dependência de runtime (login social) — declarado em requirements.txt.
 
 # Qualidade de código
-ruff==0.16.0
+ruff==0.16.1
 black==26.5.1
 mypy==2.3.0
 pre-commit==4.6.1
