@@ -104,7 +104,6 @@ def build_og_image():
 
     width, height = 1200, 630
     img = Image.new("RGB", (width, height), BG_DARK)
-    draw = ImageDraw.Draw(img)
 
     # Brilho sutil da marca no canto superior direito (grande círculo translúcido).
     glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))

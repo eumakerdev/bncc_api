@@ -90,7 +90,9 @@ class BNCCDataService:
                 try:
                     return Habilidade(**hab)
                 except Exception as e:  # pragma: no cover - snapshot inconsistente
-                    logger.warning("Habilidade inválida no snapshot (%s): %s", codigo, e)
+                    # repr() neutraliza controle de formatação do input (anti
+                    # log-forging — Princípio V, entrada hostil na fronteira).
+                    logger.warning("Habilidade inválida no snapshot (%s): %s", repr(codigo), e)
                     return None
         return None
 

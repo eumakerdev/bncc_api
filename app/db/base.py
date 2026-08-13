@@ -70,15 +70,3 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-
-
-async def init_models() -> None:
-    """
-    Cria as tabelas a partir dos metadados (dev/testes).
-    Em produção, as migrações Alembic são a fonte da verdade.
-    """
-    # Importa as tabelas para registrá-las no metadata.
-    from app.db import tables  # noqa: F401
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)

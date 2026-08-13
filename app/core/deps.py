@@ -18,6 +18,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.limiters import ai_limiter, deterministic_limiter
 from app.core.ratelimit import SlidingWindowLimiter
 from app.core.security import decode_access_token, hash_api_key
 from app.db.base import get_session
@@ -29,15 +30,11 @@ from app.db.tables import ApiKey, ApiKeyStatus, DeveloperAccount
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 # --------------------------------------------------------------------------- #
-# Limitadores por bucket (instância única — módulo global)
+# Limitadores por IP (instância única — módulo global)
+#
+# Os limitadores por bucket (deterministic/ai) vivem em app/core/limiters.py
+# (importados acima) — módulo separado para quebrar o ciclo deps ↔ usage_service.
 # --------------------------------------------------------------------------- #
-deterministic_limiter = SlidingWindowLimiter(
-    max_requests=settings.RATE_LIMIT_DETERMINISTIC_PER_MIN,
-    window_seconds=60,
-    burst=settings.RATE_LIMIT_DETERMINISTIC_BURST,
-)
-ai_limiter = SlidingWindowLimiter(max_requests=settings.RATE_LIMIT_AI_PER_MIN, window_seconds=60)
-
 # Limitadores por IP dos endpoints de sessão (login/signup/verify-email não usam
 # API key, então não passam pelos limitadores acima — força bruta e spam de
 # contas ficariam sem nenhuma cota sem isto).

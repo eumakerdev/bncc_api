@@ -25,7 +25,7 @@ from fastapi.responses import HTMLResponse
 
 from app.api import versions as vreg
 from app.api.openapi import release_manifest
-from app.web.router import templates
+from app.web.jinja import templates
 
 router = APIRouter()
 

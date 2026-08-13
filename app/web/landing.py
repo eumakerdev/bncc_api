@@ -19,7 +19,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse
 
 from app.core.config import settings
-from app.web.router import templates
+from app.web.jinja import templates
 
 router = APIRouter()
 logger = logging.getLogger("bncc.landing")

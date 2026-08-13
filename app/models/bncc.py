@@ -16,7 +16,7 @@ import re
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, validator
+from pydantic import BaseModel, Field, field_validator
 
 # --------------------------------------------------------------------------- #
 # Padrões oficiais de código (FR-002) — três etapas
@@ -320,7 +320,7 @@ class HabilidadeFiltros(BaseModel):
         None, description="Filtrar por eixo do Complemento de Computação (EI/EF)"
     )
 
-    @validator("competencia_geral")
+    @field_validator("competencia_geral")
     def validate_competencia_geral(cls, v):
         """Valida que a competência geral está no range 1-10."""
         if v is not None and (v < 1 or v > 10):

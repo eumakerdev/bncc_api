@@ -189,7 +189,7 @@ async def record_error(session: AsyncSession, api_key_id: str, bucket: UsageBuck
 
 async def key_usage(session: AsyncSession, api_key_id: str) -> KeyUsageResponse:
     """Métricas de consumo de uma key: minuto (limiters) + dia (DB) + limites."""
-    from app.core.deps import ai_limiter, deterministic_limiter
+    from app.core.limiters import ai_limiter, deterministic_limiter
 
     det_minute = deterministic_limiter.current(f"deterministic:{api_key_id}")
     ai_minute = ai_limiter.current(f"ai:{api_key_id}")

@@ -36,7 +36,7 @@ from app.core.deps import AdminRateLimited, get_http_client
 from app.core.security import create_access_token, decode_access_token
 from app.db.base import async_session_factory
 from app.services import oauth_service
-from app.web.router import templates
+from app.web.jinja import templates
 
 router = APIRouter(include_in_schema=False)
 logger = logging.getLogger("bncc.admin")

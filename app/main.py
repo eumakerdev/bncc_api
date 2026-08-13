@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Banco da plataforma: em dev criamos as tabelas; em prod, Alembic é a verdade.
     try:
-        from app.db.base import init_models
+        from app.db.setup import init_models
 
         await init_models()
     except Exception as e:  # pragma: no cover - defensivo

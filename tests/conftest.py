@@ -50,14 +50,13 @@ def _reset_rate_limiters():
     """Zera os limitadores in-process (globais de módulo) entre testes."""
     from app.core.deps import (
         admin_ip_limiter,
-        ai_limiter,
-        deterministic_limiter,
         forgot_ip_limiter,
         login_ip_limiter,
         oauth_ip_limiter,
         signup_ip_limiter,
         verify_ip_limiter,
     )
+    from app.core.limiters import ai_limiter, deterministic_limiter
 
     deterministic_limiter.reset()
     ai_limiter.reset()

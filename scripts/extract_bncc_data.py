@@ -686,8 +686,11 @@ _CE_FOOTER = re.compile(
     r"ENSINO\s+FUNDAMENTAL$|E SUAS TECNOLOGIAS$|SOCIAIS APLICADAS$",
     re.IGNORECASE,
 )
-_LIG1 = re.compile(r"([a-zá-úâ-ûà-ù0-9])f([il])\s+([a-zá-úâ-ûà-ù])", re.IGNORECASE)
-_LIG2 = re.compile(r"([a-zá-úâ-ûà-ù])-\s*f([il])\s+([a-zá-úâ-ûà-ù])", re.IGNORECASE)
+# Classes de acentos em forma canônica única: `á-ú` ∪ `â-û` ∪ `à-ù` é exatamente
+# o bloco contínuo U+00E0–U+00FB (`à-û`) — ranges sobrepostos reordenados não mudam
+# o conjunto aceito, então a forma canônica preserva o texto extraído (Princípio IV).
+_LIG1 = re.compile(r"([a-zà-û0-9])f([il])\s+([a-zà-û])", re.IGNORECASE)
+_LIG2 = re.compile(r"([a-zà-û])-\s*f([il])\s+([a-zà-û])", re.IGNORECASE)
 
 
 def _fix_ligatures(s: str) -> str:
@@ -697,7 +700,8 @@ def _fix_ligatures(s: str) -> str:
         prev = s
         s = _LIG1.sub(r"\1f\2\3", s)
         s = _LIG2.sub(r"\1f\2\3", s)
-    s = re.sub(r"\bfl\s+([a-zá-úâ-û])", r"fl\1", s, flags=re.IGNORECASE)
+    # `á-ú` ∪ `â-û` é o bloco U+00E1–U+00FB (`á-û`) — forma canônica, mesmo conjunto.
+    s = re.sub(r"\bfl\s+([a-zá-û])", r"fl\1", s, flags=re.IGNORECASE)
     return s
 
 

@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import pytest
 from app.core.deps import (
-    deterministic_limiter,
     rate_limit_deterministic,
     require_api_key,
 )
+from app.core.limiters import deterministic_limiter
 from app.db.tables import ApiKey
 from app.main import app
 from app.services import account_service
