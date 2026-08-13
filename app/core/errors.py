@@ -37,8 +37,8 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> Respon
         and "text/html" in request.headers.get("accept", "")
     ):
         # 404 amigável para rotas web (navegador); o contrato JSON de /api fica intacto.
-        # Import tardio: evita ciclo errors -> web.router (padrão já usado no repo).
-        from app.web.router import templates
+        # Import tardio: evita acoplar o tratamento de erros ao seam web no import.
+        from app.web.jinja import templates
 
         return templates.TemplateResponse(
             request, "404.html", status_code=exc.status_code, headers=headers

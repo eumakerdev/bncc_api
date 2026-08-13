@@ -47,11 +47,9 @@ class Source(Protocol):
 
     def disponivel(self) -> bool:
         """True se a fonte pode responder consultas (arquivos/cache/rede prontos)."""
-        ...
 
     def fetch(self, codigo: str) -> SourceRecord | None:
         """Retorna a testemunha da fonte para `codigo`, ou None se ausente."""
-        ...
 
 
 def carregar_fontes(

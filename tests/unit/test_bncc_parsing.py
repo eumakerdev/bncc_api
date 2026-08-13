@@ -148,3 +148,26 @@ def test_parse_ef_deduplica_codigo():
     result = parse_ef(texto)
     assert len(result) == 1
     assert "Primeira" in result[0]["descricao"]
+
+
+# --------------------------------------------------------------------------- #
+# Regressão (Princípio IV): as classes canônicas à-û/á-û aceitam exatamente os
+# mesmos caracteres que as ranges sobrepostas originais — o texto extraído não
+# pode mudar quando o extrator é editado.
+# --------------------------------------------------------------------------- #
+def test_fix_ligatures_rejunta_ligaduras_quebradas():
+    from scripts.extract_bncc_data import _fix_ligatures
+
+    # Caso do docstring do extrator (corrupção real de ligadura na prosa).
+    assert _fix_ligatures("classifi cá-la") == "classificá-la"
+    assert _fix_ligatures("afi rmou") == "afirmou"
+    # Hífen partido.
+    assert _fix_ligatures("a-fl uxo") == "afluxo"
+    assert _fix_ligatures("in-fl uência") == "influência"
+    # Extremidades do bloco de acentos: à (U+00E0), á (U+00E1), ú (U+00FA), û (U+00FB).
+    assert _fix_ligatures("àfi la") == "àfila"
+    assert _fix_ligatures("afi laû") == "afilaû"
+    assert _fix_ligatures("fl á") == "flá"
+    assert _fix_ligatures("fl û") == "flû"
+    # Texto íntegro não é tocado (sem ligadura quebrada).
+    assert _fix_ligatures("fila afiada") == "fila afiada"

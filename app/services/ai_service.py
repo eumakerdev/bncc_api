@@ -105,7 +105,7 @@ def _build_prompt(query: str, contexto: str) -> str:
 def _deterministic_answer(query: str, fontes: list[dict[str, Any]]) -> str:
     """Resumo deterministico das fontes (fallback sem LLM)."""
     linhas = [
-        "Com base nas fontes oficiais da BNCC mais relevantes para a sua " "pergunta, destaco:",
+        "Com base nas fontes oficiais da BNCC mais relevantes para a sua pergunta, destaco:",
         "",
     ]
     for f in fontes[:5]:

@@ -40,7 +40,7 @@ from app.services import (
     usage_service,
 )
 from app.web.charts import build_usage_chart
-from app.web.router import templates
+from app.web.jinja import templates
 
 router = APIRouter()
 logger = logging.getLogger("bncc.oauth")
@@ -253,13 +253,15 @@ async def oauth_callback(
                 expires_minutes=settings.SESSION_EXPIRE_MINUTES,
             )
     except oauth_service.OAuthError:
-        logger.warning("Login social falhou (provider=%s)", provider)
+        # provider já passou pelo whitelist acima; repr() é defesa em profundidade
+        # contra forjação de log (Princípio V).
+        logger.warning("Login social falhou (provider=%s)", repr(provider))
         return _login_redirect_with_error(_OAUTH_FAILED_MSG)
     except Exception:
-        logger.exception("Erro inesperado no callback OAuth (provider=%s)", provider)
+        logger.exception("Erro inesperado no callback OAuth (provider=%s)", repr(provider))
         return _login_redirect_with_error(_OAUTH_FAILED_MSG)
 
-    logger.info("Login social concluído (provider=%s)", provider)
+    logger.info("Login social concluído (provider=%s)", repr(provider))
     response = RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     # `_set_session` sobrescreve `__session` (que carregava o state) com a sessão real.
     _set_session(response, token)
@@ -438,7 +440,8 @@ async def dashboard_revoke_key(request: Request, key_id: str):
         try:
             await apikey_service.revoke(session, account.id, key_id)
         except Exception:
-            pass
+            # Erro tratado deve ser logado (Princípio VI); repr() evita forjação.
+            logger.warning("Falha ao revogar a API key (key_id=%s)", repr(key_id))
     return RedirectResponse(url="/portal/dashboard", status_code=status.HTTP_303_SEE_OTHER)
 
 
