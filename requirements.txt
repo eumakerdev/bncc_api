@@ -61,7 +61,9 @@ google-generativeai==0.8.6
 # ndarray; `vector_store` chama `.tolist()` nos embeddings). O teto `<2` vinha do
 # langchain 0.1.0; com ele fora da stack o pino 1.x é apenas conservador — o bump
 # para numpy 2.x fica liberado para o Dependabot propor, validado pelos portões de CI.
-numpy==1.24.3
+# 1.26.4 (último da linha 1.x) destrava pandas 3.x nos scripts de extração (dev),
+# que exige numpy>=1.26.
+numpy==1.26.4
 requests==2.34.2
 
 # Produção
