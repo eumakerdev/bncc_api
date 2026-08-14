@@ -30,7 +30,7 @@ As 10 competências gerais.
 
 ## GET /api/v1/competencias/especificas
 Filtros: `area`, `componente`, `etapa`.
-- **200** → lista de `CompetenciaEspecifica` (EI/EF/EM). 
+- **200** → lista de `CompetenciaEspecifica` (EI/EF/EM).
 
 ## GET /api/v1/taxonomia (novo)
 Exposição da estrutura navegável: etapas → áreas → componentes → unidades temáticas → objetos de
