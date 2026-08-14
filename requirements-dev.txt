@@ -15,7 +15,7 @@
 # Extração determinística da BNCC a partir dos PDFs oficiais (scripts/).
 # Ver CLAUDE.md: pdfplumber isola colunas; pikepdf normaliza o page tree
 # comprimido do documento completo da Educação Infantil.
-pandas==2.1.4
+pandas==3.0.5
 beautifulsoup4==4.15.0
 lxml==6.1.1
 pdfplumber==0.11.10
