@@ -54,7 +54,7 @@ Jinja2==3.1.6
 # converge direto e o pip escolhe as versões mais novas.
 chromadb==1.5.9
 sentence-transformers==5.7.0  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_download removido)
-openai==2.53.0
+openai==3.0.0
 google-generativeai==0.8.6
 
 # numpy: dependência de RUNTIME (chromadb/sentence-transformers operam sobre
