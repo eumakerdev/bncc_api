@@ -4,19 +4,19 @@
 
 # Web framework / API
 fastapi==0.141.1  # >=0.115.3 corrige CVE-2024-47874; >=0.130 exige starlette/pydantic abaixo
-uvicorn[standard]==0.52.1
-starlette==1.4.1  # >=1.0.1 corrige CVE-2026-48710 (BadHost: bypass de auth via Host header); pin explícito
+uvicorn[standard]==0.52.3
+starlette==1.6.0  # >=1.0.1 corrige CVE-2026-48710 (BadHost: bypass de auth via Host header); pin explícito
 pydantic==2.13.4  # exigido por fastapi>=0.130 (>=2.9.0)
-pydantic-settings==2.14.2  # acompanha o bump de pydantic (exige pydantic>=2.7.0)
+pydantic-settings==2.15.0  # acompanha o bump de pydantic (exige pydantic>=2.7.0)
 python-multipart==0.0.32  # >=0.0.7 corrige CVE-2024-24762 (ReDoS no parsing de boundary multipart)
 
 # Plataforma: banco relacional (SQLAlchemy 2.0 async + Alembic)
 # SQLite (aiosqlite) em dev; Postgres (asyncpg) em produção / Cloud SQL.
-SQLAlchemy==2.0.51
-alembic==1.19.0
+SQLAlchemy==2.0.52
+alembic==1.19.1
 aiosqlite==0.22.1
 asyncpg==0.31.0
-greenlet==3.5.4
+greenlet==3.5.5
 
 # Segurança: hash de senha (Argon2), JWT de sessão do portal
 passlib[argon2]==1.7.4
