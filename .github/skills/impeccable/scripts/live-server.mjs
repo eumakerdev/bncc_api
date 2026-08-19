@@ -33,7 +33,10 @@ import { runGenerationPreflight } from './live/generation-preflight.mjs';
 import { validateEvent } from './live/event-validation.mjs';
 import { selectAvailablePendingEvent } from './live/poll-lanes.mjs';
 import { createManualEditRoutes } from './live/manual-edit-routes.mjs';
-import { LIVE_COMMANDS } from './live/vocabulary.mjs';
+import {
+  LIVE_COMMANDS,
+  VARIANT_PROGRESS_CHECKPOINT_REASONS as VARIANT_PROGRESS_CHECKPOINT_REASON_LIST,
+} from './live/vocabulary.mjs';
 import {
   getDesignSidecarPath,
   getLiveDir,
@@ -51,24 +54,53 @@ import {
 } from './live/manual-apply.mjs';
 import {
   applyDeferredSvelteComponentAccepts,
+  bumpSvelteComponentPreviewRevision,
+  compileCheckVariants,
   removeAllSvelteComponentSessions,
+  sweepInactiveSvelteComponentSessions,
 } from './live/svelte-component.mjs';
+import { enterLiveRoot } from './live/roots.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// PRODUCT.md / DESIGN.md live wherever context.mjs resolves. The generated
-// DESIGN sidecar is project-local at .impeccable/design.json, with legacy
-// DESIGN.json fallback for existing projects.
-const PROJECT_CONTEXT = loadContext(process.cwd());
-const CONTEXT_DIR = PROJECT_CONTEXT.contextDir;
-const DESIGN_MD_PATH = PROJECT_CONTEXT.designPath
-  ? path.resolve(process.cwd(), PROJECT_CONTEXT.designPath)
-  : null;
+// Anchor the whole process on the live roots manifest before anything derives
+// a path from cwd. A server started from the wrong directory re-roots itself
+// onto the appRoot the boot decided on instead of minting a second project.
+const LIVE_ROOTS = enterLiveRoot(process.cwd());
+
+// PRODUCT.md / DESIGN.md context, resolved lazily and per request so a server
+// that outlives an `impeccable document` run (or a context file created after
+// boot) reports current truth instead of a boot-time snapshot. The roots
+// manifest wins when the ambient resolution misses (nested app inheriting
+// repo-level context files).
+function resolveProjectContext() {
+  const ctx = loadContext(process.cwd());
+  const designPath = ctx.designPath
+    ? path.resolve(process.cwd(), ctx.designPath)
+    : (LIVE_ROOTS?.designPath && fs.existsSync(LIVE_ROOTS.designPath) ? LIVE_ROOTS.designPath : null);
+  const hasProduct = ctx.hasProduct
+    || !!(LIVE_ROOTS?.productPath && fs.existsSync(LIVE_ROOTS.productPath));
+  return {
+    ...ctx,
+    hasProduct,
+    hasDesign: !!designPath,
+    resolvedDesignPath: designPath,
+    contextDir: ctx.contextDir || LIVE_ROOTS?.contextRoot || process.cwd(),
+    designContextDir: ctx.designContextDir
+      || (designPath ? path.dirname(designPath) : null),
+  };
+}
 const DEFAULT_POLL_TIMEOUT = 600_000;   // 10 min — agent re-polls on timeout anyway
 const SSE_HEARTBEAT_INTERVAL = 30_000;  // keepalive ping every 30s
+
+// The browser events allowed to mint a NEW session journal. `generate` starts
+// a variant session at Go; `steer` mints its own request id. Every other
+// id-carrying event must land on an existing session (see the unknown_session
+// gate in the /events handler).
+const SESSION_CREATING_EVENT_TYPES = new Set(['generate', 'steer']);
 // The browser checkpoints for several unrelated reasons (see checkpointPayload
 // in live-browser.js). Only these two report that variant availability changed,
 // and only they may drive variant_progress / the *_reviewable phases.
-const VARIANT_PROGRESS_CHECKPOINT_REASONS = new Set(['variants_progress', 'variants_ready']);
+const VARIANT_PROGRESS_CHECKPOINT_REASONS = new Set(VARIANT_PROGRESS_CHECKPOINT_REASON_LIST);
 
 // ---------------------------------------------------------------------------
 // Port detection
@@ -150,7 +182,16 @@ function chatAgentLikelyActive() {
 const MAX_ANNOTATION_BYTES = 10 * 1024 * 1024;
 
 function enqueueEvent(event) {
-  if (!event || (event.id && state.pendingEvents.some((entry) => entry.event?.id === event.id && entry.event?.type === event.type))) return;
+  if (!event) return;
+  // Dedupe by (session, type), except mount failures, which are per-variant:
+  // variant 2 failing must not be swallowed because variant 1's failure is
+  // still queued.
+  const duplicate = event.id && state.pendingEvents.some((entry) => (
+    entry.event?.id === event.id
+    && entry.event?.type === event.type
+    && (event.type !== 'variant_mount_failed' || entry.event?.variant === event.variant)
+  ));
+  if (duplicate) return;
   state.pendingEvents.push({ event, leaseUntil: 0, seq: state.nextEventSeq++ });
   flushPendingPolls();
 }
@@ -235,11 +276,12 @@ function recordAgentPhase(id, phase, details = {}) {
 /**
  * Detect a browser that missed the generation `done` broadcast.
  *
- * The preflight scaffold write triggers a framework full-reload (Astro reloads
- * the page for any .astro edit). If the agent's variant write + `done` land
- * while the browser is mid-reload, the new page misses both the second HMR
- * reload and the SSE `done` — it resumes from the scaffold-only source and
- * sits in GENERATING at 0/N forever. That resumed page always checkpoints
+ * The preflight no longer writes the scaffold into source for source-preview
+ * targets (the agent writes wrapper + variants in one atomic edit), so the old
+ * scaffold-write full-reload that opened the "stranded at 0/N" race is gone.
+ * This recovery stays as defense in depth: any framework reload that drops the
+ * agent's variant write + `done` while the browser is mid-reload leaves the new
+ * page in GENERATING at 0/N. That resumed page always checkpoints
  * (`browser_resumed`), so a checkpoint claiming "still generating, variants
  * missing" for a session whose generation already completed is direct
  * evidence of the miss. Rebuild the `done` payload from the snapshot so the
@@ -444,6 +486,11 @@ function summarizeActiveSessionForClient(snapshot = {}) {
     generationCompletedAt: snapshot.generationCompletedAt ?? null,
     generationCanceled: snapshot.generationCanceled === true,
     cancelReason: snapshot.cancelReason ?? null,
+    // Render truth, so a browser with no localStorage can rehydrate to the
+    // same comparison the server already knows about.
+    mountedVariants: Array.isArray(snapshot.mountedVariants) ? snapshot.mountedVariants : [],
+    mountFailures: Array.isArray(snapshot.mountFailures) ? snapshot.mountFailures : [],
+    renderState: snapshot.renderState ?? null,
   };
 }
 
@@ -617,11 +664,23 @@ function hasProjectContext() {
   // PRODUCT.md carries brand voice / anti-references — that's what determines
   // whether variants are brand-aware. DESIGN.md (visual tokens) is a separate
   // concern, surfaced by the design panel's own empty state.
-  return !!PROJECT_CONTEXT.hasProduct;
+  return !!resolveProjectContext().hasProduct;
 }
 
 function statOrNull(filePath) {
   try { return fs.statSync(filePath); } catch { return null; }
+}
+
+// Strict loopback-origin test for CORS. Parses the Origin as a URL (never a
+// substring match, so `http://localhost.evil.com` and `http://127.0.0.1.evil.com`
+// fail) and accepts only http/https on localhost, 127.0.0.1, or the IPv6 loopback.
+function isLoopbackOrigin(origin) {
+  if (typeof origin !== 'string' || origin.length === 0) return false;
+  let parsed;
+  try { parsed = new URL(origin); } catch { return false; }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+  const host = parsed.hostname.toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]';
 }
 
 // HTTP request handler
@@ -630,7 +689,27 @@ function statOrNull(filePath) {
 function createRequestHandler({ detectScript, liveScriptParts }) {
   return (req, res) => {
     const url = new URL(req.url, `http://localhost:${state.port}`);
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Token-or-loopback CORS. Reflect the caller's Origin when it is a
+    // loopback origin OR the request carries the valid session token, always
+    // paired with `Vary: Origin` so an intermediary cache never serves a
+    // response authorized for one origin to another. A remote page (e.g.
+    // https://evil.example probing the port from a tab open on the same
+    // machine) has no token and gets no Access-Control-Allow-Origin, so its
+    // JS-initiated fetch cannot read any response. The token branch exists for
+    // dev servers on non-localhost loopback aliases (ddev's *.ddev.site,
+    // Valet's *.test, hosts-file entries): the injected classic <script src>
+    // delivers the token to the page regardless of origin, every overlay
+    // request carries it in the query string (preflights included, since
+    // OPTIONS hits the same URL), and a token bearer is already fully
+    // authorized on every route — the token is the security boundary, not the
+    // origin. Requests with no Origin header (script tags, curl, the agent's
+    // own fetches) are not subject to CORS and keep working; no ACAO header
+    // is needed for them.
+    const origin = req.headers.origin;
+    if (origin && (isLoopbackOrigin(origin) || url.searchParams.get('token') === state.token)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
@@ -639,6 +718,15 @@ function createRequestHandler({ detectScript, liveScriptParts }) {
 
     // --- Scripts ---
     if (p === '/live.js') {
+      // Token-gated: the script body embeds state.token, which unlocks every
+      // token-guarded route. Serving it unauthenticated let any local page read
+      // the token and drive the session. The injected <script src> carries
+      // `?token=...` (see live-inject.mjs). A missing/wrong token → 401.
+      if (url.searchParams.get('token') !== state.token) {
+        res.writeHead(401, { 'Content-Type': 'text/plain' });
+        res.end('Unauthorized');
+        return;
+      }
       // Re-read from disk each request so edits to live-browser.js land on
       // the next tab reload. No-store headers prevent browser caching across
       // sessions — during iteration, a cached old script silently breaks
@@ -656,6 +744,7 @@ function createRequestHandler({ detectScript, liveScriptParts }) {
         port: state.port,
         vocabulary: LIVE_COMMANDS,
         commandPrefix: IMPECCABLE_COMMAND_PREFIX,
+        appRoot: process.cwd(),
         parts,
       });
       res.writeHead(200, {
@@ -784,7 +873,7 @@ function createRequestHandler({ detectScript, liveScriptParts }) {
     //                            { present, parsed, sidecar, hasMd, hasSidecar,
     //                              mdNewerThanJson, parseError?, sidecarError? }
     //                          - parsed: output of parseDesignMd (frontmatter
-    //                            + six canonical sections) when DESIGN.md exists.
+    //                            + the canonical sections) when DESIGN.md exists.
     //                          - sidecar: .impeccable/design.json contents when present.
     //                            Expected shape: schemaVersion 2, carrying
     //                            extensions + components + narrative.
@@ -793,8 +882,9 @@ function createRequestHandler({ detectScript, liveScriptParts }) {
       const token = url.searchParams.get('token');
       if (token !== state.token) { res.writeHead(401); res.end('Unauthorized'); return; }
 
-      const mdPath = DESIGN_MD_PATH;
-      const jsonPath = resolveDesignSidecarPath(process.cwd(), PROJECT_CONTEXT.designContextDir || CONTEXT_DIR) || getDesignSidecarPath(process.cwd());
+      const projectContext = resolveProjectContext();
+      const mdPath = projectContext.resolvedDesignPath;
+      const jsonPath = resolveDesignSidecarPath(process.cwd(), projectContext.designContextDir || projectContext.contextDir) || getDesignSidecarPath(process.cwd());
       const mdStat = statOrNull(mdPath);
       const jsonStat = statOrNull(jsonPath);
 
@@ -846,7 +936,13 @@ function createRequestHandler({ detectScript, liveScriptParts }) {
       const filePath = url.searchParams.get('path');
       if (!filePath || filePath.includes('..')) { res.writeHead(400); res.end('Bad path'); return; }
       const absPath = path.resolve(process.cwd(), filePath);
-      if (!absPath.startsWith(process.cwd())) { res.writeHead(403); res.end('Forbidden'); return; }
+      // Confine to the project root. A bare `startsWith(cwd)` string check lets a
+      // sibling dir whose name extends the root name (projeto -> projeto-backup)
+      // slip through; compare on the relative path instead (same pattern as
+      // sessionFileMetadataFromPollReply below). An empty rel means the request
+      // resolved to the root directory itself, which this file route never serves.
+      const rel = path.relative(process.cwd(), absPath);
+      if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) { res.writeHead(403); res.end('Forbidden'); return; }
       let content;
       try { content = fs.readFileSync(absPath, 'utf-8'); }
       catch { res.writeHead(404); res.end('File not found'); return; }
@@ -939,6 +1035,20 @@ function createRequestHandler({ detectScript, liveScriptParts }) {
           res.end(JSON.stringify({ ok: true }));
           return;
         }
+        // Only the events that START a session may create its journal.
+        // Everything else (checkpoints, mount acks, accept/discard) must
+        // reference a session THIS store already knows: appendEvent creates a
+        // journal for any id it is handed, so without this gate a browser
+        // resuming another project's session from per-origin storage (two
+        // apps sharing a localhost port) materializes a ghost session here
+        // that keeps reattaching after every discard.
+        if (msg.id && state.sessionStore
+            && !SESSION_CREATING_EVENT_TYPES.has(msg.type)
+            && !state.sessionStore.has(msg.id)) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'unknown_session', id: msg.id }));
+          return;
+        }
         const missedCompletion = detectMissedGenerationCompletion(msg);
         if (state.sessionStore && msg.id) {
           try {
@@ -957,7 +1067,25 @@ function createRequestHandler({ detectScript, liveScriptParts }) {
         if (msg.type === 'exit') {
           cleanupSvelteComponentSessionsBeforeExit();
         }
-        if (msg.type !== 'checkpoint') {
+        // An ORPHANED discard is the browser reporting that the session's
+        // wrapper no longer exists in source (edited or regenerated away).
+        // There is no cleanup for an agent to perform, and asking one to run
+        // the normal discard flow would just fail against the missing
+        // scaffolding, so the server terminalizes the session itself and the
+        // event stays out of the poll queue.
+        const orphanedDiscard = msg.type === 'discard' && msg.orphaned === true;
+        if (orphanedDiscard && state.sessionStore && msg.id) {
+          try {
+            state.sessionStore.appendEvent({ type: 'discarded', id: msg.id, orphaned: true });
+          } catch { /* the discard_requested phase already left the resumable set */ }
+        }
+        // `variant_mounted` is the happy path: it is journaled above so the
+        // snapshot carries render truth, but there is nothing for the agent to
+        // do about it, so it stays out of the poll queue and off the SSE bus.
+        // `variant_mount_failed` is the opposite: the agent published something
+        // the browser could not render, and only the agent can fix it, so it
+        // goes to the queue as a first-class event.
+        if (msg.type !== 'checkpoint' && msg.type !== 'variant_mounted' && !orphanedDiscard) {
           enqueueEvent(msg);
         }
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -1059,7 +1187,8 @@ function sessionFileMetadataFromPollReply(file) {
   const base = { file: normalized };
   const metadataFile = normalized;
   if (!metadataFile.endsWith('/manifest.json') && metadataFile !== 'manifest.json') return base;
-  if (!metadataFile.includes('node_modules/.impeccable-live/')
+  if (!metadataFile.includes('.impeccable/live/previews/')
+      && !metadataFile.includes('node_modules/.impeccable-live/')
       && !metadataFile.includes('src/lib/impeccable/')
       && !metadataFile.includes('/.impeccable-live/')) return base;
 
@@ -1099,7 +1228,14 @@ function inferSourceEventType(msg = {}, pendingEvents = state.pendingEvents) {
   // `agent_done` can be the automatic acknowledgement for a carbonize Accept.
   // New pollers send sourceEventType explicitly; default to generate only for
   // older callers so a late worker cannot acknowledge a queued Accept.
-  if (msg.type === 'agent_done' || msg.type === 'done') return 'generate';
+  if (msg.type === 'agent_done' || msg.type === 'done') {
+    // A `done` reply to a mount failure is the republish that unblocks the
+    // browser. Without this the ack would look for a `generate` that was
+    // already retired, the mount-failure event would stay queued, and the next
+    // poll would hand the same failure back to the agent forever.
+    if (!pendingTypes.has('generate') && pendingTypes.has('variant_mount_failed')) return 'variant_mount_failed';
+    return 'generate';
+  }
   // `error` is reference/live.md's documented failure reply, and parseReplyArgs
   // never sets sourceEventType on it (the poller is a fresh process that cannot
   // know what it leased). Returning undefined here makes acknowledgePendingEvent
@@ -1224,6 +1360,30 @@ function handlePollPost(req, res) {
       return;
     }
     const replyFileMeta = sessionFileMetadataFromPollReply(msg.file);
+    // A publish (done reply carrying a component manifest) snapshots the
+    // variant files into a fresh revision dir before the browser is told:
+    // the import path changes every publish, so no transform cache can pin a
+    // stale compile of a republished module (node_modules is unwatched).
+    // Broken variants are bounced HERE, before the browser imports anything:
+    // a compile error that reaches the page is a red overlay in the user's
+    // face; bounced at publish it is a private fix with file and line.
+    if (replyFileMeta.previewMode === 'svelte-component'
+        && msg.id
+        && (msg.type === 'done' || !msg.type)) {
+      let compileCheck = { ok: true, failures: [] };
+      try { compileCheck = compileCheckVariants(msg.id, process.cwd()); } catch { /* best-effort */ }
+      if (!compileCheck.ok) {
+        res.writeHead(422, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: 'variant_compile_failed',
+          id: msg.id,
+          failures: compileCheck.failures,
+          _instructions: 'The publish was NOT delivered: the listed variant file(s) do not compile, so the browser never saw them. Fix each failure at the given file and line (the most common cause is a second top-level <style> element; Svelte allows exactly one, so merge all rules into the existing block), then send the same --reply done again.',
+        }));
+        return;
+      }
+      try { bumpSvelteComponentPreviewRevision(msg.id, process.cwd()); } catch { /* best-effort */ }
+    }
     if (state.sessionStore && msg.id && !skipJournalReply) {
       try {
         const eventType = msg.type === 'steer_done'
@@ -1292,6 +1452,51 @@ function cleanupSvelteComponentSessionsBeforeExit() {
     removeAllSvelteComponentSessions(process.cwd());
   } catch (err) {
     console.warn('[impeccable] Svelte component session cleanup failed:', err.message);
+  }
+}
+
+/**
+ * A previous run that died without its shutdown hook leaves preview component
+ * dirs behind. Drop the ones whose session the store no longer considers
+ * active; anything still active is mid-generation and must survive a restart.
+ */
+function sweepOrphanSvelteComponentSessionsOnStartup() {
+  try {
+    const activeIds = (state.sessionStore?.listActiveSessions() || [])
+      .map((snapshot) => snapshot?.id)
+      .filter(Boolean);
+    const result = sweepInactiveSvelteComponentSessions(activeIds, process.cwd());
+    if (result.removed.length > 0 || result.removedRoot) {
+      console.log('[impeccable] swept orphaned Svelte component sessions:', JSON.stringify(result));
+    }
+  } catch (err) {
+    console.warn('[impeccable] Svelte component session sweep failed:', err.message);
+  }
+}
+
+// Accept receipts are a short-lived idempotency record for a single accept.
+// Nothing reads one after the session that wrote it is gone, so they only need
+// to outlive a crash-and-retry window.
+const ACCEPT_RECEIPT_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+function sweepStaleAcceptReceiptsOnStartup() {
+  try {
+    const dir = path.join(getLiveDir(process.cwd()), 'accept-receipts');
+    if (!fs.existsSync(dir)) return;
+    const cutoff = Date.now() - ACCEPT_RECEIPT_MAX_AGE_MS;
+    let removed = 0;
+    for (const name of fs.readdirSync(dir)) {
+      if (!name.endsWith('.json') && !name.endsWith('.tmp')) continue;
+      const file = path.join(dir, name);
+      try {
+        if (fs.statSync(file).mtimeMs >= cutoff) continue;
+        fs.rmSync(file, { force: true });
+        removed++;
+      } catch { /* non-fatal */ }
+    }
+    if (removed > 0) console.log(`[impeccable] removed ${removed} accept receipt(s) older than 14 days`);
+  } catch (err) {
+    console.warn('[impeccable] accept receipt retention sweep failed:', err.message);
   }
 }
 
@@ -1434,6 +1639,8 @@ manualApply.rollbackTransaction({
   reason: 'manual_edit_server_start_recovered_abandoned_transaction',
 });
 applyLegacyDeferredAcceptsOnStartup();
+sweepOrphanSvelteComponentSessionsOnStartup();
+sweepStaleAcceptReceiptsOnStartup();
 restorePendingEventsFromStore();
 manualApply.pruneStaleEvidence();
 const portArg = args.find(a => a.startsWith('--port='));

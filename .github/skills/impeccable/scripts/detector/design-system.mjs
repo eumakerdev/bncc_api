@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { finding } from './findings.mjs';
@@ -7,7 +8,16 @@ import { parseAnyColor, resolveLengthPx } from './rules/checks.mjs';
 
 const DESIGN_NAMES = ['DESIGN.md', 'Design.md', 'design.md'];
 const FALLBACK_DIRS = ['.agents/context', 'docs'];
+// Files/dirs whose presence marks a directory as a project root. Mirrors the
+// walk-up semantics of skill/scripts/context.mjs (`resolveProject`), which the
+// CLI can't import (separate tree). `.git` and `package.json` are the common
+// boundaries; `.impeccable` is our own project marker.
+const PROJECT_ROOT_MARKERS = ['.git', 'package.json', '.impeccable'];
 const COLOR_CHANNEL_TOLERANCE = 6;
+// Shadow blacks at different alphas are different tokens (0.28 vs 0.55 is the
+// difference between a documented shadow and drift), so shadow matching cannot
+// reuse the r/g/b-only channel tolerance.
+const SHADOW_ALPHA_TOLERANCE = 0.02;
 const RADIUS_TOLERANCE_PX = 0.5;
 const FONT_SIZE_TOLERANCE_PX = 0.5;
 const FONT_SIZE_LITERAL_RE = /^-?[\d.]+(?:px|rem)$/;
@@ -136,10 +146,73 @@ function stripInlineYamlComment(s) {
   return s;
 }
 
+// YAML double-quoted scalars process backslash escapes. Stripping the outer
+// quotes without unescaping leaves them in place, so a nested font family like
+//   fontFamily: "\"IBM Plex Sans\", system-ui, sans-serif"
+// reaches allowedFonts as '\"ibm plex sans' and never matches the same family
+// declared in CSS. Scanner instead of a regex: the escape set is small and the
+// backslash handling stays readable.
+// The full YAML 1.2 double-quote escape set (spec section 5.7).
+const YAML_SIMPLE_ESCAPES = {
+  '0': '\0',
+  a: '\x07',
+  b: '\b',
+  t: '\t',
+  n: '\n',
+  v: '\v',
+  f: '\f',
+  r: '\r',
+  e: '\x1b',
+  ' ': ' ',
+  '"': '"',
+  '/': '/',
+  '\\': '\\',
+  N: '\u0085',
+  _: '\u00a0',
+  L: '\u2028',
+  P: '\u2029',
+};
+const YAML_HEX_ESCAPE_LENGTHS = { x: 2, u: 4, U: 8 };
+
+function unescapeYamlDoubleQuoted(body) {
+  let out = '';
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i];
+    if (ch !== '\\' || i === body.length - 1) {
+      out += ch;
+      continue;
+    }
+    const next = body[i + 1];
+    if (Object.prototype.hasOwnProperty.call(YAML_SIMPLE_ESCAPES, next)) {
+      out += YAML_SIMPLE_ESCAPES[next];
+      i++;
+      continue;
+    }
+    // \xNN, \uNNNN, \UNNNNNNNN. Malformed or out-of-range sequences stay
+    // literal rather than corrupting the rest of the scalar.
+    const hexLen = YAML_HEX_ESCAPE_LENGTHS[next];
+    if (hexLen) {
+      const hex = body.slice(i + 2, i + 2 + hexLen);
+      const codePoint = hex.length === hexLen && /^[0-9a-fA-F]+$/.test(hex) ? parseInt(hex, 16) : -1;
+      if (codePoint >= 0 && codePoint <= 0x10ffff) {
+        out += String.fromCodePoint(codePoint);
+        i += 1 + hexLen;
+        continue;
+      }
+    }
+    out += ch;
+  }
+  return out;
+}
+
 function parseScalar(raw) {
   const s = raw.trim();
-  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-    return s.slice(1, -1);
+  if (s.length >= 2 && s.startsWith('"') && s.endsWith('"')) {
+    return unescapeYamlDoubleQuoted(s.slice(1, -1));
+  }
+  // Single-quoted YAML escapes only the quote itself, by doubling it.
+  if (s.length >= 2 && s.startsWith("'") && s.endsWith("'")) {
+    return s.slice(1, -1).split("''").join("'");
   }
   if (s === 'true') return true;
   if (s === 'false') return false;
@@ -405,6 +478,25 @@ function addSidecarRadii(out, sidecar) {
   }
 }
 
+// Sidecar `extensions.shadows` entries ({ name, value, purpose }) carry the
+// documented shadow vocabulary that Stitch's frontmatter schema can't hold.
+// Their colors go into a separate allowlist — NOT allowedColorKeys — because a
+// shadow black is only documented *as a shadow*: feeding it into the general
+// color allowlist would legalize #000 as a page ground (alpha is dropped from
+// colorKey), which is the hole issue #547 warns against.
+function addSidecarShadows(out, sidecar) {
+  const shadows = sidecar?.extensions?.shadows;
+  if (!Array.isArray(shadows)) return;
+
+  for (const entry of shadows) {
+    if (typeof entry?.value !== 'string') continue;
+    for (const match of entry.value.matchAll(CSS_COLOR_RE)) {
+      const parsed = parseDesignColor(match[0]);
+      if (parsed) out.allowedShadowColors.push({ color: parsed });
+    }
+  }
+}
+
 function normalizeDesignSystem(input = {}) {
   const frontmatter = input.frontmatter || {};
   const sidecar = input.sidecar || null;
@@ -417,6 +509,7 @@ function normalizeDesignSystem(input = {}) {
     allowedColorKeys: new Map(),
     allowedRadii: [],
     allowedFontSizes: [],
+    allowedShadowColors: [],
     hasPillRadius: false,
   };
 
@@ -426,6 +519,7 @@ function normalizeDesignSystem(input = {}) {
   addSidecarColors(out, sidecar);
   addRoundedScale(out, frontmatter.rounded);
   addSidecarRadii(out, sidecar);
+  addSidecarShadows(out, sidecar);
 
   out.hasFonts = out.allowedFonts.size > 0;
   out.hasColors = out.allowedColorKeys.size > 0;
@@ -469,6 +563,62 @@ function loadDesignSystemForCwd(cwd = process.cwd()) {
   });
 }
 
+// Directory to begin the project-root walk from, given a scan target that may
+// be a file or a directory (and may not exist yet).
+function designSystemStartDir(targetPath, cwd = process.cwd()) {
+  const abs = path.isAbsolute(targetPath) ? targetPath : path.resolve(cwd, targetPath);
+  try {
+    return fs.statSync(abs).isDirectory() ? abs : path.dirname(abs);
+  } catch {
+    // Nonexistent path: treat an extension-bearing leaf as a file.
+    return path.extname(abs) ? path.dirname(abs) : abs;
+  }
+}
+
+// Walk up from `startDir` to the directory that governs the target's design
+// system, mirroring skill/scripts/context.mjs's project-boundary semantics:
+//
+//   - A directory carrying a DESIGN.md (directly or in a fallback dir) IS the
+//     design root — that's where the rules live.
+//   - A directory carrying a project marker (.git / package.json / .impeccable)
+//     but no DESIGN.md is a project BOUNDARY: the walk stops with no design
+//     system, so a sibling project never inherits a parent's or cwd's rules.
+//   - Reaching the home directory / filesystem root with neither means no
+//     design system at all — never process.cwd()'s.
+//
+// Returns { dir, hasDesign } for the stopping directory, or null when the walk
+// runs out. This is the fix for cross-project contamination.
+export function findDesignRoot(startDir) {
+  let dir = path.resolve(startDir);
+  const homeDir = path.resolve(os.homedir());
+  while (true) {
+    if (resolveDesignMdPath(dir)) return { dir, hasDesign: true };
+    if (PROJECT_ROOT_MARKERS.some((marker) => fs.existsSync(path.join(dir, marker)))) {
+      return { dir, hasDesign: false };
+    }
+    if (dir === homeDir) return null;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+// Resolve the design system that governs a specific scan target, by walking up
+// from the target's own location — never process.cwd(). Scanning project B's
+// files from inside project A applies B's DESIGN.md (or none), not A's.
+//
+// Pass a `cache` Map to memoize by resolved design root across a multi-file
+// scan; a target with no design root above it resolves to null.
+export function loadDesignSystemForTarget(targetPath, { cache, cwd = process.cwd() } = {}) {
+  const startDir = designSystemStartDir(targetPath, cwd);
+  const found = findDesignRoot(startDir);
+  const key = found ? `root:${found.dir}` : '\0none';
+  if (cache && cache.has(key)) return cache.get(key);
+  const loaded = found?.hasDesign ? loadDesignSystemForCwd(found.dir) : null;
+  if (cache) cache.set(key, loaded);
+  return loaded;
+}
+
 function isAllowedFont(font, designSystem) {
   if (!font || GENERIC_FONTS.has(font)) return true;
   if (!designSystem?.hasFonts) return true;
@@ -487,6 +637,20 @@ function isAllowedColorRaw(raw, designSystem) {
     if (colorsClose(parsed, entry.color)) return true;
   }
   return false;
+}
+
+// A color is a documented shadow color only when both the r/g/b channels AND
+// the alpha match a sidecar shadow token's color. Alpha has to be compared
+// here because colorKey()/colorsClose() drop it, and a match on r/g/b alone
+// would let every black at every alpha through.
+function isAllowedShadowColorRaw(raw, designSystem) {
+  if (!designSystem?.allowedShadowColors?.length) return false;
+  const parsed = parseDesignColor(String(raw || '').trim().toLowerCase());
+  if (!parsed) return false;
+  return designSystem.allowedShadowColors.some(entry =>
+    colorsClose(parsed, entry.color) &&
+    Math.abs((parsed.a ?? 1) - (entry.color.a ?? 1)) <= SHADOW_ALPHA_TOLERANCE,
+  );
 }
 
 function isAllowedRadiusRaw(raw, designSystem) {
@@ -564,6 +728,40 @@ function isProbablyColorLiteral(line, match) {
   const jsColorKeyContext = /(?:^|[,{]\s*)(?:color|background|backgroundColor|borderColor|outlineColor|fill|stroke|boxShadow|textShadow)\s*[:=]\s*["'`]?[^"'`,}]*/i.test(before);
 
   return styleContext || cssFunctionContext || jsColorKeyContext;
+}
+
+// One complete `${...}` template interpolation. Its content may carry paired
+// quoted strings (function arguments, ternary branches) and one level of
+// braces (an object-literal argument, itself allowing paired quotes). Deeper
+// nesting would need a parser, so the regex deliberately fails safe there:
+// the context check misses and the finding fires — a false positive a waiver
+// can silence, never a leak.
+const QUOTED_STRING_SRC = `"[^"]*"|'[^']*'`;
+const INTERPOLATION_SRC =
+  `\\$\\{(?:${QUOTED_STRING_SRC}|\\{(?:${QUOTED_STRING_SRC}|[^{}"'\`])*\\}|[^{}"'\`])*\\}`;
+// The two shadow-context tails. Unlike jsColorKeyContext, the JS tail admits
+// commas: a multi-layer shadow string is comma-separated, and a later
+// property on the same line is still blocked because it sits past the
+// string's closing quote. Both tails admit complete interpolations; a bare
+// `}`, quote, or `;` still ends the context.
+const SHADOW_CSS_CONTEXT_RE = new RegExp(
+  `(?:^|[{\\s;"'\`(,])(?:box-shadow|text-shadow)\\s*:\\s*(?:${INTERPOLATION_SRC}|[^;{}"'\`])*$`, 'i',
+);
+const SHADOW_JS_CONTEXT_RE = new RegExp(
+  `(?:^|[,{]\\s*)(?:boxShadow|textShadow)\\s*[:=]\\s*["'\`]?(?:${INTERPOLATION_SRC}|[^"'\`}])*$`, 'i',
+);
+
+// True when the color literal sits inside a box-shadow / text-shadow value —
+// the only contexts where a documented shadow color is legal. Anchored to the
+// end of `before` (no ; } { or quote in between) so a shadow property earlier
+// on the line can't leak the allowance into a later declaration. Kept separate
+// from isProbablyColorLiteral(), which stays a boolean for its existing call
+// sites and deliberately discards which property matched.
+function isShadowPropertyContext(line, match) {
+  const index = match.index ?? -1;
+  if (index < 0) return false;
+  const before = line.slice(0, index);
+  return SHADOW_CSS_CONTEXT_RE.test(before) || SHADOW_JS_CONTEXT_RE.test(before);
 }
 
 function isInsideCssAttributeSelector(line, index) {
@@ -699,6 +897,7 @@ function checkSourceDesignSystem(content, filePath, options = {}) {
         if (!isProbablyColorLiteral(line, match)) continue;
         const raw = cssColorLabel(match[0]);
         if (isAllowedColorRaw(raw, designSystem)) continue;
+        if (isShadowPropertyContext(line, match) && isAllowedShadowColorRaw(raw, designSystem)) continue;
         findings.push(makeDesignFinding(
           'design-system-color',
           filePath,
@@ -913,6 +1112,7 @@ export {
   loadDesignSystemForCwd,
   isAllowedFont,
   isAllowedColorRaw,
+  isAllowedShadowColorRaw,
   isAllowedRadiusRaw,
   isAllowedFontSizeRaw,
   checkSourceDesignSystem,
