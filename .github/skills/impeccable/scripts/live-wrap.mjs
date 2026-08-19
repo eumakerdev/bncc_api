@@ -17,11 +17,13 @@ import { isGeneratedFile } from './lib/is-generated.mjs';
 import { resolveLiveTemplateExtensions } from './lib/template-extensions.mjs';
 import { readBuffer as readManualEditsBuffer } from './live/manual-edits-buffer.mjs';
 import { findSourceFile } from './live/source-search.mjs';
+import { resolveSourceTraits } from './live/frameworks/index.mjs';
 import {
   buildSvelteComponentCssAuthoring,
   scaffoldSvelteComponentSession,
   shouldUseSvelteComponentInjection,
 } from './live/svelte-component.mjs';
+import { enterLiveRoot } from './live/roots.mjs';
 
 export async function wrapCli() {
   const args = process.argv.slice(2);
@@ -68,6 +70,13 @@ The agent should insert variant HTML at insertLine.`);
   const filePath = argVal(args, '--file');
   const text = argVal(args, '--text');
   const pageUrl = argVal(args, '--page-url');
+  // Preflight passes this for source-preview targets. It computes the scaffold
+  // (element location + wrapper text) but does NOT write it into source. The
+  // agent then writes the wrapper + all variants in one atomic edit. The
+  // premature server-side write full-reloaded the framework mid-generate and
+  // stranded the browser at 0/N (live-server.mjs missed-completion note). It is
+  // a no-op on the svelte-component path, which never writes the route source.
+  const deferSourceWrite = args.includes('--defer-source-write');
 
   if (!id) { console.error('Missing --id'); process.exit(1); }
   if (!elementId && !classes && !query) {
@@ -286,8 +295,10 @@ The agent should insert variant HTML at insertLine.`);
     .join('\n');
   const originalIndented = reindentOriginal('    ');
   const relTargetFile = path.relative(process.cwd(), targetFile).split(path.sep).join('/');
-  const useSvelteComponent = shouldUseSvelteComponentInjection(targetFile);
-  const useFrameworkComponent = useSvelteComponent;
+  // The registry says which files get component preview; the svelte-component
+  // module keeps the env escape hatch that turns it off.
+  const useSvelteComponent = resolveSourceTraits(targetFile).preview === 'component'
+    && shouldUseSvelteComponentInjection(targetFile);
 
   // Wrapper attributes differ by syntax. HTML allows plain string attrs;
   // JSX requires object-literal style and parses string attrs as HTML (which
@@ -334,13 +345,20 @@ The agent should insert variant HTML at insertLine.`);
   let outputEndLine = startLine + wrapperLines.length + (originalLines.length - 1);
   let insertLine;
   let svelteSession = null;
+  let deferredWrapper = null;
 
+  let sveltePreviewFallback = null;
   if (useSvelteComponent) {
     // Svelte/SvelteKit resets component-local state on markup HMR updates.
     // Keep generation source-neutral: agents write real variant components
     // under the generated componentDir, the browser mounts them into the live
     // DOM, and live-accept.mjs inlines the accepted variant back into the route.
-    svelteSession = scaffoldSvelteComponentSession({
+    //
+    // The scaffold is AST-based and refuses markup a detached preview cannot
+    // support (component tags, bind:/use:, await blocks, bound nested each).
+    // Refusal falls back to the plain source-preview wrapper below: an
+    // HMR-resetting but CORRECT preview beats a detached wrong one.
+    const scaffolded = scaffoldSvelteComponentSession({
       id,
       count,
       sourceFile: relTargetFile,
@@ -349,10 +367,32 @@ The agent should insert variant HTML at insertLine.`);
       originalLines,
       cwd: process.cwd(),
     });
-    outputFile = path.resolve(process.cwd(), svelteSession.manifestFile);
-    outputStartLine = 1;
-    outputEndLine = 1;
-    insertLine = 1;
+    if (scaffolded && scaffolded.fallback === 'source-preview') {
+      sveltePreviewFallback = scaffolded.reason || 'unsupported markup';
+    } else {
+      svelteSession = scaffolded;
+      outputFile = path.resolve(process.cwd(), svelteSession.manifestFile);
+      outputStartLine = 1;
+      outputEndLine = 1;
+      insertLine = 1;
+    }
+  }
+  if (svelteSession) {
+    // component preview: outputs already set above
+  } else if (deferSourceWrite) {
+    // Deferred source write: compute the scaffold text but leave source
+    // untouched. The agent replaces the picked element's source range with
+    // `wrapperBlock` (variants spliced at the marker) in one edit. Writing the
+    // scaffold here first would reload the framework before the agent's write
+    // lands, and a browser caught mid-reload misses the `done` and sits at 0/N.
+    deferredWrapper = {
+      block: wrapperLines.join('\n'),
+      replaceStartLine: startLine + 1, // 1-indexed picked-element range the
+      replaceEndLine: endLine + 1,     // agent's wrapper block replaces
+    };
+    // insertLine matches the final file position the wrapper occupies once the
+    // agent replaces the picked range, so downstream consumers stay consistent.
+    insertLine = startLine + 6 + (originalLines.length - 1) + 1;
   } else {
     // Replace the original element with the wrapper
     const newLines = [
@@ -374,19 +414,31 @@ The agent should insert variant HTML at insertLine.`);
 
   const outputRelFile = path.relative(process.cwd(), outputFile).split(path.sep).join('/');
 
-  const svelteComponentAuthoring = useSvelteComponent ? buildSvelteComponentCssAuthoring(count) : null;
+  const componentPreviewActive = !!svelteSession;
+  const svelteComponentAuthoring = componentPreviewActive ? buildSvelteComponentCssAuthoring(count) : null;
   const componentSession = svelteSession;
-  const componentPreviewMode = useSvelteComponent ? 'svelte-component' : undefined;
+  const componentPreviewMode = componentPreviewActive ? 'svelte-component' : undefined;
   const previewMode = componentPreviewMode;
 
   console.log(JSON.stringify({
     file: outputRelFile,
-    sourceFile: useFrameworkComponent ? relTargetFile : undefined,
+    sourceFile: componentPreviewActive ? relTargetFile : undefined,
     previewMode,
+    previewFallback: sveltePreviewFallback
+      ? { from: 'svelte-component', reason: sveltePreviewFallback }
+      : undefined,
+    // Deferred source write: the wrapper is NOT yet in source. The agent
+    // replaces [replaceStartLine, replaceEndLine] with `wrapperBlock` (variants
+    // spliced at the "insert below this line" marker) in one atomic edit.
+    sourceWritten: deferredWrapper ? false : undefined,
+    wrapperBlock: deferredWrapper ? deferredWrapper.block : undefined,
+    replaceStartLine: deferredWrapper ? deferredWrapper.replaceStartLine : undefined,
+    replaceEndLine: deferredWrapper ? deferredWrapper.replaceEndLine : undefined,
     componentDir: componentSession?.componentDir,
     propContract: componentSession?.propContract,
-    sourceStartLine: useFrameworkComponent ? startLine + 1 : undefined,
-    sourceEndLine: useFrameworkComponent ? endLine + 1 : undefined,
+    componentStubMarkup: componentSession?.stubMarkup,
+    sourceStartLine: componentPreviewActive ? startLine + 1 : undefined,
+    sourceEndLine: componentPreviewActive ? endLine + 1 : undefined,
     startLine: outputStartLine,       // 1-indexed for the agent
     // wrapperLines is an array but one element (the original-content slot)
     // is a `\n`-joined multi-line string, so the actual file-row count is
@@ -397,8 +449,8 @@ The agent should insert variant HTML at insertLine.`);
     insertLine,            // 1-indexed: where variants go
     commentSyntax: commentSyntax,
     styleMode: componentPreviewMode || styleMode.mode,
-    styleTag: useFrameworkComponent ? null : styleMode.styleTag,
-    cssSelectorPrefixExamples: useFrameworkComponent ? [] : buildCssSelectorPrefixExamples(styleMode.mode, count),
+    styleTag: componentPreviewActive ? null : styleMode.styleTag,
+    cssSelectorPrefixExamples: componentPreviewActive ? [] : buildCssSelectorPrefixExamples(styleMode.mode, count),
     cssAuthoring: svelteComponentAuthoring || buildCssAuthoring(styleMode, count),
     originalLineCount: originalLines.length,
   }));
@@ -601,27 +653,22 @@ function attrEscapeDouble(str) {
     .replace(/>/g, '&gt;');
 }
 
+/**
+ * Comment syntax, style mode, and preview strategy all come from the framework
+ * registry, keyed on the target file's extension: `.jsx`/`.tsx` author JSX
+ * comments, `.astro` needs global-prefixed preview CSS because Astro scopes
+ * component styles away from the generated wrappers, `.svelte` gets component
+ * preview. See live/frameworks/index.mjs for why extension and not project.
+ */
 function detectCommentSyntax(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  if (ext === '.jsx' || ext === '.tsx') {
-    return { open: '{/*', close: '*/}' };
-  }
-  // HTML, Vue, Svelte, Astro all use HTML comments
-  return { open: '<!--', close: '-->' };
+  return resolveSourceTraits(filePath).commentSyntax === 'jsx'
+    ? { open: '{/*', close: '*/}' }
+    : { open: '<!--', close: '-->' };
 }
 
 function detectStyleMode(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  if (ext === '.astro') {
-    return {
-      mode: 'astro-global-prefixed',
-      styleTag: '<style is:inline data-impeccable-css="SESSION_ID">',
-    };
-  }
-  return {
-    mode: 'scoped',
-    styleTag: '<style data-impeccable-css="SESSION_ID">',
-  };
+  const traits = resolveSourceTraits(filePath);
+  return { mode: traits.styleMode, styleTag: traits.styleTag };
 }
 
 function buildCssSelectorPrefixExamples(styleMode, count) {
@@ -861,6 +908,7 @@ function findClosingLine(lines, start) {
 // Auto-execute when run directly (node live-wrap.mjs ...)
 const _running = process.argv[1];
 if (_running?.endsWith('live-wrap.mjs') || _running?.endsWith('live-wrap.mjs/')) {
+  enterLiveRoot();
   wrapCli();
 }
 

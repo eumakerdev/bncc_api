@@ -86,7 +86,7 @@ BNCC, cobertura curricular, código real de resposta.
 página precisa ser ela mesma auditável e aberta. Número na tela é número real
 puxado do banco, nunca ilustração.
 
-**Mostrar, não adjetivar.** "1.703 habilidades" e uma resposta JSON real valem
+**Mostrar, não adjetivar.** "1.721 habilidades" e uma resposta JSON real valem
 mais que "completo e confiável". Toda afirmação da página deve ter como ser
 verificada por quem lê.
 
