@@ -222,7 +222,7 @@ semântica com IA e API keys self-service. Grátis e open-source.{% endblock %}
     </li>
   </ol>
   <pre class="curl-block"><code>curl -H <span class="tv">"Authorization: Bearer SUA_API_KEY"</span> \
-  "{{ (request.base_url|string).rstrip('/') }}/api/v1/habilidades?etapa=ensino_fundamental&amp;ano=5"</code></pre>
+  "{{ site_url }}/api/v1/habilidades?etapa=ensino_fundamental&amp;ano=5"</code></pre>
 </section>
 
 <!-- ============================ CASOS DE USO ============================

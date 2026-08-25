@@ -97,6 +97,8 @@ def test_site_url_overrides_canonical_and_sitemap(client, monkeypatch):
     body = client.get("/").text
     assert 'rel="canonical" href="https://bncc.api.br/"' in body
     assert 'property="og:url" content="https://bncc.api.br/"' in body
+    assert "https://bncc.api.br/api/v1/habilidades" in body
+    assert "run.app" not in body
 
     sitemap = client.get("/sitemap.xml").text
     assert "<loc>https://bncc.api.br/</loc>" in sitemap
