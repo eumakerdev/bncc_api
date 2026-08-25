@@ -10,6 +10,16 @@ versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)
 
 ## [Não lançado]
 
+### Corrigido — exemplo de `curl` da landing deixou de expor o host interno do Cloud Run
+
+O bloco "Da conta à primeira chamada" montava a URL do exemplo com `request.base_url` em
+vez do `site_url` já injetado pelo contexto Jinja (`app/web/jinja.py::_seo_context`) —
+atrás do Firebase Hosting esse é sempre o `Host` **interno** `.run.app` (o Firebase não
+repassa o domínio público ao container), então um visitante real de `bncc.api.br` via o
+exemplo de `curl` apontando para `bncc-api-….run.app`. Era o único ponto do template com
+esse padrão; canonical, Open Graph, JSON-LD, sitemap e robots já usavam `site_url`
+corretamente (mesma família do fix de redirects da 1.4.0). Sem impacto em `/api/v1`.
+
 ### Corrigido — a transparência de custos voltou a se atualizar sozinha
 
 A seção pública publicava **R$ 103,78** desde 12/07 — um valor semeado à mão, enquanto o
