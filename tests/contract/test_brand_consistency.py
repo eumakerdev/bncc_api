@@ -206,6 +206,27 @@ def test_og_image_svg_continua_morto() -> None:
     ).exists(), "og-image.svg foi recriado; o card social vem de scripts/generate_og_image.py"
 
 
+def test_fonte_e_servida_com_o_content_type_que_o_preload_anuncia() -> None:
+    """O <link rel=preload type="font/woff2"> só vale se a resposta bater com ele.
+
+    O Starlette tira o Content-Type do módulo `mimetypes`, que consulta o
+    registro do SO — e o Windows não conhece .woff2. Sem o registro explícito em
+    `app/web/staticfiles.py`, a fonte saía como application/octet-stream no dev
+    e font/woff2 no contêiner: o navegador descarta o preload quando o tipo não
+    bate, e o request vira desperdício só numa das plataformas.
+    """
+    from app.main import app
+    from fastapi.testclient import TestClient
+
+    with TestClient(app) as client:
+        resposta = client.get("/static/fonts/inter-latin.woff2")
+    assert resposta.status_code == 200
+    assert resposta.headers["content-type"] == "font/woff2", (
+        f"fonte servida como {resposta.headers['content-type']}; o preload de base.html "
+        'anuncia type="font/woff2" e o navegador descarta o que não bate'
+    )
+
+
 def test_fonte_da_marca_e_carregada_onde_e_declarada() -> None:
     """Inter foi declarada por meses sem nunca ser baixada — o site caía no sistema."""
     assert (STATIC / "fonts.css").exists()
