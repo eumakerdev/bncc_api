@@ -1,0 +1,38 @@
+{#- =========================================================================
+    Símbolo da BNCC API — FONTE ÚNICA DE VERDADE do desenho inline.
+
+    Antes deste arquivo o mark existia em 7 cópias coladas à mão nos templates,
+    e elas tinham divergido: o admin desenhava só 2 chevrons e omitia o ponto
+    do estudante. Qualquer tela que precise do símbolo importa daqui:
+
+        {% from "_brand.html" import mark %}
+        {{ mark(28, 'nav') }}
+
+    `uid` entra no id do <linearGradient>. Ele é obrigatório porque
+    portal/login.html e portal/signup.html estendem base.html — duas instâncias
+    na MESMA página — e ids repetidos fazem o segundo gradiente herdar o
+    primeiro. Use um uid distinto por instância ('nav', 'auth', 'adm').
+
+    As cores vêm de --mark-a/--mark-b/--mark-dot (styles.css), então este único
+    macro serve tema claro e escuro. O símbolo NUNCA é recolorido fora desses
+    tokens — ver DESIGN.md.
+    ========================================================================= #}
+
+{%- macro mark(size=28, uid='m') -%}
+<svg class="bncc-mark" viewBox="0 0 48 48" width="{{ size }}" height="{{ size }}"
+     aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="bncc-tile-{{ uid }}" x1="0" y1="0" x2="1" y2="1">
+      <stop class="mark-a" offset="0" />
+      <stop class="mark-b" offset="1" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#bncc-tile-{{ uid }})" />
+  <g fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 22l11 4.5L35 22" />
+    <path d="M13 28.6l11 4.5 11-4.5" />
+    <path d="M13 35.2l11 4.5 11-4.5" />
+  </g>
+  <circle class="mark-dot" cx="24" cy="13.8" r="3.3" />
+</svg>
+{%- endmacro -%}

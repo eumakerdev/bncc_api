@@ -8,42 +8,68 @@
 
 /* ------------------------------ Tokens ----------------------------------
    Paleta em OKLCH, exceto --brand, fixado no hex exato da identidade.
-   Estratégia de cor: COMMITTED — o azul da marca carrega superfície (bandas
+   Estratégia de cor: COMMITTED — o verde da marca carrega superfície (bandas
    inteiras), não é só cor de botão. Contraste de cada par verificado; os
    números nos comentários são WCAG reais, não estimativa.
 
-   Regra dura: --amber NUNCA é texto sobre fundo claro (1.61:1). Ele é
-   preenchimento, marcador e display sobre azul profundo (6.19:1). */
+   Leitura da bandeira, em registro sóbrio: o VERDE carrega superfície, o
+   OURO é acento e o AZUL-NOITE é cor de dado. Nunca os três em saturação
+   cheia na mesma tela — é o que separa identidade cívica de camisa de time.
+
+   Regra dura: --gold NUNCA é texto sobre fundo claro (1.67:1). Ele é
+   preenchimento, marcador e display sobre verde profundo (6.18:1).
+
+   Os neutros são tingidos no matiz FRIO (258), não no verde: neutro
+   esverdeado lê como enjoado, e verde saturado sobre cinza-frio é o
+   pareamento que sustenta o registro sóbrio. */
 :root {
   color-scheme: light dark;
 
   /* Marca — identidade travada (logo, theme-color, og-image dependem disto) */
-  --brand: #1b4dff;                        /* branco sobre: 5.91:1 */
-  --brand-lift: oklch(0.575 0.212 265);    /* hover; branco sobre: 4.58:1 */
-  --brand-deep: oklch(0.392 0.196 265);    /* banda drenched; branco: 10.13:1 */
-  --brand-deeper: oklch(0.268 0.128 265);  /* banda mais densa; branco: 15.62:1 */
-  --brand-wash: oklch(0.955 0.028 265);    /* fundo tênue, tingido para a marca */
-  --brand-fg: oklch(0.995 0.002 265);      /* texto SOBRE --brand (botão) */
-  --band-ink: oklch(0.990 0.004 265);      /* texto SOBRE a banda drenched */
-  --amber: oklch(0.842 0.150 84);          /* #ffc53d do logo — só fill/display */
-  --amber-deep: oklch(0.660 0.145 68);     /* quando o âmbar precisa ser texto */
+  --brand: #0a6b3c;                        /* verde-mata; branco sobre: 6.60:1 */
+  --brand-lift: oklch(0.545 0.120 150);    /* hover; branco sobre: 4.69:1 */
+  --brand-deep: oklch(0.355 0.092 152);    /* banda drenched; branco: 10.64:1 */
+  --brand-deeper: oklch(0.245 0.062 154);  /* banda mais densa; branco: 15.91:1 */
+  --brand-wash: oklch(0.962 0.022 150);    /* fundo tênue; ink sobre: 15.80:1 */
+  --brand-fg: oklch(0.995 0.002 150);      /* texto SOBRE --brand (botão) */
+  --band-ink: oklch(0.990 0.004 150);      /* texto SOBRE a banda drenched */
+  --gold: oklch(0.828 0.145 88);           /* #eec046 do logo — só fill/display */
+  --gold-deep: oklch(0.530 0.118 70);      /* quando o ouro precisa ser texto; paper: 5.31:1 */
+
+  /* Azul-noite da bandeira — secundária e segunda série dos gráficos. Não
+     compete com o verde: aparece como dado e como âncora, nunca como CTA. */
+  --azul: oklch(0.410 0.140 262);          /* branco sobre: 9.05:1 */
+  --azul-deep: oklch(0.300 0.130 264);     /* ≈ #002776; branco sobre: 14.02:1 */
+
+  /* Verde-noite: theme-color escuro, topbar do Scalar e fundo do og-image.
+     Antes era #0d0f14, um valor solto que não batia com nenhum token. */
+  --ground: #0b120e;
 
   /* Rampa da barra de cobertura. Fixa nos DOIS temas: é dado, não superfície,
      e os rótulos em branco por cima precisam de contraste estável. Nenhuma
-     passa de L 0.575, o ponto em que o branco ainda fecha 4.5:1. */
-  --cov-1: oklch(0.392 0.196 265);         /* branco sobre: 10.13:1 */
-  --cov-2: oklch(0.512 0.271 265);         /* branco sobre:  6.28:1 */
-  --cov-3: oklch(0.575 0.212 265);         /* branco sobre:  4.58:1 */
+     passa de L 0.575, o ponto em que o branco ainda fecha 4.5:1 — e nenhuma
+     desce de L 0.400, senão a faixa mais escura (Educação Infantil, a menor)
+     some contra o paper do tema escuro. */
+  --cov-1: oklch(0.400 0.100 154);         /* branco: 8.78:1; separa do paper escuro: 2.15:1 */
+  --cov-2: oklch(0.470 0.128 150);         /* branco: 6.43:1 */
+  --cov-3: oklch(0.545 0.130 147);         /* branco: 4.68:1 — piso da rampa */
 
-  /* Neutros tingidos para o matiz da marca (265), nunca para o quente */
-  --paper: oklch(0.993 0.003 265);
-  --surface: oklch(0.968 0.007 265);
-  --sunken: oklch(0.940 0.010 265);
-  --ink: oklch(0.215 0.026 265);           /* sobre paper: 17.24:1 */
-  --ink-muted: oklch(0.468 0.030 265);     /* sobre paper: 6.79:1 */
-  --ink-subtle: oklch(0.540 0.029 265);    /* sobre paper: 4.97:1 — piso do AA */
-  --line: oklch(0.905 0.012 265);
-  --line-strong: oklch(0.855 0.016 265);
+  /* Neutros tingidos para o matiz frio (258), nunca para o verde */
+  --paper: oklch(0.993 0.003 258);
+  --surface: oklch(0.968 0.006 258);
+  --sunken: oklch(0.940 0.009 258);
+  --ink: oklch(0.215 0.022 258);           /* sobre paper: 17.17:1 */
+  --ink-muted: oklch(0.468 0.026 258);     /* sobre paper: 6.74:1 */
+  --ink-subtle: oklch(0.540 0.026 258);    /* sobre paper: 4.96:1 — piso do AA */
+  --line: oklch(0.905 0.010 258);
+  --line-strong: oklch(0.855 0.014 258);
+
+  /* Stops do gradiente do símbolo. O macro inline (_brand.html) lê daqui, então
+     um mesmo macro serve claro e escuro. Os .svg standalone repetem os hexes
+     porque são consumidos fora do CSS (README, x-logo do OpenAPI). */
+  --mark-a: #07603a;
+  --mark-b: #12a45a;
+  --mark-dot: #f2c04a;
 
   /* Aliases legados: portal, admin, /guia e onboarding consomem estes nomes.
      Mantidos para o sistema novo valer em todas as telas sem reescrever 18
@@ -70,28 +96,33 @@
   --primary: var(--brand);
   --primary-soft: var(--brand-wash);
 
-  --danger: oklch(0.505 0.185 27);
+  --danger: oklch(0.505 0.185 27);         /* branco sobre: 6.46:1 */
   --danger-soft: oklch(0.962 0.018 27);
-  --ok: oklch(0.505 0.108 162);
-  --ok-soft: oklch(0.955 0.035 162);
-  /* Séries do gráfico de uso (BI): total (marca) vs. bem-sucedidas (verde). */
+  /* Verde-água, não o verde da marca: a 22° de distância do matiz 150, um
+     badge "ok" ainda se distingue de um elemento de marca ao lado dele. */
+  --ok: oklch(0.500 0.096 172);            /* branco sobre: 5.70:1 */
+  --ok-soft: oklch(0.955 0.030 172);       /* --ok sobre: 5.06:1 */
+  --gold-soft: oklch(0.960 0.035 80);      /* --gold-deep sobre: 4.82:1 */
+  /* Séries do gráfico de uso (BI): total (marca) vs. bem-sucedidas (azul).
+     As duas são quantidades, não aprovação/reprovação — por isso verde+azul
+     da bandeira, e não verde+verde, que ficariam indistinguíveis. */
   --chart-total: var(--brand);
-  --chart-success: #0a9d6e;
-  --chart-total-fill: rgba(27, 77, 255, 0.12);
-  --chart-success-fill: rgba(10, 157, 110, 0.12);
+  --chart-success: oklch(0.410 0.140 262);
+  --chart-total-fill: oklch(0.470 0.125 150 / 0.14);
+  --chart-success-fill: oklch(0.410 0.140 262 / 0.14);
   --chart-grid: var(--border);
   /* Custo por serviço (categórico): banco / servidor / IA / outros. */
-  --cost-banco: #4263eb;
-  --cost-servidor: #0ca678;
-  --cost-ia: #f08c00;
-  --cost-outros: #868e96;
-  --code-bg: #0b1020;
+  --cost-banco: oklch(0.455 0.150 262);
+  --cost-servidor: oklch(0.520 0.120 150);
+  --cost-ia: oklch(0.560 0.120 70);
+  --cost-outros: oklch(0.600 0.018 258);
+  --code-bg: #0a1410;
   --code-fg: #e2e8f0;
-  --code-key: #7dd3fc;
-  --code-val: #86efac;
-  --shadow-sm: 0 1px 2px oklch(0.215 0.026 265 / 0.05);
-  --shadow: 0 1px 2px oklch(0.215 0.026 265 / 0.05), 0 12px 28px -10px oklch(0.215 0.026 265 / 0.12);
-  --shadow-lg: 0 24px 60px -18px oklch(0.215 0.026 265 / 0.24);
+  --code-key: #7fd6a5;
+  --code-val: #f2c04a;
+  --shadow-sm: 0 1px 2px oklch(0.215 0.022 258 / 0.05);
+  --shadow: 0 1px 2px oklch(0.215 0.022 258 / 0.05), 0 12px 28px -10px oklch(0.215 0.022 258 / 0.12);
+  --shadow-lg: 0 24px 60px -18px oklch(0.215 0.022 258 / 0.24);
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 18px;
@@ -142,43 +173,52 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Sem preto puro: o fundo escuro também é tingido para o matiz da marca. */
-    --paper: oklch(0.178 0.019 265);
-    --surface: oklch(0.222 0.023 265);
-    --sunken: oklch(0.148 0.017 265);
-    --ink: oklch(0.945 0.008 265);          /* sobre paper: 16.09:1 */
-    --ink-muted: oklch(0.740 0.021 265);    /* sobre paper: 8.19:1 */
-    --ink-subtle: oklch(0.630 0.024 265);   /* sobre paper: 5.38:1 */
-    --line: oklch(0.298 0.024 265);
-    --line-strong: oklch(0.365 0.028 265);
+    /* Sem preto puro: o fundo escuro também é tingido para o neutro frio. */
+    --paper: oklch(0.178 0.016 258);
+    --surface: oklch(0.222 0.020 258);
+    --sunken: oklch(0.148 0.014 258);
+    --ink: oklch(0.945 0.008 258);          /* sobre paper: 16.07:1 */
+    --ink-muted: oklch(0.740 0.018 258);    /* sobre paper: 8.19:1 */
+    --ink-subtle: oklch(0.630 0.021 258);   /* sobre paper: 5.40:1 */
+    --line: oklch(0.298 0.021 258);
+    --line-strong: oklch(0.365 0.025 258);
 
-    /* No escuro o azul da marca precisa clarear para virar texto legível;
-       a banda drenched inverte e usa o azul profundo como superfície. */
-    --brand: oklch(0.700 0.138 265);        /* sobre paper: 6.96:1 */
-    --brand-lift: oklch(0.775 0.115 265);
-    --brand-deep: oklch(0.330 0.150 265);
-    --brand-deeper: oklch(0.242 0.110 265);
-    --brand-wash: oklch(0.268 0.078 265);   /* ink sobre: 13.06:1 */
+    /* No escuro o verde da marca precisa clarear para virar texto legível;
+       a banda drenched inverte e usa o verde profundo como superfície. */
+    --brand: oklch(0.720 0.135 150);        /* sobre paper: 8.03:1 */
+    --brand-lift: oklch(0.790 0.115 150);   /* sobre paper: 10.20:1 */
+    --brand-deep: oklch(0.310 0.080 152);   /* band-ink sobre: 11.53:1 */
+    --brand-deeper: oklch(0.235 0.058 154); /* band-ink sobre: 14.83:1 */
+    --brand-wash: oklch(0.268 0.060 152);   /* ink sobre: 12.64:1 */
     /* No escuro --brand clareia, então a tinta sobre ele escurece. Mas a
        banda drenched continua escura, e a tinta dela segue clara: são dois
-       papéis diferentes e confundi-los deixava o hero preto-no-azul. */
-    --brand-fg: oklch(0.145 0.030 265);
-    --band-ink: oklch(0.965 0.006 265);
-    --amber: oklch(0.842 0.150 84);
-    --amber-deep: oklch(0.800 0.150 78);
+       papéis diferentes e confundi-los deixava o hero preto-no-verde. */
+    --brand-fg: oklch(0.145 0.030 152);     /* sobre --brand: 8.39:1 */
+    --band-ink: oklch(0.965 0.006 150);
+    --gold: oklch(0.845 0.145 88);          /* sobre paper: 11.68:1 */
+    --gold-deep: oklch(0.805 0.140 78);     /* sobre paper: 10.12:1 */
+    --azul: oklch(0.680 0.130 262);         /* sobre paper: 6.49:1 */
+    --azul-deep: oklch(0.520 0.150 264);
 
-    --danger: oklch(0.700 0.170 27);
+    /* No escuro o símbolo clareia junto: o tile precisa continuar separando
+       do fundo #0d1118 sem virar néon. */
+    --mark-a: #0e8c4c;
+    --mark-b: #35c97a;
+    --mark-dot: #f3c64c;
+
+    --danger: oklch(0.700 0.170 27);        /* sobre paper: 6.56:1 */
     --danger-soft: oklch(0.268 0.070 27);
-    --ok: oklch(0.760 0.140 162);
-    --ok-soft: oklch(0.268 0.055 162);
-    --chart-success: oklch(0.760 0.140 162);
-    --chart-total-fill: oklch(0.700 0.138 265 / 0.18);
-    --chart-success-fill: oklch(0.760 0.140 162 / 0.16);
-    --cost-banco: oklch(0.680 0.150 265);
-    --cost-servidor: oklch(0.790 0.135 168);
-    --cost-ia: oklch(0.800 0.135 62);
-    --cost-outros: oklch(0.720 0.020 265);
-    --code-bg: oklch(0.148 0.024 265);
+    --ok: oklch(0.760 0.130 172);           /* sobre paper: 9.31:1 */
+    --ok-soft: oklch(0.268 0.055 172);      /* --ok sobre: 7.29:1 */
+    --gold-soft: oklch(0.278 0.055 70);     /* --gold-deep sobre: 7.95:1 */
+    --chart-success: oklch(0.680 0.130 262);
+    --chart-total-fill: oklch(0.720 0.135 150 / 0.18);
+    --chart-success-fill: oklch(0.680 0.130 262 / 0.16);
+    --cost-banco: oklch(0.680 0.130 262);
+    --cost-servidor: oklch(0.740 0.130 150);
+    --cost-ia: oklch(0.805 0.140 78);
+    --cost-outros: oklch(0.720 0.018 258);
+    --code-bg: oklch(0.148 0.020 152);
     --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
     --shadow: 0 1px 2px oklch(0 0 0 / 0.4), 0 16px 36px -14px oklch(0 0 0 / 0.6);
     --shadow-lg: 0 30px 70px -20px oklch(0 0 0 / 0.7);
@@ -229,7 +269,7 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, summary:focus-visible
 }
 /* Dentro da banda azul o foco precisa contrastar com o azul, não com o papel. */
 .band-brand a:focus-visible, .band-brand button:focus-visible, .band-brand .btn:focus-visible {
-  outline-color: var(--amber);
+  outline-color: var(--gold);
 }
 .btn, a, button {
   transition: opacity var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out),
@@ -258,7 +298,14 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, summary:focus-visible
   color: var(--fg);
 }
 .brand:hover { text-decoration: none; }
-.brand-mark { display: block; width: 1.75rem; height: 1.75rem; flex: none; }
+.brand .bncc-mark { display: block; width: 1.75rem; height: 1.75rem; flex: none; }
+/* O símbolo é desenhado uma vez só, pelo macro de templates/_brand.html. Os
+   stops do gradiente vêm de tokens para que UM macro sirva claro e escuro —
+   sem uma segunda cópia do desenho para o tema escuro. */
+.admin-brand .bncc-mark { flex: none; }
+.bncc-mark .mark-a { stop-color: var(--mark-a); }
+.bncc-mark .mark-b { stop-color: var(--mark-b); }
+.bncc-mark .mark-dot { fill: var(--mark-dot); }
 .brand-text { color: var(--fg); }
 .nav-links { display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; }
 .nav-links a { min-height: 44px; display: inline-flex; align-items: center; }
@@ -313,7 +360,7 @@ svg[hidden] { display: none; }
 /* Sobre a banda azul os botões invertem: o primário vira papel, o secundário
    vira contorno claro. Sem isso o CTA sumiria dentro da própria cor. */
 .band-brand .btn { background: var(--band-ink); color: var(--brand-deep); }
-.band-brand .btn:hover { background: var(--amber); color: var(--brand-deeper); }
+.band-brand .btn:hover { background: var(--gold); color: var(--brand-deeper); }
 .band-brand .btn-secondary {
   background: transparent; color: var(--band-ink);
   border-color: color-mix(in oklab, var(--band-ink) 45%, transparent);
@@ -425,7 +472,7 @@ input[type="password"]::-ms-clear { display: none; }
 /* ------------------------------ Badges e avisos -------------------------- */
 .badge {
   display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem;
-  border-radius: 999px; background: var(--accent); color: #fff; vertical-align: middle;
+  border-radius: 999px; background: var(--accent); color: var(--brand-fg); vertical-align: middle;
 }
 .badge-muted { background: var(--border); color: var(--fg-muted); }
 /* Aviso: borda completa + fundo tingido. A tarja lateral colorida (border-left
@@ -459,7 +506,7 @@ input[type="password"]::-ms-clear { display: none; }
 .band-brand .lead { color: color-mix(in oklab, var(--band-ink) 80%, transparent); }
 /* :not(.btn) — sem isso o sublinhado de link vaza para dentro dos botões. */
 .band-brand a:not(.btn) { color: var(--band-ink); text-decoration: underline; text-underline-offset: 3px; }
-.band-brand a:not(.btn):hover { color: var(--amber); }
+.band-brand a:not(.btn):hover { color: var(--gold); }
 .band-surface { background: var(--surface); border-block: 1px solid var(--line); }
 
 /* ------------------------------ Hero ------------------------------------
@@ -481,7 +528,7 @@ input[type="password"]::-ms-clear { display: none; }
 }
 /* O âmbar do logo vira grifo tipográfico: sobre o azul profundo dá 6.19:1,
    suficiente para display. Nunca use âmbar em texto corrido claro. */
-.hero h1 em { font-style: normal; color: var(--amber); }
+.hero h1 em { font-style: normal; color: var(--gold); }
 .hero-lead {
   font-size: var(--t-lg); line-height: 1.5; max-width: 46ch;
   color: color-mix(in oklab, var(--band-ink) 84%, transparent); margin: 0 0 var(--s-6);
@@ -507,7 +554,7 @@ input[type="password"]::-ms-clear { display: none; }
   font-family: var(--mono); font-size: var(--t-xs);
   color: color-mix(in oklab, var(--band-ink) 72%, transparent);
 }
-.record-verb { color: var(--amber); font-weight: 600; }
+.record-verb { color: var(--gold); font-weight: 600; }
 .record pre {
   background: transparent; border: 0; margin: 0; padding: var(--s-4);
   font-size: var(--t-sm); line-height: 1.7; color: var(--code-fg);
@@ -762,7 +809,7 @@ input[type="password"]::-ms-clear { display: none; }
 }
 .key-field-input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand-soft); }
 .key-copy { flex: none; }
-.key-copy.is-copied { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: none; }
+.key-copy.is-copied { background: var(--accent); border-color: var(--accent); color: var(--brand-fg); box-shadow: none; }
 .key-copy.is-copied .icon-copy { display: none; }
 .key-modal-actions { margin-top: 1.5rem; }
 @media (max-width: 480px) {

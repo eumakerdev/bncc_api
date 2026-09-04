@@ -75,8 +75,8 @@
       Requisições — últimos {{ analytics.window_days }} dias
     </h2>
     <div class="comp-legend">
-      <span><span class="dot" style="background:#1b4dff"></span>Total</span>
-      <span><span class="dot" style="background:#16a34a"></span>Bem-sucedidas</span>
+      <span><span class="dot" style="background:var(--chart-total)"></span>Total</span>
+      <span><span class="dot" style="background:var(--chart-success)"></span>Bem-sucedidas</span>
     </div>
   </div>
   {% if chart.has_data %}
@@ -84,16 +84,16 @@
     <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-label="Gráfico de uso da plataforma">
       <title>Requisições da plataforma: total vs. bem-sucedidas</title>
       {% for tick in chart.y_ticks %}
-      <line x1="44" y1="{{ tick.pos }}" x2="{{ chart.width - 12 }}" y2="{{ tick.pos }}" stroke="#e2e8f0" stroke-width="1"/>
-      <text x="40" y="{{ tick.pos }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="#94a3b8">{{ tick.label }}</text>
+      <line x1="44" y1="{{ tick.pos }}" x2="{{ chart.width - 12 }}" y2="{{ tick.pos }}" stroke="var(--chart-grid)" stroke-width="1"/>
+      <text x="40" y="{{ tick.pos }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="var(--ink-subtle)">{{ tick.label }}</text>
       {% endfor %}
       <!-- Área total (o vão até a linha verde é o volume com erro) -->
-      <path d="{{ chart.total_area }}" fill="#1b4dff" opacity="0.10"/>
-      <path d="{{ chart.success_area }}" fill="#16a34a" opacity="0.12"/>
-      <polyline points="{{ chart.total_line }}" fill="none" stroke="#1b4dff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <polyline points="{{ chart.success_line }}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="{{ chart.total_area }}" fill="var(--chart-total)" opacity="0.10"/>
+      <path d="{{ chart.success_area }}" fill="var(--chart-success)" opacity="0.12"/>
+      <polyline points="{{ chart.total_line }}" fill="none" stroke="var(--chart-total)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="{{ chart.success_line }}" fill="none" stroke="var(--chart-success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       {% for tick in chart.x_ticks %}
-      <text x="{{ tick.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle" font-size="10" fill="#94a3b8">{{ tick.label }}</text>
+      <text x="{{ tick.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle" font-size="10" fill="var(--ink-subtle)">{{ tick.label }}</text>
       {% endfor %}
     </svg>
   </div>
@@ -171,10 +171,10 @@
     <div class="comp-seg comp-seg-b" style="width:{{ (composition.oauth_only / comp_total * 100) | round(1) }}%"></div>
   </div>
   <div class="comp-legend">
-    <span><span class="dot" style="background:#1b4dff"></span>E-mail/senha: {{ composition.with_password }}</span>
-    <span><span class="dot" style="background:#0aa8dc"></span>Só login social: {{ composition.oauth_only }}</span>
-    <span><span class="dot" style="background:#16a34a"></span>Verificadas: {{ composition.verified }}</span>
-    <span><span class="dot" style="background:#94a3b8"></span>Onboarding concluído: {{ composition.onboarded }}</span>
+    <span><span class="dot" style="background:var(--chart-total)"></span>E-mail/senha: {{ composition.with_password }}</span>
+    <span><span class="dot" style="background:var(--chart-success)"></span>Só login social: {{ composition.oauth_only }}</span>
+    <span><span class="dot" style="background:var(--chart-success)"></span>Verificadas: {{ composition.verified }}</span>
+    <span><span class="dot" style="background:var(--ink-subtle)"></span>Onboarding concluído: {{ composition.onboarded }}</span>
   </div>
 </div>
 {% endblock %}

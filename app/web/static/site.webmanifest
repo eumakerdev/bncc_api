@@ -1,0 +1,17 @@
+{
+  "name": "BNCC API",
+  "short_name": "BNCC API",
+  "description": "Toda a Base Nacional Comum Curricular do Brasil em uma API gratuita.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "minimal-ui",
+  "theme_color": "#0a6b3c",
+  "background_color": "#0b120e",
+  "icons": [
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/logo-icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

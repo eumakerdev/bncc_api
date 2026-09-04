@@ -8,7 +8,7 @@
   <p>Faturamento real do Google Cloud (BigQuery billing export), líquido de créditos.</p>
   {# Frescor: o job roda 1x/dia. Sem este selo, uma ingestão parada só aparece como
      um número público congelado — foi assim por 20 dias em jul/2026. #}
-  <p style="font-size:0.85rem;margin-top:0.35rem;{% if ingest_stale %}color:#b45309;font-weight:600{% else %}color:var(--text-muted,#64748b){% endif %}">
+  <p style="font-size:0.85rem;margin-top:0.35rem;{% if ingest_stale %}color:var(--gold-deep);font-weight:600{% else %}color:var(--text-muted){% endif %}">
     {%- if summary.last_ingested_at %}
       Última ingestão: {{ summary.last_ingested_at.strftime('%d/%m/%Y %H:%M') }} UTC ·
       {% if ingest_age_days == 0 %}hoje{% elif ingest_age_days == 1 %}há 1 dia{% else %}há {{ ingest_age_days }} dias{% endif %}
@@ -51,8 +51,8 @@
     <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" preserveAspectRatio="none"
          aria-label="Custo mensal de infraestrutura por serviço, em reais.">
       {% for t in chart.y_ticks %}
-      <line x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}" stroke="#e2e8f0" stroke-width="1"/>
-      <text x="40" y="{{ t.pos }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="#94a3b8">{{ t.label }}</text>
+      <line x1="44" y1="{{ t.pos }}" x2="{{ chart.width - 12 }}" y2="{{ t.pos }}" stroke="var(--chart-grid)" stroke-width="1"/>
+      <text x="40" y="{{ t.pos }}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="var(--ink-subtle)">{{ t.label }}</text>
       {% endfor %}
       {% for bar in chart.bars %}
         {% for seg in bar.segments %}
@@ -60,14 +60,14 @@
         {% endfor %}
       {% endfor %}
       {% for t in chart.x_ticks %}
-      <text x="{{ t.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle" font-size="10" fill="#94a3b8">{{ t.label }}</text>
+      <text x="{{ t.pos }}" y="{{ chart.height - 6 }}" text-anchor="middle" font-size="10" fill="var(--ink-subtle)">{{ t.label }}</text>
       {% endfor %}
     </svg>
   </div>
   {% endif %}
 
   <details style="margin-top:1rem">
-    <summary style="cursor:pointer;font-size:0.85rem;color:var(--text-muted,#64748b)">Ver dados em tabela</summary>
+    <summary style="cursor:pointer;font-size:0.85rem;color:var(--text-muted)">Ver dados em tabela</summary>
     <div style="overflow-x:auto;margin-top:0.75rem">
       <table class="data-table">
         <thead><tr><th>Mês</th><th>Total</th></tr></thead>

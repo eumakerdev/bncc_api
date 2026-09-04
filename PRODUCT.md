@@ -54,6 +54,11 @@ bem público, com as contas abertas.
 
 ## Brand Personality
 
+A identidade visual — paleta, símbolo, tipografia e as regras duras de uso — vive em
+[`DESIGN.md`](DESIGN.md). Em resumo: leitura sóbria das cores do Brasil, com o verde
+carregando superfície, o ouro só como acento e o azul-noite como cor de dado. É a tradução
+visual do que está escrito abaixo — bem público, não produto.
+
 Cívico, transparente, generoso. A voz é de quem construiu uma coisa pública e
 está prestando contas dela: direta, sem hype, sem vender. Assume que o leitor é
 competente e não precisa ser convencido com adjetivo. Admite limite com a mesma

@@ -3,8 +3,8 @@
   <desc id="bncc-icon-desc">Estudante sobre um livro aberto em três camadas — as três etapas da BNCC — desenhado como chevrons de código.</desc>
   <defs>
     <linearGradient id="bncc-tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b4dff"/>
-      <stop offset="1" stop-color="#0aa8dc"/>
+      <stop offset="0" stop-color="#07603a"/>
+      <stop offset="1" stop-color="#12a45a"/>
     </linearGradient>
   </defs>
   <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#bncc-tile)"/>
@@ -13,5 +13,5 @@
     <path d="M13 28.6l11 4.5 11-4.5"/>
     <path d="M13 35.2l11 4.5 11-4.5"/>
   </g>
-  <circle cx="24" cy="13.8" r="3.3" fill="#ffc53d"/>
+  <circle cx="24" cy="13.8" r="3.3" fill="#f2c04a"/>
 </svg>
