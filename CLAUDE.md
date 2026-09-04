@@ -37,6 +37,19 @@ Corolários: `requirements.txt` é só runtime (dev/PDF em `requirements-dev.txt
 instala torch do índice **CPU-only** (a wheel padrão traz ~2,5 GB de CUDA inútil), e a landing manda
 `Cache-Control` público para a CDN do Firebase absorver o tráfego. Ver `deploy/README.md`.
 
+## Identidade visual (ver `DESIGN.md`)
+Leitura sóbria das cores do Brasil: **verde carrega superfície**, **ouro só como acento** (nunca
+texto sobre fundo claro, 1.67:1) e **azul-noite como cor de dado**; neutros no matiz **frio** (258),
+nunca esverdeados. Tokens OKLCH em `app/web/static/styles.css` — os contrastes nos comentários são
+**medidos**, não estimativa: ao mexer num par, recalcule e atualize o número.
+O símbolo tem **uma** fonte de verdade por superfície: macro `app/web/templates/_brand.html` para
+todo template (nunca cole SVG inline), `logo{,-dark,-icon}.svg` para consumidores externos e
+`scripts/generate_og_image.py` para **todos** os rasters (og, favicon, PWA, LinkedIn). O mark nunca
+é recolorido fora de `--mark-a/--mark-b/--mark-dot`. `tests/contract/test_brand_consistency.py` é o
+portão — a regressão aqui é invisível (nada quebra, a marca só volta a se fragmentar em cópias
+divergentes, como aconteceu até 09/2026). Não renomeie `logo.svg`: o caminho está congelado em
+`info.x-logo` nos snapshots de contrato.
+
 ## Feature ativa
 `001-public-api-platform` — ver `specs/001-public-api-platform/` (spec, plan, research, data-model,
 contracts, quickstart). Estado atual do repo: protótipo com ~11 habilidades de amostra; o v1 substitui

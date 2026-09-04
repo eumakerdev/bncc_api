@@ -40,7 +40,7 @@
           <td>{{ acc.total_keys }}</td>
           <td>{{ acc.active_keys }}</td>
           <td>{{ acc.requests_today }}</td>
-          <td style="font-size:0.8rem;color:var(--text-muted,#64748b)">
+          <td style="font-size:0.8rem;color:var(--text-muted)">
             {{ acc.created_at.strftime('%d/%m/%Y %H:%M') if acc.created_at else '—' }}
           </td>
         </tr>

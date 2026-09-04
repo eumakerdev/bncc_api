@@ -1,3 +1,4 @@
+{% from "_brand.html" import mark %}
 <!doctype html>
 <html lang="pt-BR">
 
@@ -11,9 +12,12 @@
   <link rel="canonical" href="{{ site_url }}{{ current_path }}">
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/static/logo-icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/static/logo-icon.svg">
-  <meta name="theme-color" content="#1b4dff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
+  <!-- O iOS ignora SVG em apple-touch-icon: precisa de PNG (gerado por
+       scripts/generate_og_image.py, mesmo desenho do símbolo). -->
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <link rel="manifest" href="/static/site.webmanifest">
+  <meta name="theme-color" content="#0a6b3c" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b120e" media="(prefers-color-scheme: dark)">
   <meta property="og:site_name" content="BNCC API">
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
@@ -30,6 +34,8 @@
   <meta name="twitter:description" content="{{ self.og_description() }}">
   <meta name="twitter:image" content="{{ site_url }}/static/og-image.png">
   {% block head_extra %}{% endblock %}
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/fonts.css">
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 
@@ -38,21 +44,7 @@
   <header class="site-header">
     <div class="container nav">
       <a class="brand" href="/" aria-label="BNCC API — página inicial">
-        <svg class="brand-mark" viewBox="0 0 48 48" width="28" height="28" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id="brand-tile" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#1b4dff" />
-              <stop offset="1" stop-color="#0aa8dc" />
-            </linearGradient>
-          </defs>
-          <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#brand-tile)" />
-          <g fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M13 22l11 4.5L35 22" />
-            <path d="M13 28.6l11 4.5 11-4.5" />
-            <path d="M13 35.2l11 4.5 11-4.5" />
-          </g>
-          <circle cx="24" cy="13.8" r="3.3" fill="#ffc53d" />
-        </svg>
+        {{ mark(28, 'nav') }}
         <span class="brand-text">BNCC&nbsp;API</span>
       </a>
       <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="primary-nav"

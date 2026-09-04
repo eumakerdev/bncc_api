@@ -3,8 +3,8 @@
   <desc id="bncc-logo-desc">Estudante sobre um livro aberto em três camadas — as três etapas da BNCC — ao lado do nome BNCC API.</desc>
   <defs>
     <linearGradient id="bncc-tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b4dff"/>
-      <stop offset="1" stop-color="#0aa8dc"/>
+      <stop offset="0" stop-color="#07603a"/>
+      <stop offset="1" stop-color="#12a45a"/>
     </linearGradient>
   </defs>
   <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#bncc-tile)"/>
@@ -13,6 +13,6 @@
     <path d="M13 28.6l11 4.5 11-4.5"/>
     <path d="M13 35.2l11 4.5 11-4.5"/>
   </g>
-  <circle cx="24" cy="13.8" r="3.3" fill="#ffc53d"/>
-  <text x="60" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="-0.5" fill="#16181d">BNCC<tspan fill="#1b4dff"> API</tspan></text>
+  <circle cx="24" cy="13.8" r="3.3" fill="#f2c04a"/>
+  <text x="60" y="32" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="-0.5" fill="#131a24">BNCC<tspan fill="#0a6b3c"> API</tspan></text>
 </svg>

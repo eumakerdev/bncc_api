@@ -32,6 +32,14 @@ pytest-cov==7.1.0  # >=5 para API de plugin compatível com pytest 9
 pytest-asyncio==1.4.0  # >=1.0 exigido por pytest 9 (0.21 quebra na coleta: FixtureDef.unittest)
 # httpx é dependência de runtime (login social) — declarado em requirements.txt.
 
+# Assets raster da marca (scripts/generate_og_image.py). Ver DESIGN.md.
+# fonttools+brotli instanciam a Inter variable (woff2) num peso estático, para o
+# og-image sair idêntico no Windows e no CI — antes o script caçava fontes do
+# sistema e o mesmo comando produzia arquivos diferentes em cada máquina.
+pillow==12.3.0
+fonttools==4.64.0
+brotli==1.2.0
+
 # Qualidade de código
 ruff==0.16.1
 black==26.5.1

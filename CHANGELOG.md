@@ -10,6 +10,47 @@ versão maior (Princípio I da [Constituição](.specify/memory/constitution.md)
 
 ## [Não lançado]
 
+### Alterado — identidade visual unificada nas cores do Brasil
+
+A marca existia em **quatro paletas paralelas** (azul elétrico no app, terracota nos carrosséis do
+LinkedIn, teal nos relatórios, slate/Tailwind no admin) e **onze cópias divergentes do símbolo**:
+sete SVGs colados à mão nos templates e quatro arquivos em `static/`. O `admin/base.html` chegava a
+desenhar o mark com **dois** chevrons e sem o ponto do estudante, e os carrosséis tinham regras CSS
+que **repintavam o logo** — os PNGs/PDFs exportados carregavam um tile azul com ponto vermelho, um
+símbolo que não existia em nenhuma outra superfície.
+
+Agora há uma identidade só, documentada em [`DESIGN.md`](DESIGN.md): leitura sóbria da bandeira, com
+o verde carregando superfície, o ouro só como acento (nunca texto sobre claro, 1.67:1) e o azul-noite
+como cor de dado. Neutros no matiz frio, não esverdeados.
+
+- **Fonte única do símbolo**: macro `app/web/templates/_brand.html`, consumido pelas 7 telas que
+  antes colavam o SVG. O `id` do gradiente é parametrizado porque as páginas do portal renderizam
+  duas instâncias na mesma página. As cores saem de `--mark-a/--mark-b/--mark-dot`, então **um**
+  macro serve claro e escuro.
+- **Tokens recalibrados** em `styles.css` com contraste **medido** par a par (`--brand` #0a6b3c,
+  branco sobre: 6.60:1, contra 5.91:1 do azul anterior). `--amber` virou `--gold`; entraram
+  `--azul`, `--azul-deep`, `--ground` (que substitui o `#0d0f14` solto, nunca tokenizado) e
+  `--gold-soft`. `--ok` mudou para o matiz 172 para não colidir com a marca verde, e as séries do
+  gráfico de uso passaram a ser verde + azul.
+- **Fim das cores literais nos templates**: os fallbacks slate do admin (`var(--text, #0f172a)` e
+  companhia) e os hexes inline dos gráficos foram para tokens. Sobraram apenas exceções declaradas
+  e testadas (logo do Google, `theme-color`, branco do QR do Pix, chevrons do símbolo).
+- **Rasters reproduzíveis**: `scripts/generate_og_image.py` passou a gerar *todos* os assets
+  (og-image, favicon, apple-touch-icon, ícones do PWA, logo-300, banner e capa do LinkedIn) a partir
+  da mesma paleta. `logo-300.png`, `linkedin-banner.png` e `linkedin-cover.png` eram órfãos na
+  paleta antiga; `og-image.svg`, morto e contradizendo o PNG servido, foi apagado.
+- **Tipografia determinística**: a Inter era declarada em `--font` e **nunca carregada** — o site
+  caía no stack do sistema e a tipografia mudava de máquina para máquina. Agora é auto-hospedada
+  (variable, subset latin, 48 KB, SIL OFL) em `static/fonts.css`, com dois consumidores: o design
+  system e a página do Scalar. O gerador de raster usa o mesmo arquivo versionado, então o og-image
+  deixou de sair diferente no Windows e no CI.
+- **PWA**: entrou `site.webmanifest`, e o `apple-touch-icon` deixou de apontar para um SVG (que o
+  iOS ignora).
+- **Portão anti-regressão**: `tests/contract/test_brand_consistency.py` reprova a volta da paleta
+  antiga, SVG do símbolo colado em template, variante do mark sem os três chevrons ou sem o ponto,
+  `theme-color` divergente entre superfícies e cor literal em template.
+
+
 ### Corrigido — exemplo de `curl` da landing deixou de expor o host interno do Cloud Run
 
 O bloco "Da conta à primeira chamada" montava a URL do exemplo com `request.base_url` em
