@@ -20,11 +20,11 @@
 # (Princípio IV). Requer numpy>=1.26 (pin em requirements.txt).
 pandas==3.0.5
 beautifulsoup4==4.15.0
-lxml==6.1.1
+lxml==6.1.2
 pdfplumber==0.11.10
 PyPDF2==3.0.1
-pypdf==6.15.0
-pikepdf==10.11.0
+pypdf==6.16.2
+pikepdf==10.12.0
 
 # Testes + cobertura (gate de CI ≥ 80%)
 pytest==9.1.1
@@ -41,10 +41,10 @@ fonttools==4.64.0
 brotli==1.2.0
 
 # Qualidade de código
-ruff==0.16.1
+ruff==0.16.5
 black==26.5.1
-mypy==2.3.0
-pre-commit==4.6.1
+mypy==2.3.1
+pre-commit==4.6.2
 
 # Documentação
 mkdocs==1.6.1
