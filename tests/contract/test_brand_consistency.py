@@ -129,6 +129,35 @@ def test_theme_color_igual_em_todas_as_superficies() -> None:
     ), f"theme-color divergente entre superfícies: {valores}"
 
 
+def test_theme_color_espelha_os_tokens_da_marca() -> None:
+    """As metas theme-color não podem derivar do CSS: elas não aceitam var().
+
+    Como o navegador pinta a barra com um hex literal, o valor é copiado de
+    `--brand` e `--ground`. Este teste é o que mantém a cópia honesta — sem ele,
+    mudar a marca no CSS deixaria a barra do navegador na cor antiga, que foi
+    exatamente como `#0d0f14` sobreviveu sem nunca ter sido token.
+    """
+    css = (STATIC / "styles.css").read_text(encoding="utf-8")
+    brand = re.search(r"^  --brand: (#[0-9a-fA-F]{6});", css, re.M)
+    ground = re.search(r"^  --ground: (#[0-9a-fA-F]{6});", css, re.M)
+    assert brand and ground, "--brand e --ground precisam ser hex literais (as metas os copiam)"
+
+    html = (TEMPLATES / "base.html").read_text(encoding="utf-8")
+    claro = re.search(r'content="(#[0-9a-fA-F]{6})" media="\(prefers-color-scheme: light\)"', html)
+    escuro = re.search(r'content="(#[0-9a-fA-F]{6})" media="\(prefers-color-scheme: dark\)"', html)
+    assert claro and escuro, "base.html perdeu um dos theme-color"
+    assert (
+        claro.group(1).lower() == brand.group(1).lower()
+    ), f"theme-color claro ({claro.group(1)}) divergiu de --brand ({brand.group(1)})"
+    assert (
+        escuro.group(1).lower() == ground.group(1).lower()
+    ), f"theme-color escuro ({escuro.group(1)}) divergiu de --ground ({ground.group(1)})"
+
+    manifesto = (STATIC / "site.webmanifest").read_text(encoding="utf-8")
+    assert brand.group(1) in manifesto, "site.webmanifest: theme_color divergiu de --brand"
+    assert ground.group(1) in manifesto, "site.webmanifest: background_color divergiu de --ground"
+
+
 def test_hex_literal_nao_volta_para_os_templates() -> None:
     """Cor em template é divergência esperando acontecer: use os tokens."""
     padrao = re.compile(r"#([0-9a-fA-F]{6})\b")
