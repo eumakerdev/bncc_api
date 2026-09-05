@@ -66,6 +66,17 @@ function Ensure-Proxy {
 function Do-Start {
   if (-not (Test-Path $VenvPy)) { throw "venv nao encontrado em $VenvPy - crie o ambiente do projeto primeiro." }
   if (Get-PortPid $Port) { Warn "Ja ha algo na porta $Port (app). Rode 'stop' antes ou use outra -Port."; return }
+
+  # O cloud-sql-proxy (Go) da precedencia a GOOGLE_APPLICATION_CREDENTIALS sobre a ADC do
+  # gcloud. Se essa env var estiver setada no seu perfil (ex.: aponta pra uma service account
+  # de outro projeto/cliente), o proxy autentica com ela e falha com "Cloud SQL Admin API ...
+  # SERVICE_DISABLED" no projeto errado - erro confuso, parece problema no GCP mas e so a
+  # credencial errada sendo escolhida. Forcamos o uso da ADC do usuario (fabio@expertia.dev.br).
+  if ($env:GOOGLE_APPLICATION_CREDENTIALS) {
+    Warn "Ignorando GOOGLE_APPLICATION_CREDENTIALS ($($env:GOOGLE_APPLICATION_CREDENTIALS)) - usando ADC do gcloud"
+    Remove-Item Env:\GOOGLE_APPLICATION_CREDENTIALS -ErrorAction SilentlyContinue
+  }
+
   Ensure-Proxy
   New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
