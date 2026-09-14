@@ -13,7 +13,7 @@ python-multipart==0.0.32  # >=0.0.7 corrige CVE-2024-24762 (ReDoS no parsing de 
 # Plataforma: banco relacional (SQLAlchemy 2.0 async + Alembic)
 # SQLite (aiosqlite) em dev; Postgres (asyncpg) em produção / Cloud SQL.
 SQLAlchemy==2.0.52
-alembic==1.19.1
+alembic==1.19.2
 aiosqlite==0.22.1
 asyncpg==0.31.0
 greenlet==3.5.5
@@ -29,7 +29,7 @@ email-validator==2.3.0
 httpx==0.28.1
 
 # E-mail (verificação de conta) — SMTP async; backend console em dev
-aiosmtplib==5.1.2
+aiosmtplib==5.1.3
 
 # Rate limiting
 slowapi==0.1.10
@@ -37,7 +37,7 @@ slowapi==0.1.10
 # Transparência de custos — leitura do BigQuery billing export (só no job de
 # ingestão `scripts/ingest_costs.py`; import lazy, o app web nunca o carrega).
 # Cliente CORE (sem extras pandas/bqstorage): superfície mínima de dependências.
-google-cloud-bigquery==3.44.0
+google-cloud-bigquery==3.45.0
 
 # Superfícies visuais (SSR: landing + portal + docs)
 Jinja2==3.1.6
@@ -54,7 +54,7 @@ Jinja2==3.1.6
 # converge direto e o pip escolhe as versões mais novas.
 chromadb==1.5.9
 sentence-transformers==5.7.0  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_download removido)
-openai==3.0.0
+openai==3.13.0
 google-generativeai==0.8.6
 
 # numpy: dependência de RUNTIME (chromadb/sentence-transformers operam sobre
