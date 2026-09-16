@@ -1139,9 +1139,7 @@ input[type="password"]::-ms-clear { display: none; }
 .chart-scroll { overflow-x: auto; overflow-y: hidden; }
 
 /* Painel de apoio financeiro: espelha o de custos (número-herói + nota), mas sem
-   gráfico. Comunica que nenhuma verba entrou ainda e o compromisso de auditar
-   publicamente qualquer apoio futuro. */
-.funding-block { border-style: dashed; }
+   gráfico. Mostra quanto entrou, de onde veio e onde foi aplicado. */
 .funding-note {
   margin: 1.25rem 0 0; padding-top: 1.15rem; border-top: 1px solid var(--border);
   color: var(--fg-muted); font-size: 0.95rem; line-height: 1.6; max-width: 46rem;

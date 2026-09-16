@@ -63,6 +63,9 @@ async def test_landing_shows_usage_section_when_seeded(async_client):
     assert "1.234" in body
     # A página pública NÃO expõe taxa de erro/sucesso (fica no /admin).
     assert "taxa de sucesso" not in body.lower()
+    # Apoio financeiro recebido: valor e origem agregados, sem identificar o patrocinador.
+    assert "R$ 400" in body
+    assert "patrocínio de empresa" in body
 
 
 async def test_landing_hides_usage_section_when_empty(async_client):
