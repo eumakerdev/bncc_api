@@ -3,25 +3,25 @@
 # ---------------------------------------------------------------------------
 
 # Web framework / API
-fastapi==0.141.1  # >=0.115.3 corrige CVE-2024-47874; >=0.130 exige starlette/pydantic abaixo
-uvicorn[standard]==0.52.4
-starlette==1.6.0  # >=1.0.1 corrige CVE-2026-48710 (BadHost: bypass de auth via Host header); pin explícito
-pydantic==2.13.5  # exigido por fastapi>=0.130 (>=2.9.0)
+fastapi==0.143.0  # >=0.115.3 corrige CVE-2024-47874; >=0.130 exige starlette/pydantic abaixo
+uvicorn[standard]==0.54.0
+starlette==1.7.0  # >=1.0.1 corrige CVE-2026-48710 (BadHost: bypass de auth via Host header); pin explícito
+pydantic==2.14.0  # exigido por fastapi>=0.130 (>=2.9.0)
 pydantic-settings==2.15.0  # acompanha o bump de pydantic (exige pydantic>=2.7.0)
 python-multipart==0.0.32  # >=0.0.7 corrige CVE-2024-24762 (ReDoS no parsing de boundary multipart)
 
 # Plataforma: banco relacional (SQLAlchemy 2.0 async + Alembic)
 # SQLite (aiosqlite) em dev; Postgres (asyncpg) em produção / Cloud SQL.
-SQLAlchemy==2.0.52
-alembic==1.19.2
+SQLAlchemy==2.1.4
+alembic==1.20.0
 aiosqlite==0.22.1
-asyncpg==0.31.0
-greenlet==3.5.5
+asyncpg==0.32.0
+greenlet==3.5.6
 
 # Segurança: hash de senha (Argon2), JWT de sessão do portal
 passlib[argon2]==1.7.4
 argon2-cffi==25.1.0
-PyJWT==2.13.0
+PyJWT==2.15.1
 email-validator==2.3.0
 
 # Cliente HTTP async — chamadas OAuth (login social) aos provedores em runtime.
@@ -37,7 +37,7 @@ slowapi==0.1.10
 # Transparência de custos — leitura do BigQuery billing export (só no job de
 # ingestão `scripts/ingest_costs.py`; import lazy, o app web nunca o carrega).
 # Cliente CORE (sem extras pandas/bqstorage): superfície mínima de dependências.
-google-cloud-bigquery==3.45.0
+google-cloud-bigquery==3.46.1
 
 # Superfícies visuais (SSR: landing + portal + docs)
 Jinja2==3.1.6
@@ -53,8 +53,8 @@ Jinja2==3.1.6
 # árvore inteira a cada tentativa (~175s por iteração). Sem o conflito, a resolução
 # converge direto e o pip escolhe as versões mais novas.
 chromadb==1.5.9
-sentence-transformers==6.0.1  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_download removido)
-openai==3.13.0
+sentence-transformers==6.1.0  # 2.2.2 quebra com huggingface_hub>=0.26 (cached_download removido)
+openai==3.26.1
 google-generativeai==0.8.6
 
 # numpy: dependência de RUNTIME (chromadb/sentence-transformers operam sobre
@@ -68,7 +68,7 @@ requests==2.34.2
 
 # Produção
 gunicorn==26.2.0
-python-dotenv==1.2.3
+python-dotenv==1.2.4
 
 # ---------------------------------------------------------------------------
 # NÃO adicione aqui ferramentas de teste/lint/docs nem a stack de extração de
