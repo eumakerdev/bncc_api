@@ -1,0 +1,35 @@
+.git/
+.github/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+venv/
+env/
+ENV/
+.env
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+specs/
+.specify/
+.claude/
+data/chromadb/
+data/*.db
+# PDFs oficiais (~7 MB): fonte da extração offline, nunca lidos em runtime — só o
+# snapshot versionado data/bncc_v1.json vai para a imagem. O .gcloudignore já os
+# exclui do upload do Cloud Build; aqui cobre `docker build` local e o gate do CI.
+data/*.pdf
+
+# Documentos locais, saídas de vídeo, auditoria local e scripts de deploy
+# (deploy/admin/bin traz o cloud-sql-proxy.exe, 31 MB): nada disso é usado pelo
+# Dockerfile nem em runtime. Espelha o .gcloudignore.
+.tmp/
+brag-*
+audit/
+deploy/

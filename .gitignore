@@ -71,9 +71,6 @@ chromadb/
 # Jupyter Notebooks
 .ipynb_checkpoints
 
-# Docker
-.dockerignore
-
 # Temporary files
 *.tmp
 *.temp

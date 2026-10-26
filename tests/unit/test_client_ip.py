@@ -30,6 +30,13 @@ def test_client_ip_via_firebase_skips_the_google_proxy(monkeypatch):
     assert deps.client_ip(_req("6.6.6.6, 203.0.113.7, 74.125.210.165")) == "203.0.113.7"
 
 
+def test_client_ip_via_firebase_skips_fastly_too(monkeypatch):
+    # Se o Firebase Hosting repassar o IP da Fastly entre o cliente e o proxy do
+    # Google, parar nele voltaria a dividir a cota por ponto de presença.
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    assert deps.client_ip(_req("203.0.113.7, 151.101.1.1, 74.125.210.165")) == "203.0.113.7"
+
+
 def test_client_ip_spoofed_google_ip_on_the_left_is_not_trusted(monkeypatch):
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
     assert deps.client_ip(_req("66.102.8.10, 203.0.113.7, 74.125.210.165")) == "203.0.113.7"
