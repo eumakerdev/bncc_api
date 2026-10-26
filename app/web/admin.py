@@ -32,7 +32,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
-from app.core.deps import AdminRateLimited, get_http_client
+from app.core.deps import AdminRateLimited, client_ip, get_http_client
 from app.core.security import create_access_token, decode_access_token
 from app.db.base import async_session_factory
 from app.services import oauth_service
@@ -64,12 +64,8 @@ def _admin_enabled() -> bool:
 
 
 def _log_ip(request: Request) -> str:
-    """IP para log de auditoria (best-effort; honra X-Forwarded-For em produção)."""
-    if settings.is_production:
-        xff = request.headers.get("x-forwarded-for")
-        if xff:
-            return xff.split(",")[0].strip() or "?"
-    return request.client.host if request.client else "?"
+    """IP para log de auditoria (mesma regra de confiança do rate limit)."""
+    return client_ip(request)
 
 
 def _check_password(candidate: str) -> bool:

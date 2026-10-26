@@ -21,7 +21,7 @@ greenlet==3.5.5
 # Segurança: hash de senha (Argon2), JWT de sessão do portal
 passlib[argon2]==1.7.4
 argon2-cffi==25.1.0
-PyJWT==2.13.0
+PyJWT==2.15.0  # >=2.14.0 corrige a leva de CVE-2026-1022xx (confusão HMAC/PEM, JWK vazia, RecursionError)
 email-validator==2.3.0
 
 # Cliente HTTP async — chamadas OAuth (login social) aos provedores em runtime.
