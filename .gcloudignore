@@ -44,3 +44,9 @@ data/*.pdf
 *.temp
 .DS_Store
 Thumbs.db
+
+# Documentos locais, saídas de vídeo e scripts de deploy (deploy/admin/bin traz o
+# cloud-sql-proxy.exe, 31 MB): nunca usados pela app nem pelo build.
+.tmp/
+brag-*
+deploy/
