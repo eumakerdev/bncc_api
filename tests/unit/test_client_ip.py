@@ -22,12 +22,29 @@ def test_client_ip_ignores_spoofed_leftmost_entry(monkeypatch):
     assert deps.client_ip(_req("6.6.6.6, 203.0.113.7")) == "203.0.113.7"
 
 
-def test_client_ip_counts_trusted_hops_from_the_right(monkeypatch):
+def test_client_ip_via_firebase_skips_the_google_proxy(monkeypatch):
+    # Via Firebase Hosting o último item é o proxy do Google (muda a cada request);
+    # o cliente é o anterior. Com o IP do proxy, clientes diferentes dividiam a cota.
     monkeypatch.setattr(settings, "ENVIRONMENT", "production")
-    monkeypatch.setattr(settings, "TRUSTED_PROXY_HOPS", 2)
-    assert deps.client_ip(_req("6.6.6.6, 203.0.113.7, 35.191.0.1")) == "203.0.113.7"
-    # Menos itens que o configurado: fica com o mais à esquerda disponível.
-    assert deps.client_ip(_req("203.0.113.7")) == "203.0.113.7"
+    assert deps.client_ip(_req("203.0.113.7, 192.178.11.137")) == "203.0.113.7"
+    assert deps.client_ip(_req("6.6.6.6, 203.0.113.7, 74.125.210.165")) == "203.0.113.7"
+
+
+def test_client_ip_spoofed_google_ip_on_the_left_is_not_trusted(monkeypatch):
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    assert deps.client_ip(_req("66.102.8.10, 203.0.113.7, 74.125.210.165")) == "203.0.113.7"
+
+
+def test_client_ip_google_cloud_customer_is_a_client_not_a_proxy(monkeypatch):
+    # Uma VM no GCP chamando o .run.app direto não pode escolher o próprio "IP".
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    assert deps.client_ip(_req("6.6.6.6, 34.95.0.1")) == "34.95.0.1"
+
+
+def test_client_ip_only_google_hops_keeps_the_leftmost(monkeypatch):
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    assert deps.client_ip(_req("66.102.8.10")) == "66.102.8.10"
+    assert deps.client_ip(_req("garbage, 74.125.210.165")) == "garbage"
 
 
 def test_client_ip_outside_production_uses_socket_peer(monkeypatch):

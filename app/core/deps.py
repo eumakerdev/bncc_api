@@ -9,6 +9,7 @@ de US1 (a auth real chega em US2).
 
 from __future__ import annotations
 
+import ipaddress
 from datetime import UTC, datetime
 from typing import Annotated
 
@@ -18,6 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.google_ranges import GOOGLE_SERVICE_NETWORKS
 from app.core.limiters import ai_limiter, deterministic_limiter
 from app.core.ratelimit import SlidingWindowLimiter
 from app.core.security import decode_access_token, hash_api_key
@@ -262,22 +264,40 @@ AiRateLimited = Annotated[ApiKey, Depends(rate_limit_ai)]
 # --------------------------------------------------------------------------- #
 # Rate limiting por IP (endpoints de sessão — sem API key)
 # --------------------------------------------------------------------------- #
+_GOOGLE_NETWORKS = tuple(ipaddress.ip_network(n) for n in GOOGLE_SERVICE_NETWORKS)
+
+
+def _is_google_proxy(ip: str) -> bool:
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return any(addr in net for net in _GOOGLE_NETWORKS)
+
+
 def client_ip(request: Request) -> str:
     """IP do cliente para as cotas por IP e para logs de auditoria.
 
     Atrás do Cloud Run/Firebase, ``request.client.host`` é o IP do balanceador —
     o que faria todas as requisições caírem no mesmo balde de rate limit. O
     ``X-Forwarded-For`` chega como ``<o que o cliente mandou…>, <IPs anexados pelo
-    Google>``: tudo à esquerda é forjável, então contamos ``TRUSTED_PROXY_HOPS``
-    itens a partir da direita. Ler o primeiro item deixava qualquer um trocar de
-    "IP" a cada tentativa e furar a cota de login. Fora de produção não há proxy
-    confiável, então mantemos ``request.client.host``."""
+    Google>``: tudo à esquerda é forjável. Lemos da direita para a esquerda pulando
+    os proxies do Google (``google_ranges.py``) e paramos no primeiro IP que não é
+    deles. Direto no ``.run.app`` isso é o último item; via Firebase Hosting, o
+    penúltimo (o último é o proxy do Firebase, que muda a cada request). Fora de
+    produção não há proxy confiável, então mantemos ``request.client.host``.
+
+    Limite conhecido: um cliente que saia por IP de serviço do Google (ex.: Apps
+    Script) e chame o ``.run.app`` direto ainda consegue forjar o item anterior."""
     if settings.is_production:
         xff = request.headers.get("x-forwarded-for")
         if xff:
             hops = [h.strip() for h in xff.split(",") if h.strip()]
+            i = len(hops) - 1
+            while i > 0 and _is_google_proxy(hops[i]):
+                i -= 1
             if hops:
-                return hops[-min(settings.TRUSTED_PROXY_HOPS, len(hops))]
+                return hops[i]
     return request.client.host if request.client else "unknown"
 
 

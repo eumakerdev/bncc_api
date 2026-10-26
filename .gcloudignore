@@ -44,3 +44,7 @@ data/*.pdf
 *.temp
 .DS_Store
 Thumbs.db
+
+# Documentos locais e saídas de vídeo: nunca usados pela app nem pelo build.
+.tmp/
+brag-output/
