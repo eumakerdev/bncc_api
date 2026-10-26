@@ -262,25 +262,27 @@ AiRateLimited = Annotated[ApiKey, Depends(rate_limit_ai)]
 # --------------------------------------------------------------------------- #
 # Rate limiting por IP (endpoints de sessão — sem API key)
 # --------------------------------------------------------------------------- #
-def _client_ip(request: Request) -> str:
-    """IP do cliente para as cotas por IP.
+def client_ip(request: Request) -> str:
+    """IP do cliente para as cotas por IP e para logs de auditoria.
 
     Atrás do Cloud Run/Firebase, ``request.client.host`` é o IP do balanceador —
-    o que faria todas as requisições caírem no mesmo balde de rate limit. Em
-    produção, o front-end do Google popula ``X-Forwarded-For`` como
-    ``<cliente>, <proxies…>``; usamos o primeiro item (o cliente original). Fora de
-    produção não há proxy confiável, então mantemos ``request.client.host``."""
+    o que faria todas as requisições caírem no mesmo balde de rate limit. O
+    ``X-Forwarded-For`` chega como ``<o que o cliente mandou…>, <IPs anexados pelo
+    Google>``: tudo à esquerda é forjável, então contamos ``TRUSTED_PROXY_HOPS``
+    itens a partir da direita. Ler o primeiro item deixava qualquer um trocar de
+    "IP" a cada tentativa e furar a cota de login. Fora de produção não há proxy
+    confiável, então mantemos ``request.client.host``."""
     if settings.is_production:
         xff = request.headers.get("x-forwarded-for")
         if xff:
-            first = xff.split(",")[0].strip()
-            if first:
-                return first
+            hops = [h.strip() for h in xff.split(",") if h.strip()]
+            if hops:
+                return hops[-min(settings.TRUSTED_PROXY_HOPS, len(hops))]
     return request.client.host if request.client else "unknown"
 
 
 def _enforce_ip(limiter: SlidingWindowLimiter, bucket: str, request: Request) -> None:
-    allowed, retry_after = limiter.check(f"{bucket}:{_client_ip(request)}")
+    allowed, retry_after = limiter.check(f"{bucket}:{client_ip(request)}")
     if not allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

@@ -100,6 +100,12 @@ class Settings(BaseSettings):
     # Tentativas de auth no painel admin por IP/minuto (força bruta de senha e spam
     # do callback OAuth). Baixo de propósito — admin é de pouquíssimas pessoas.
     RATE_LIMIT_ADMIN_PER_MIN: int = Field(default=5)
+    # Quantos itens do X-Forwarded-For, contados da direita, foram anexados por
+    # proxies do Google (deps.client_ip). 1 = só o IP que o front-end do Cloud Run
+    # anexou: nunca vem do cliente. Atrás do Firebase Hosting o cliente real fica
+    # uma posição antes, mas com 2 quem chamar o .run.app direto volta a forjar o IP
+    # da cota. Só suba após conferir o header num request real e aceitar esse custo.
+    TRUSTED_PROXY_HOPS: int = Field(default=1, ge=1)
 
     # --- Login social (OAuth 2.0) — opcional; desabilita se não configurado ---
     # Secrets carregados do ambiente (Princípio V). Ambos os campos de um provedor

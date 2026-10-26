@@ -20,22 +20,15 @@ services:
       - ./scripts:/app/scripts
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # ChromaDB standalone service (optional for production)
-  chromadb:
-    image: ghcr.io/chroma-core/chroma:latest
-    ports:
-      - "8001:8000"
-    environment:
-      - CHROMA_SERVER_HOST=0.0.0.0
-      - CHROMA_SERVER_HTTP_PORT=8000
-    volumes:
-      - ./data/chromadb:/chroma/chroma
+  # Sem servidor ChromaDB: a app usa o PersistentClient embarcado
+  # (app/services/vector_store.py). O servidor HTTP do Chroma 1.0–1.5.9 tem RCE
+  # pré-auth sem patch (CVE-2026-45829) e não deve rodar exposto na rede.
 
-  # Redis for caching (future enhancement)
+  # Redis for caching (future enhancement) — só no loopback: não tem senha.
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
 
