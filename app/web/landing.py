@@ -203,3 +203,19 @@ async def robots(request: Request) -> Response:
         f"Sitemap: {base}/sitemap.xml\n"
     )
     return Response(content=body, media_type="text/plain", headers={"Cache-Control": _CACHE_1H})
+
+
+# Conteúdo em arquivo próprio: linhas de Markdown longas não cabem no limite do ruff.
+_LLMS_TXT = (Path(__file__).parent / "llms.txt").read_text(encoding="utf-8")
+
+
+@router.get("/llms.txt", include_in_schema=False)
+@router.head("/llms.txt", include_in_schema=False)
+async def llms_txt(request: Request) -> Response:
+    """llms.txt: resumo do site para assistentes de IA (llmstxt.org)."""
+    base = (settings.SITE_URL or str(request.base_url)).rstrip("/")
+    return Response(
+        content=_LLMS_TXT.format(base=base),
+        media_type="text/plain; charset=utf-8",
+        headers={"Cache-Control": _CACHE_1H},
+    )

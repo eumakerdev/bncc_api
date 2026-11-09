@@ -1,0 +1,23 @@
+# BNCC API
+
+> API pública, gratuita e open source (MIT) com toda a Base Nacional Comum Curricular (BNCC) do Brasil: Educação Infantil, Ensino Fundamental e Ensino Médio, incluindo o Complemento de Computação, com busca semântica. Iniciativa independente, sem vínculo com o MEC. Mantida pela Expertia.
+
+## Documentação
+
+- [Página inicial]({base}/)
+- [Guia de início rápido]({base}/guia)
+- [Referência da API]({base}/docs)
+- [Criar conta e chave de API]({base}/portal/signup)
+- [Código-fonte](https://github.com/eumakerdev/bncc_api)
+
+## Quem faz
+
+- [Expertia](https://expertia.dev.br): consultoria e agência de desenvolvimento para organizações educacionais, que mantém a BNCC API.
+- [Fábio Santana (EuMaker)](https://eumaker.dev): cofundador da Expertia e autor da BNCC API.
+
+## Outros produtos da Expertia
+
+- [FormsFlow](https://www.formsflow.dev/): PDF ou prova em Google Forms com IA.
+- [CertMe](https://certme.pro/): check-in por QR e certificados automáticos.
+- [Bordi](https://www.bordi.cc/): quadro Scrumban para coordenação escolar.
+- [Provito](https://provito.com.br/): questões inéditas no estilo ENEM, ENADE e SAEB.

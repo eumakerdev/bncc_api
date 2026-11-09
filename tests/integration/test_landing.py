@@ -130,6 +130,32 @@ def test_robots_txt(client):
     assert "sitemap.xml" in body
 
 
+def test_llms_txt_links_the_expertia_ecosystem(client):
+    response = client.get("/llms.txt")
+    assert response.status_code == 200
+    assert "text/plain" in response.headers["content-type"]
+
+    body = response.text
+    assert body.startswith("# BNCC API")
+    assert "/docs" in body
+    for site in (
+        "expertia.dev.br",
+        "eumaker.dev",
+        "formsflow.dev",
+        "certme.pro",
+        "bordi.cc",
+        "provito.com.br",
+    ):
+        assert site in body
+
+
+def test_landing_json_ld_uses_shared_entity_ids(client):
+    """Publisher e criador usam os mesmos @id de expertia.dev.br e eumaker.dev."""
+    body = client.get("/").text
+    assert '"@id": "https://expertia.dev.br/#organization"' in body
+    assert '"@id": "https://eumaker.dev/#person"' in body
+
+
 def test_landing_permite_cache_de_cdn(client):
     """
     A landing precisa mandar `Cache-Control` público — é o que segura o custo.
